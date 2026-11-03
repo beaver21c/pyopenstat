@@ -584,8 +584,17 @@ def test_jasp_features_synthetic_data_and_stata_transpiler():
     assert transpile_stata_line("ttest len, by(supp)") == "sess.ttest(dep='len', group='supp')"
     assert transpile_stata_line("reg len supp dose") == "sess.regression(dep='len', covs=['supp', 'dose'])"
     assert transpile_stata_line("gen log_len = log(len)") == "sess.compute('log_len = log(len)')"
+    assert "sess.spatial_regression" in transpile_stata_line("spregress welfare_expenditure elderly_ratio, dvarlag(W)")
+    assert "sess.spatial_regression" in transpile_stata_line("moran welfare_expenditure")
 
-    # 5. Stata script execution via ASGI
+    # 5. Spatial Analysis Module (GeoDa / Stata spregress)
+    gis_df = pd.read_csv(os.path.join(SAMPLE_DIR, "Korea_Regional_Welfare_GIS.csv"))
+    from pyjamovi.analyses import SpatialAnalysis
+    sa = SpatialAnalysis(gis_df, dep="welfare_expenditure", covs=["elderly_ratio"], lat="latitude", lon="longitude", model_type="lag")
+    assert len(sa.tables) >= 2
+    assert len(sa.plots) >= 1
+
+    # 6. Stata script execution via ASGI
     _asgi_request("POST", "/api/dataset/load", query={"name": "ToothGrowth.csv"})
     st_stata, b_stata = _asgi_request("POST", "/api/syntax/execute", json_body={
         "code": "ttest len, by(supp)\nsum len",
@@ -594,3 +603,13 @@ def test_jasp_features_synthetic_data_and_stata_transpiler():
     assert st_stata == 200
     res_stata = json.loads(b_stata.decode("utf-8"))
     assert len(res_stata["analyses"]) >= 1
+
+    # 7. Spatial spregress via ASGI
+    _asgi_request("POST", "/api/dataset/load", query={"name": "Korea_Regional_Welfare_GIS.csv"})
+    st_sp, b_sp = _asgi_request("POST", "/api/syntax/execute", json_body={
+        "code": "spregress welfare_expenditure elderly_ratio, lat(latitude) lon(longitude) model(lag)",
+        "replace_existing": False
+    })
+    assert st_sp == 200
+    res_sp = json.loads(b_sp.decode("utf-8"))
+    assert any(a.get("name") == "spatialAnalysis" or a.get("analysis_type") == "spatialAnalysis" for a in res_sp["analyses"])

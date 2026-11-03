@@ -22,6 +22,7 @@ from .bayesian import (
 from .factor_suite import Reliability, FactorAnalysis
 from .network_module import NetworkAnalysis
 from .summary_stats import SummaryTTest
+from .spatial_module import SpatialAnalysis
 from .sem_module import SEM
 from .medmod import Mediation, Moderation
 from .panel_module import PanelAnalysis
@@ -80,6 +81,7 @@ __all__ = [
     "FactorAnalysis",
     "NetworkAnalysis",
     "SummaryTTest",
+    "SpatialAnalysis",
     "SEM",
     "Mediation",
     "Moderation",

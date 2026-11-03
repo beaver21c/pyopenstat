@@ -525,6 +525,14 @@ class JamoviSession:
     def survival(self, time_col: str, event_col: str, group: Optional[str] = None, covs: Optional[List[str]] = None, **kwargs):
         return self.run("survival", time=time_col, event=event_col, group=group, covs=covs or [], **kwargs)
 
+    def spatial_regression(self, dep: str, covs: Optional[List[str]] = None, lat: Optional[str] = None, lon: Optional[str] = None, model_type: str = "lag", k: int = 4, **kwargs):
+        """GeoDa / Stata spregress GIS Spatial Econometric Regression & Autocorrelation."""
+        return self.run("spatial", dep=dep, covs=covs or [], lat=lat, lon=lon, modelType=model_type, k=k, **kwargs)
+
+    def moran(self, dep: str, lat: Optional[str] = None, lon: Optional[str] = None, k: int = 4, **kwargs):
+        """Global Moran's I & LISA Spatial Clustering."""
+        return self.run("spatial", dep=dep, covs=[], lat=lat, lon=lon, modelType="moran_only", k=k, **kwargs)
+
     def restyle_plots(self, plot_style: Dict[str, Any]) -> "JamoviSession":
         """Re-execute all analyses in session history using an updated `PlotStyle` dictionary."""
         if self.df is None or not self.specs:

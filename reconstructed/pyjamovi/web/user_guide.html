@@ -402,6 +402,9 @@ body {
         <a href="#ch-export" class="nav-link">7. 결과 보고서 내보내기 (.hwpx, .xlsx)</a>
         <a href="#ch-ai" class="nav-link">8. Claude Code AI로 말로 분석하기</a>
         <a href="#ch-colab" class="nav-link">9. Colab 및 외부 파이썬 환경 실행</a>
+        <a href="#ch-gis" class="nav-link">10. GIS 공간분석 &amp; 공간회귀 (GeoDa/Stata)</a>
+        <a href="#ch-sem" class="nav-link">11. 대화형 SEM 빌더 (Stata/Amos)</a>
+        <a href="#ch-syntax" class="nav-link">12. 신택스 실시간 순차 기록 &amp; 커맨드창</a>
     </nav>
 
     <!-- Main Content -->
@@ -769,6 +772,127 @@ res = sess.anova_oneway(deps=<span style="color:#A7F3D0;">"len"</span>, group=<s
 <span style="color:#64748B;"># 3. 한글 보고서 및 엑셀로 한 번에 내보내기</span><br>
 res.export_results(<span style="color:#A7F3D0;">"reports/anova_report.hwpx"</span>)<br>
 res.export_results(<span style="color:#A7F3D0;">"reports/anova_report.xlsx"</span>)
+                </div>
+            </div>
+        </section>
+
+        <!-- Chapter 10: GIS Spatial Analysis & Regression -->
+        <section id="ch-gis" class="guide-card">
+            <div class="card-hdr">
+                <span class="card-num">10</span>
+                <h2 class="card-title">GIS 공간분석 및 공간계량 회귀모형 (GeoDa &amp; Stata spregress)</h2>
+            </div>
+            <p class="card-desc">지리적 인접성이나 공간적 상호작용(예: 지역별 복지예산, 고령화율, 빈곤율 등)을 반영하는 공간자기상관 검정(Global Moran's I), 국소 공간 클러스터(LISA), 그리고 공간시차(SAR)·공간오차(SEM) 회귀모형을 마우스 클릭만으로 분석합니다.</p>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">1단계</span>
+                    <span class="step-title">리본 메뉴에서 공간분석 선택</span>
+                </div>
+                <div class="step-body">
+                    화면 상단 리본 메뉴에서 <strong>[공간분석 (GIS) ▾]</strong> 버튼을 클릭하고 <strong>[공간회귀 모형 (Spatial Lag &amp; Error / spregress)]</strong>을 선택합니다.<br>
+                    (첫 화면에서 <code>🗺️ 서울 복지예산 GIS</code> 데이터셋을 클릭하면 실측 좌표 데이터가 바로 준비됩니다.)
+                </div>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">2단계</span>
+                    <span class="step-title">변수 슬롯 손으로 배치하기</span>
+                </div>
+                <div class="step-body">
+                    좌측 변수 목록에서 마우스로 클릭하여 슬롯에 배치합니다:<br>
+                    • <strong>종속변수 (Y):</strong> 분석 대상 변수 (예: <code>welfare_expenditure</code>)<br>
+                    • <strong>위도 (Latitude):</strong> 지역 위도 좌표 (예: <code>latitude</code>)<br>
+                    • <strong>경도 (Longitude):</strong> 지역 경도 좌표 (예: <code>longitude</code>)<br>
+                    • <strong>설명변수 (Covariates):</strong> 독립변수들 (예: <code>elderly_ratio</code>, <code>poverty_rate</code>)<br>
+                    • <strong>지역명/ID:</strong> 지자체 이름 (예: <code>sgg_name</code>)
+                </div>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">3단계</span>
+                    <span class="step-title">공간 가중치 및 모형 선택 후 결과 확인</span>
+                </div>
+                <div class="step-body">
+                    옵션 패널에서 <strong>가중치 행렬(k-NN / 역거리)</strong>과 <strong>모형(Spatial Lag / Spatial Error)</strong>을 선택하면 우측 결과 시트에 <strong>전역 모란 지수 검정표, 공간회귀 계수표, GeoDa 모란 산점도, 그리고 서울 25개 구 LISA 클러스터 지도</strong>가 실시간으로 렌더링됩니다!
+                </div>
+            </div>
+        </section>
+
+        <!-- Chapter 11: Interactive SEM Builder -->
+        <section id="ch-sem" class="guide-card">
+            <div class="card-hdr">
+                <span class="card-num">11</span>
+                <h2 class="card-title">대화형 SEM 빌더 (Stata SEM Builder / Amos 스타일 그래픽 모델러)</h2>
+            </div>
+            <p class="card-desc">어려운 문법 코드를 외울 필요 없이, 타원(잠재변수)과 사각형(관측변수)을 캔버스에서 마우스로 직접 배치하고 화살표로 연결하여 구조방정식 모형을 설계하고 추정합니다.</p>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">1단계</span>
+                    <span class="step-title">SEM 빌더 캔버스 열기</span>
+                </div>
+                <div class="step-body">
+                    상단 리본에서 <strong>[SEM / CFA]</strong>를 클릭한 뒤, 옵션 패널 상단의 초록색 <strong>[🎨 대화형 SEM 빌더 캔버스 열기]</strong> 버튼을 누릅니다. 대형 그래픽 캔버스 창이 열립니다.
+                </div>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">2단계</span>
+                    <span class="step-title">잠재변수 생성 및 관측변수 추가</span>
+                </div>
+                <div class="step-body">
+                    • 상단 도구함에서 <strong>[⭕ + 잠재변수]</strong>를 클릭하고 이름을 입력(예: <code>F1_복지수요</code>)하면 캔버스에 타원이 생성됩니다.<br>
+                    • 툴바의 <strong>[관측변수 추가]</strong> 칩(예: <code>+ elderly_ratio</code>)을 클릭하면 사각형 노드가 캔버스에 추가됩니다.<br>
+                    • 원하는 위치로 마우스를 드래그하여 자유롭게 배치합니다.
+                </div>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">3단계</span>
+                    <span class="step-title">화살표 연결 및 실시간 추정</span>
+                </div>
+                <div class="step-body">
+                    • <strong>[➔ 경로 화살표]</strong> 도구를 선택한 후, 시작 노드(타원)를 클릭하고 대상 노드(사각형)를 클릭하면 <strong>측정 경로(=~)</strong> 또는 <strong>회귀 경로(~)</strong> 화살표가 즉시 연결됩니다.<br>
+                    • 하단 텍스트박스에 <code>semopy / lavaan</code> 표준 문법이 1초의 지연도 없이 자동 생성됩니다.<br>
+                    • 우측 상단의 <strong>[✓ 모델 적용 &amp; 추정 실행 ▶]</strong>을 클릭하면 분석이 즉시 실행되고 적합도 지수(CFI, TLI, RMSEA)와 경로계수가 산출됩니다.
+                </div>
+            </div>
+        </section>
+
+        <!-- Chapter 12: Syntax Auto-Logging -->
+        <section id="ch-syntax" class="guide-card">
+            <div class="card-hdr">
+                <span class="card-num">12</span>
+                <h2 class="card-title">신택스 에디터 실시간 순차 기록 (Auto-Logging) &amp; Stata 커맨드창</h2>
+            </div>
+            <p class="card-desc">SPSS의 Paste 기능과 Stata의 Do-file Review를 완벽하게 결합했습니다. 마우스로 어떤 분석을 클릭하거나 변수를 옮기더라도 좌측 명령어 에디터에 실행 코드가 단계별 주석과 함께 순차적으로 누적 기록됩니다.</p>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">자동 기록</span>
+                    <span class="step-title">기본 세팅: 100% 자동 순차 기록</span>
+                </div>
+                <div class="step-body">
+                    프로그램이 켜지면 <strong>[● 실시간 기록 ON]</strong>이 기본 활성화되어 있습니다. 메뉴를 클릭하거나 옵션을 바꿀 때마다:<br>
+                    <code># [단계 1: 데이터셋 로드] sess.load_data("Korea_Regional_Welfare_GIS.csv")</code><br>
+                    <code># [단계 2: 분석 실행] sess.spatial_regression(dep='welfare_expenditure', covs=['elderly_ratio'], lat='latitude', lon='longitude', model_type='lag')</code><br>
+                    형태로 순차 누적 기록되므로 나중에 <code>💾 저장</code> 버튼을 눌러 <code>.do</code> 또는 <code>.py</code> 파일로 한 번에 다운로드받아 연구 재현성을 입증할 수 있습니다.
+                </div>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">실행 제어</span>
+                    <span class="step-title">선택 블록 실행 &amp; Stata 한 줄 즉시 실행</span>
+                </div>
+                <div class="step-body">
+                    • <strong>블록 실행:</strong> 마우스로 특정 코드 구간을 드래그하고 <code>▶ 선택 실행 (Ctrl+Enter)</code>을 누르면 해당 분석만 다시 수행됩니다.<br>
+                    • <strong>Stata 명령어 입력줄:</strong> 좌측 하단 <code>명령어 &gt;</code> 입력창에 <code>ttest len, by(supp)</code> 또는 <code>reg len supp dose</code>를 타이핑하고 Enter를 치면 1초 만에 분석이 완료되어 결과 시트에 반영됩니다!
                 </div>
             </div>
         </section>

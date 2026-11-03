@@ -1701,6 +1701,10 @@ table.jmv-apa-table tbody tr:last-child {
                     <img class="rb-icon" src="assets/analysis-survival.svg" alt="Survival">
                     <span class="rb-label" data-i18n="ana_survival">생존분석</span>
                 </button>
+                <button class="ribbon-btn" id="rb-spatial" onclick="openRibbonMenu(event, 'spatial')">
+                    <img class="rb-icon" src="assets/analysis-scatr-jmvscatter.svg" alt="Spatial GIS">
+                    <span class="rb-label"><span data-i18n="ana_spatial">공간분석 (GIS)</span> <span class="rb-caret">▾</span></span>
+                </button>
 
                 <div class="ribbon-spacer"></div>
 
@@ -1929,6 +1933,7 @@ table.jmv-apa-table tbody tr:last-child {
                 </div>
                 <div class="welcome-quick-pills">
                     <span class="quick-pill" onclick="loadDatasetByName('ToothGrowth.csv')">ToothGrowth (T-검정 / ANOVA / 베이지안)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('Korea_Regional_Welfare_GIS.csv')">🗺️ 서울 복지예산 GIS (모란 지수 / 공간회귀 SAR·SEM)</span>
                     <span class="quick-pill" onclick="loadDatasetByName('iris.csv')">Iris 붓꽃 (ANOVA / 회귀분석 / PCA)</span>
                     <span class="quick-pill" onclick="loadDatasetByName('SEM_Latent3Factor.csv')">SEM_Latent3Factor (구조방정식 SEM / CFA)</span>
                     <span class="quick-pill" onclick="loadDatasetByName('Grunfeld_Panel.csv')">Grunfeld_Panel (패널 고정효과 FE / 하우스만 검정)</span>
@@ -2363,6 +2368,7 @@ const I18N = {
         ana_medmod: "매개/조절",
         ana_panel: "패널 &amp; 혼합",
         ana_survival: "생존분석",
+        ana_spatial: "공간분석 (GIS)",
         ana_doctor: "자가진단 &amp; 동기화",
         ana_modules: "추가 모듈",
 
@@ -2436,6 +2442,7 @@ const I18N = {
         ana_medmod: "MedMod",
         ana_panel: "Panel &amp; Mixed",
         ana_survival: "Survival",
+        ana_spatial: "Spatial (GIS)",
         ana_doctor: "Doctor &amp; Sync",
         ana_modules: "Modules",
 
@@ -2542,6 +2549,11 @@ const RIBBON_MENUS_I18N = {
         survival: [
             { id: "survival", label: "생존분석 (Kaplan-Meier & Cox 비례위험)" }
         ],
+        spatial: [
+            { section: "공간 통계 & 공간계량 회귀 (GeoDa & Stata spregress)" },
+            { id: "spatial", label: "공간회귀 모형 (Spatial Lag & Error / spregress)", badge: "GIS" },
+            { id: "spatial_moran", label: "모란 지수 및 LISA 공간 클러스터 (Moran's I)", badge: "GeoDa" }
+        ],
         export_tables: [
             { section: "문서 및 논문 보고서 (.hwpx, .docx, .pdf)" },
             { action: "exportFullSessionResults('hwpx')", label: "한글 문서 (.hwpx) — 네이티브 편집 가능 표 + 그림", badge: "한글" },
@@ -2620,6 +2632,11 @@ const RIBBON_MENUS_I18N = {
         ],
         survival: [
             { id: "survival", label: "Survival Analysis (Kaplan-Meier & Cox)" }
+        ],
+        spatial: [
+            { section: "Spatial Econometrics & Autocorrelation" },
+            { id: "spatial", label: "Spatial Regression (SAR / SEM / spregress)", badge: "GIS" },
+            { id: "spatial_moran", label: "Moran's I & LISA Spatial Clusters", badge: "GeoDa" }
         ],
         export_tables: [
             { section: "Full Results (Tables + Embedded Graphs)" },
@@ -2745,6 +2762,26 @@ const OPTION_LABELS_KO = {
     "McDonald's omega": "McDonald's ω 계수",
     "Scree plot": "스크리 도표 (Scree Plot)",
     "Hausman test": "하우스만 사양검정 (Fixed vs Random Effects)",
+    // GIS Spatial Analysis & Regression
+    "GIS Spatial Analysis & Regression (GeoDa & Stata spregress)": "GIS 공간분석 및 공간계량 회귀 (GeoDa & Stata spregress)",
+    "Global Moran's I & LISA Spatial Cluster (GeoDa)": "전역 모란 지수 & 국소 LISA 공간 클러스터 (GeoDa)",
+    "종속변수 (Dependent Variable - Y)": "종속변수 (Dependent Variable - Y)",
+    "설명변수 (Covariates - X)": "설명변수 (Covariates - X)",
+    "위도 좌표 (Latitude - lat)": "위도 좌표 (Latitude - lat)",
+    "경도 좌표 (Longitude - lon)": "경도 좌표 (Longitude - lon)",
+    "지역 식별자 / 명칭 (Region ID / Name)": "지역 식별자 / 명칭 (Region ID / Name)",
+    "공간 가중치 행렬 W (Spatial Weights Matrix)": "공간 가중치 행렬 W (Spatial Weights Matrix)",
+    "가중치 행렬 방식 (Weights Type)": "가중치 행렬 방식 (Weights Type)",
+    "k-NN 이웃 수 (k)": "k-NN 이웃 수 (k)",
+    "모형 명세 (Spatial Model Specification)": "모형 명세 (Spatial Model Specification)",
+    "공간계량 회귀 모형 (Model Type)": "공간계량 회귀 모형 (Model Type)",
+    "GeoDa 시각화 및 공간 통계 도표 (Visualizations)": "GeoDa 시각화 및 공간 통계 도표 (Visualizations)",
+    "GeoDa 모란 산점도 (Moran Scatterplot)": "GeoDa 모란 산점도 (Moran Scatterplot)",
+    "국소 모란 LISA 공간 클러스터 지도 (LISA Cluster Map)": "국소 모란 LISA 공간 클러스터 지도 (LISA Cluster Map)",
+    "Network Analysis (JASP / bootnet)": "네트워크 분석 (JASP / bootnet 편상관망)",
+    "Summary Statistics Independent Samples T-Test (JASP)": "요약 통계치 독립표본 T-검정 (JASP Summary Stats)",
+    "Structural Equation Modeling (SEMLj)": "구조방정식 모형 (SEM / CFA — Stata & Amos 스타일)",
+    "lavaan Model Syntax (=~ latent, ~ regression, ~~ covariance)": "lavaan 모델 문법 (=~ 잠재변수, ~ 경로회귀, ~~ 공분산)"
 };
 
 function setLanguage(lang) {
@@ -2814,6 +2851,85 @@ const PALETTE_SWATCHES = {
 
 /* Complete Declarative UI Schema for All 28 Statistical Analyses */
 const ANALYSIS_SCHEMAS = {
+    spatial: {
+        title: "GIS Spatial Analysis & Regression (GeoDa & Stata spregress)",
+        slots: [
+            { key: "dep", label: "종속변수 (Dependent Variable - Y)", multi: false, req: true, prefer: "num" },
+            { key: "covs", label: "설명변수 (Covariates - X)", multi: true, req: false, prefer: "num" },
+            { key: "lat", label: "위도 좌표 (Latitude - lat)", multi: false, req: true, prefer: "num" },
+            { key: "lon", label: "경도 좌표 (Longitude - lon)", multi: false, req: true, prefer: "num" },
+            { key: "region_id", label: "지역 식별자 / 명칭 (Region ID / Name)", multi: false, req: false, prefer: "any" }
+        ],
+        sections: [
+            {
+                title: "공간 가중치 행렬 W (Spatial Weights Matrix)",
+                items: [
+                    {
+                        type: "select", key: "weightsMethod", label: "가중치 행렬 방식 (Weights Type)",
+                        options: [
+                            ["knn", "k-최근접 이웃 행렬 (k-Nearest Neighbors - 권장)"],
+                            ["inverse_distance", "역거리 가중 행렬 (Inverse Distance Weighting)"]
+                        ],
+                        def: "knn"
+                    },
+                    { type: "number", key: "k", label: "k-NN 이웃 수 (k)", def: 4, min: 2, max: 50, step: 1 }
+                ]
+            },
+            {
+                title: "모형 명세 (Spatial Model Specification)",
+                items: [
+                    {
+                        type: "select", key: "modelType", label: "공간계량 회귀 모형 (Model Type)",
+                        options: [
+                            ["lag", "공간시차 모형 SAR (Spatial Lag: y = ρWy + Xβ + ε)"],
+                            ["error", "공간오차 모형 SEM (Spatial Error: u = λWu + ε)"],
+                            ["ols", "일반 OLS 기준 회귀 (OLS Baseline with LM Diagnostics)"]
+                        ],
+                        def: "lag"
+                    }
+                ]
+            },
+            {
+                title: "GeoDa 시각화 및 공간 통계 도표 (Visualizations)",
+                items: [
+                    { type: "check", key: "plotMoran", label: "GeoDa 모란 산점도 (Moran Scatterplot)", def: true },
+                    { type: "check", key: "plotMap", label: "국소 모란 LISA 공간 클러스터 지도 (LISA Cluster Map)", def: true }
+                ]
+            }
+        ]
+    },
+    spatial_moran: {
+        title: "Global Moran's I & LISA Spatial Cluster (GeoDa)",
+        slots: [
+            { key: "dep", label: "종속변수 (Dependent Variable - Y)", multi: false, req: true, prefer: "num" },
+            { key: "lat", label: "위도 좌표 (Latitude - lat)", multi: false, req: true, prefer: "num" },
+            { key: "lon", label: "경도 좌표 (Longitude - lon)", multi: false, req: true, prefer: "num" },
+            { key: "region_id", label: "지역 식별자 / 명칭 (Region ID / Name)", multi: false, req: false, prefer: "any" }
+        ],
+        sections: [
+            {
+                title: "공간 가중치 행렬 W (Spatial Weights Matrix)",
+                items: [
+                    {
+                        type: "select", key: "weightsMethod", label: "가중치 행렬 방식 (Weights Type)",
+                        options: [
+                            ["knn", "k-최근접 이웃 행렬 (k-Nearest Neighbors - 권장)"],
+                            ["inverse_distance", "역거리 가중 행렬 (Inverse Distance Weighting)"]
+                        ],
+                        def: "knn"
+                    },
+                    { type: "number", key: "k", label: "k-NN 이웃 수 (k)", def: 4, min: 2, max: 50, step: 1 }
+                ]
+            },
+            {
+                title: "GeoDa 시각화 및 공간 통계 도표 (Visualizations)",
+                items: [
+                    { type: "check", key: "plotMoran", label: "GeoDa 모란 산점도 (Moran Scatterplot)", def: true },
+                    { type: "check", key: "plotMap", label: "국소 모란 LISA 공간 클러스터 지도 (LISA Cluster Map)", def: true }
+                ]
+            }
+        ]
+    },
     summaryTTest: {
         title: "Summary Statistics T-Test (JASP)",
         slots: [],
@@ -3399,7 +3515,9 @@ const ANALYSIS_SCHEMAS = {
     },
     sem: {
         title: "Structural Equation Modeling (SEMLj)",
-        slots: [],
+        slots: [
+            { key: "obsVars", label: "관측변수 후보 (더블클릭 시 모델에 추가)", multi: true, req: false, prefer: "num" }
+        ],
         sections: [
             {
                 title: "lavaan Model Syntax (=~ latent, ~ regression, ~~ covariance)",
@@ -3654,6 +3772,7 @@ async function loadDatasetByName(name) {
         applyDatasetPayload(data);
         closeBackstage();
         closeOptionsPanel();
+        logToSyntaxConsole("데이터셋 로드", `sess.load_data("${name}")`, `${name} (${data.rowCount || 0}행 × ${data.columnCount || 0}열)`);
         showToast(`Loaded ${data.name} (${data.rowCount} rows × ${data.columnCount} cols)`);
     } catch (err) {
         showToast("Load error: " + err.message);
@@ -3686,6 +3805,8 @@ function applyDatasetPayload(data) {
     document.getElementById("pop-ds-name").textContent = APP.datasetName;
 
     renderSpreadsheet();
+    renderLeftVarExplorer();
+    updateSyntaxStatusBadge();
     if (document.getElementById("variables-container").style.display === "block") {
         renderVariablesView();
     }
@@ -4170,6 +4291,8 @@ function openAnalysis(type, existingCard = null, preset = {}) {
     if (!existingCard) {
         scheduleAutoRun(true);
     }
+    const initCode = generateCodeCallForCurrentState(type, APP.currentParams);
+    logToSyntaxConsole("분석 선택", initCode || `# 분석 모듈 준비: ${schema.title}`, schema.title);
 }
 
 function openAnalysisWithPreset(type, preset) {
@@ -4191,6 +4314,18 @@ function autoAssignVariablesIntoParams(type, params) {
     const catCols = cols.filter(c => c.measureType === "Nominal" || c.measureType === "Ordinal" || (c.unique >= 2 && c.unique <= 12)).map(c => c.name);
     const binCols = cols.filter(c => c.unique === 2).map(c => c.name);
     const allNames = cols.map(c => c.name);
+
+    if (type === "spatial" || type === "spatial_moran") {
+        params.lat = allNames.find(n => /latitude|lat|위도/i.test(n)) || numCols[0] || allNames[0];
+        params.lon = allNames.find(n => /longitude|lon|경도/i.test(n)) || numCols[1] || allNames[1];
+        params.region_id = allNames.find(n => /name|region|시군구|지역|code|id/i.test(n)) || catCols[0] || "";
+        const remNum = numCols.filter(n => n !== params.lat && n !== params.lon);
+        params.dep = remNum[0] || allNames[0];
+        if (type === "spatial") {
+            params.covs = remNum.slice(1, 4).length ? remNum.slice(1, 4) : remNum.slice(0, 1);
+        }
+        return;
+    }
 
     if (type === "sem") {
         if (allNames.includes("x1_vis") && allNames.includes("x4_txt")) {
@@ -4302,6 +4437,14 @@ function renderOptionsPanel() {
     }
 
     let html = "";
+
+    if (APP.currentType === "sem") {
+        html += `<div style="margin-bottom:12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:6px;padding:10px;">
+            <div style="font-weight:700;font-size:12.5px;color:#166534;margin-bottom:4px;">🎨 대화형 SEM 모델러 (Stata SEM Builder / Amos 스타일)</div>
+            <div style="font-size:11.5px;color:#374151;margin-bottom:8px;">타원(잠재변수)과 사각형(관측변수)을 마우스로 배치하고 화살표 경로를 손으로 직접 연결합니다.</div>
+            <button class="stata-cmd-btn" style="width:100%;padding:6px;font-size:12px;background:#0D9488;" onclick="openSemBuilderModal()">🎨 대화형 SEM 빌더 캔버스 열기</button>
+        </div>`;
+    }
 
     if (schema.slots.length > 0) {
         html += `<div class="var-assign-grid">
@@ -4435,6 +4578,8 @@ function assignSelectedToSlot(slotKey) {
 
     renderOptionsPanel();
     scheduleAutoRun();
+    const curCode = generateCodeCallForCurrentState(APP.currentType, APP.currentParams);
+    if (curCode) logToSyntaxConsole("변수 설정", curCode, `${slotKey}: ${v}`);
 }
 
 function popFromSlot(slotKey) {
@@ -4446,6 +4591,8 @@ function popFromSlot(slotKey) {
     }
     renderOptionsPanel();
     scheduleAutoRun();
+    const curCode = generateCodeCallForCurrentState(APP.currentType, APP.currentParams);
+    if (curCode) logToSyntaxConsole("변수 설정", curCode, `${slotKey}: ${v}`);
 }
 
 function removeVarFromSlot(slotKey, vName) {
@@ -4457,6 +4604,8 @@ function removeVarFromSlot(slotKey, vName) {
     }
     renderOptionsPanel();
     scheduleAutoRun();
+    const curCode = generateCodeCallForCurrentState(APP.currentType, APP.currentParams);
+    if (curCode) logToSyntaxConsole("변수 설정", curCode, `${slotKey}: ${v}`);
 }
 
 function updateOptionParam(key, val, debounceMs = 120) {
@@ -4536,6 +4685,8 @@ async function executeCurrentAnalysis() {
             APP.analyses.push(payload);
         }
         renderAllResults();
+        const runCode = generateCodeCallForCurrentState(APP.currentType, APP.currentParams);
+        if (runCode) logToSyntaxConsole("분석 실행 완료", runCode, `${payload.title || APP.currentType} 결과 시트 출력`);
     } catch (err) {
         statusEl.textContent = "Python 3.0 · Claude Ready";
         showToast("Execution error: " + err.message);
@@ -5177,6 +5328,723 @@ async function pollLiveAISync() {
     }
 }
 
+/* --- Left Pane Variable Explorer Table --- */
+function renderLeftVarExplorer() {
+    const tbody = document.getElementById("left-var-tbody");
+    if (!tbody) return;
+    const isKo = (APP.lang || 'ko') !== 'en';
+    const cols = APP.columns || [];
+    if (!cols.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#94A3B8;padding:12px;">${isKo ? '데이터가 없습니다' : 'No variables'}</td></tr>`;
+        return;
+    }
+    let html = "";
+    cols.forEach((c, idx) => {
+        const icon = measureIcon(c.measureType);
+        const missingCount = c.missing || 0;
+        const dType = c.dataType || "Text";
+        html += `<tr onclick="selectSupplierVar('${c.name.replace(/'/g, "\\'")}')" ondblclick="transferToActiveSlot('${c.name.replace(/'/g, "\\'")}')" style="cursor:pointer;" title="${isKo ? '더블클릭 시 현재 분석 슬롯에 투입' : 'Double-click to insert into active slot'}">
+            <td style="color:#64748B;font-family:monospace;font-size:11px;">${idx + 1}</td>
+            <td style="text-align:center;"><img src="${icon}" alt="${c.measureType}" style="width:14px;height:14px;vertical-align:middle;"></td>
+            <td style="font-weight:600;color:#1E293B;">${escapeHtml(c.name)}</td>
+            <td style="color:#64748B;font-size:11px;">${escapeHtml(dType)}</td>
+            <td style="text-align:right;color:${missingCount > 0 ? '#E11D48' : '#94A3B8'};font-size:11px;">${missingCount}</td>
+            <td style="text-align:center;">
+                <button class="silky-small-btn" style="padding:1px 6px;font-size:10px;" onclick="event.stopPropagation(); transferToActiveSlot('${c.name.replace(/'/g, "\\'")}')">→</button>
+            </td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+}
+
+/* --- Window Layout Mode Switcher --- */
+function toggleLayoutMenu(ev) {
+    if (ev) ev.stopPropagation();
+    const dd = document.getElementById("layout-dropdown");
+    if (dd) dd.classList.toggle("open");
+}
+
+function closeLayoutMenu() {
+    const dd = document.getElementById("layout-dropdown");
+    if (dd) dd.classList.remove("open");
+}
+
+window.addEventListener("click", () => {
+    closeLayoutMenu();
+    const sdd = document.getElementById("syntax-snippets-dropdown");
+    if (sdd) sdd.style.display = "none";
+});
+
+function setLayoutMode(mode) {
+    APP.layoutMode = mode;
+    localStorage.setItem("openstat_layout_mode", mode);
+    closeLayoutMenu();
+
+    const leftPane = document.getElementById("left-pane");
+    const leftVar = document.getElementById("left-var-explorer");
+    const leftSplitter = document.getElementById("left-h-splitter");
+    const leftSyntax = document.getElementById("left-syntax-console");
+    const spreadsheet = document.getElementById("spreadsheet-container");
+    const resultsPane = document.getElementById("results-pane");
+    const labelEl = document.getElementById("current-layout-label");
+
+    document.querySelectorAll(".layout-dd-item").forEach(el => el.classList.remove("active"));
+    const activeItem = document.getElementById("layout-item-" + mode);
+    if (activeItem) activeItem.classList.add("active");
+
+    const isKo = (APP.lang || 'ko') !== 'en';
+
+    if (mode === "default") {
+        if (labelEl) labelEl.textContent = isKo ? "🏛️ 창 배열: 기본 모드 ▾" : "🏛️ Layout: Default ▾";
+        if (leftPane) leftPane.style.display = "flex";
+        if (leftVar) { leftVar.style.display = "flex"; leftVar.style.flex = "1 1 50%"; }
+        if (leftSplitter) leftSplitter.style.display = "block";
+        if (leftSyntax) { leftSyntax.style.display = "flex"; leftSyntax.style.flex = "1 1 50%"; }
+        if (spreadsheet) spreadsheet.style.display = "none";
+        if (resultsPane) resultsPane.style.display = "flex";
+        switchRightView("results");
+    } else if (mode === "jamovi") {
+        if (labelEl) labelEl.textContent = isKo ? "📊 창 배열: 자모비 모드 ▾" : "📊 Layout: jamovi ▾";
+        if (leftPane) leftPane.style.display = "flex";
+        if (leftVar) leftVar.style.display = "none";
+        if (leftSplitter) leftSplitter.style.display = "none";
+        if (leftSyntax) leftSyntax.style.display = "none";
+        if (spreadsheet) spreadsheet.style.display = "block";
+        if (resultsPane) resultsPane.style.display = "flex";
+        switchRightView("results");
+    } else if (mode === "syntax") {
+        if (labelEl) labelEl.textContent = isKo ? "📝 창 배열: 신택스 집중 ▾" : "📝 Layout: Syntax ▾";
+        if (leftPane) leftPane.style.display = "flex";
+        if (leftVar) leftVar.style.display = "none";
+        if (leftSplitter) leftSplitter.style.display = "none";
+        if (leftSyntax) { leftSyntax.style.display = "flex"; leftSyntax.style.flex = "1 1 100%"; }
+        if (spreadsheet) spreadsheet.style.display = "none";
+        if (resultsPane) resultsPane.style.display = "flex";
+        switchRightView("results");
+    } else if (mode === "quad") {
+        if (labelEl) labelEl.textContent = isKo ? "▦ 창 배열: 4분할 모드 ▾" : "▦ Layout: 4-Panes ▾";
+        if (leftPane) leftPane.style.display = "flex";
+        if (leftVar) { leftVar.style.display = "flex"; leftVar.style.flex = "1 1 50%"; }
+        if (leftSplitter) leftSplitter.style.display = "block";
+        if (leftSyntax) { leftSyntax.style.display = "flex"; leftSyntax.style.flex = "1 1 50%"; }
+        if (spreadsheet) spreadsheet.style.display = "none";
+        if (resultsPane) resultsPane.style.display = "flex";
+        switchRightView("split");
+    } else if (mode === "results-only") {
+        if (labelEl) labelEl.textContent = isKo ? "📄 창 배열: 결과 전체화면 ▾" : "📄 Layout: Results Only ▾";
+        if (leftPane) leftPane.style.display = "none";
+        if (resultsPane) resultsPane.style.display = "flex";
+        switchRightView("results");
+    } else if (mode === "data-only") {
+        if (labelEl) labelEl.textContent = isKo ? "📋 창 배열: 데이터 전체화면 ▾" : "📋 Layout: Data Only ▾";
+        if (leftPane) leftPane.style.display = "none";
+        if (resultsPane) resultsPane.style.display = "flex";
+        switchRightView("data");
+    }
+}
+
+function switchRightView(view) {
+    const tabRes = document.getElementById("v-tab-results");
+    const tabData = document.getElementById("v-tab-data");
+    const tabSplit = document.getElementById("v-tab-split");
+    const gridWrap = document.getElementById("right-grid-wrap");
+    const resWrap = document.getElementById("results-scroll-wrap");
+
+    if (tabRes) tabRes.classList.toggle("active", view === "results");
+    if (tabData) tabData.classList.toggle("active", view === "data");
+    if (tabSplit) tabSplit.classList.toggle("active", view === "split");
+
+    if (view === "results") {
+        if (gridWrap) gridWrap.style.display = "none";
+        if (resWrap) resWrap.style.display = "block";
+    } else if (view === "data") {
+        if (gridWrap) gridWrap.style.display = "block";
+        if (resWrap) resWrap.style.display = "none";
+        renderRightSpreadsheet();
+    } else if (view === "split") {
+        if (gridWrap) {
+            gridWrap.style.display = "block";
+            gridWrap.style.flex = "1 1 50%";
+        }
+        if (resWrap) {
+            resWrap.style.display = "block";
+            resWrap.style.flex = "1 1 50%";
+        }
+        renderRightSpreadsheet();
+    }
+}
+
+function renderRightSpreadsheet() {
+    const thead = document.getElementById("right-grid-thead");
+    const tbody = document.getElementById("right-grid-tbody");
+    if (!thead || !tbody) return;
+
+    let hHtml = `<tr><th class="row-num-hdr"></th>`;
+    for (const col of APP.columns) {
+        const icon = measureIcon(col.measureType);
+        hHtml += `<th><span class="col-hdr-inner"><img src="${icon}" alt=""><span>${escapeHtml(col.name)}</span></span></th>`;
+    }
+    hHtml += `</tr>`;
+    thead.innerHTML = hHtml;
+
+    const totalRows = Math.max(APP.rows.length, 30);
+    const rowsHtml = [];
+    for (let r = 0; r < totalRows; r++) {
+        const rowObj = APP.rows[r] || {};
+        let tr = `<tr><td class="row-num">${r + 1}</td>`;
+        for (const col of APP.columns) {
+            const v = rowObj[col.name];
+            const disp = (v === null || v === undefined) ? "" : String(v);
+            const cls = (col.dataType === "Decimal" || col.dataType === "Integer") ? " class=\"num-cell\"" : "";
+            tr += `<td${cls}>${escapeHtml(disp)}</td>`;
+        }
+        tr += `</tr>`;
+        rowsHtml.push(tr);
+    }
+    tbody.innerHTML = rowsHtml.join("");
+}
+
+let hResizeDragging = false;
+function startHResize(e) {
+    hResizeDragging = true;
+    e.preventDefault();
+}
+window.addEventListener("mousemove", (e) => {
+    if (!hResizeDragging) return;
+    const leftPane = document.getElementById("left-pane");
+    const leftVar = document.getElementById("left-var-explorer");
+    const leftSyntax = document.getElementById("left-syntax-console");
+    if (!leftPane || !leftVar || !leftSyntax) return;
+    const rect = leftPane.getBoundingClientRect();
+    const relativeY = e.clientY - rect.top;
+    const minH = 100;
+    if (relativeY >= minH && relativeY <= rect.height - minH) {
+        leftVar.style.flex = `0 0 ${relativeY}px`;
+        leftSyntax.style.flex = "1 1 auto";
+    }
+});
+window.addEventListener("mouseup", () => {
+    hResizeDragging = false;
+});
+
+/* --- Real-Time Syntax Auto-Logging (기본 세팅: 활성화) --- */
+APP.autoRecordSyntax = true;
+APP.syntaxStepCounter = 1;
+
+function toggleAutoRecordSyntax() {
+    APP.autoRecordSyntax = !APP.autoRecordSyntax;
+    updateSyntaxStatusBadge();
+    const isKo = (APP.lang || 'ko') !== 'en';
+    showToast(APP.autoRecordSyntax 
+        ? (isKo ? "신택스 자동 기록 활성화됨 (클릭 시 순차 누적)" : "Syntax Auto-Record Enabled") 
+        : (isKo ? "신택스 자동 기록 일시중지됨" : "Syntax Auto-Record Paused")
+    );
+}
+
+function updateSyntaxStatusBadge() {
+    const badge = document.getElementById("syntax-status-badge");
+    if (!badge) return;
+    const isKo = (APP.lang || 'ko') !== 'en';
+    if (APP.autoRecordSyntax) {
+        badge.className = "badge-pill green";
+        badge.textContent = isKo ? "● 실시간 기록 ON" : "● Auto-Record ON";
+        badge.title = isKo ? "클릭 시 자동 기록 일시중지" : "Click to pause auto-recording";
+    } else {
+        badge.className = "badge-pill gray";
+        badge.textContent = isKo ? "○ 기록 일시정지" : "○ Paused";
+        badge.title = isKo ? "클릭 시 자동 기록 켜기" : "Click to enable auto-recording";
+    }
+    badge.onclick = toggleAutoRecordSyntax;
+    badge.style.cursor = "pointer";
+}
+
+function logToSyntaxConsole(actionTitle, codeStr, comment = "") {
+    if (!APP.autoRecordSyntax) return;
+    const editor = document.getElementById("integrated-syntax-editor");
+    if (!editor || !codeStr || !codeStr.trim()) return;
+
+    const timeStr = new Date().toLocaleTimeString();
+    const stepNum = APP.syntaxStepCounter++;
+    
+    let logBlock = `\n# [단계 ${stepNum}: ${actionTitle}] ${comment ? '(' + comment + ') ' : ''}— ${timeStr}\n${codeStr.trim()}\n`;
+
+    if (!editor.value.trim() || editor.value.startsWith("# OpenStat")) {
+        editor.value = `# OpenStat Studio 재현 가능한 분석 스크립트 (.py / .do)\n# 생성일시: ${new Date().toLocaleString()}\n` + logBlock;
+    } else {
+        editor.value += logBlock;
+    }
+    editor.scrollTop = editor.scrollHeight;
+
+    const badge = document.getElementById("syntax-status-badge");
+    if (badge) {
+        badge.style.opacity = "0.5";
+        setTimeout(() => { if (badge) badge.style.opacity = "1"; }, 300);
+    }
+}
+
+function generateCodeCallForCurrentState(type, params) {
+    if (!type || !params) return "";
+    const cleanParams = Object.assign({}, params);
+    delete cleanParams.plotStyle;
+
+    const args = [];
+    for (const [k, v] of Object.entries(cleanParams)) {
+        if (v === undefined || v === null || v === "" || (Array.isArray(v) && v.length === 0)) continue;
+        if (typeof v === "string") {
+            args.push(`${k}='${v.replace(/'/g, "\\'")}'`);
+        } else if (Array.isArray(v)) {
+            args.push(`${k}=[${v.map(x => `'${String(x).replace(/'/g, "\\'")}'`).join(", ")}]`);
+        } else {
+            args.push(`${k}=${v}`);
+        }
+    }
+
+    let funcName = type;
+    if (type === "ttestIS") funcName = "ttest";
+    else if (type === "linReg") funcName = "regression";
+    else if (type === "anovaOneW" || type === "anovaFactorial") funcName = "anova";
+    else if (type === "corrMatrix") funcName = "correlation";
+    else if (type === "spatial" || type === "spatial_moran") funcName = "spatial_regression";
+    else if (type === "summaryTTest") funcName = "summary_ttest";
+    else if (type === "networkAnalysis") funcName = "network";
+
+    return `sess.${funcName}(${args.join(", ")})`;
+}
+
+async function executeIntegratedSyntax(selectionOnly = false) {
+    const editor = document.getElementById("integrated-syntax-editor");
+    if (!editor) return;
+
+    let codeToRun = editor.value;
+    if (selectionOnly) {
+        const selStart = editor.selectionStart;
+        const selEnd = editor.selectionEnd;
+        if (selStart !== selEnd) {
+            codeToRun = editor.value.substring(selStart, selEnd);
+        } else {
+            const lines = editor.value.substring(0, selStart).split("\n");
+            const curLineIdx = lines.length - 1;
+            const allLines = editor.value.split("\n");
+            codeToRun = allLines[curLineIdx] || "";
+        }
+    }
+
+    if (!codeToRun || !codeToRun.trim()) {
+        showToast("실행할 스크립트 코드가 없습니다.");
+        return;
+    }
+
+    const badge = document.getElementById("syntax-status-badge");
+    if (badge) {
+        badge.className = "badge-pill blue";
+        badge.textContent = "실행 중...";
+    }
+
+    try {
+        const res = await fetch("/api/syntax/execute", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                code: codeToRun,
+                replace_existing: !selectionOnly
+            })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            applyDatasetPayload(data);
+            showToast("신택스 실행이 성공적으로 완료되었습니다.");
+            if (badge) {
+                badge.className = "badge-pill green";
+                badge.textContent = "실행 성공";
+                setTimeout(updateSyntaxStatusBadge, 1800);
+            }
+        } else {
+            showToast("실행 오류: " + (data.detail || "Script syntax error"));
+            if (badge) {
+                badge.className = "badge-pill red";
+                badge.textContent = "오류 발생";
+                setTimeout(updateSyntaxStatusBadge, 2500);
+            }
+        }
+    } catch (err) {
+        showToast("통신 오류: " + err.message);
+        if (badge) {
+            badge.className = "badge-pill red";
+            badge.textContent = "통신 실패";
+            setTimeout(updateSyntaxStatusBadge, 2500);
+        }
+    }
+}
+
+async function executeInlineCommand() {
+    const input = document.getElementById("stata-inline-cmd");
+    if (!input || !input.value.trim()) return;
+    const cmd = input.value.trim();
+
+    logToSyntaxConsole("명령어 입력 실행", cmd, "Stata / Python 명령");
+
+    try {
+        const res = await fetch("/api/syntax/execute", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                code: cmd,
+                replace_existing: false
+            })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            applyDatasetPayload(data);
+            input.value = "";
+            showToast(`명령어 실행 완료: ${cmd}`);
+        } else {
+            showToast("실행 오류: " + (data.detail || "Command error"));
+        }
+    } catch (err) {
+        showToast("오류: " + err.message);
+    }
+}
+
+function clearIntegratedSyntax() {
+    const editor = document.getElementById("integrated-syntax-editor");
+    if (editor) {
+        editor.value = "";
+        APP.syntaxStepCounter = 1;
+        showToast("신택스 에디터가 초기화되었습니다.");
+    }
+}
+
+function saveIntegratedSyntax() {
+    const editor = document.getElementById("integrated-syntax-editor");
+    if (!editor || !editor.value.trim()) {
+        showToast("저장할 신택스 내용이 없습니다.");
+        return;
+    }
+    const blob = new Blob([editor.value], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const base = (APP.datasetName || "analysis").replace(/\.[^/.]+$/, "");
+    a.href = url;
+    a.download = `${base}_syntax.do`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast("신택스 파일(.do / .py)이 다운로드되었습니다.");
+}
+
+function toggleSyntaxSnippetsDropdown(ev) {
+    if (ev) ev.stopPropagation();
+    const dd = document.getElementById("syntax-snippets-dropdown");
+    if (!dd) return;
+    if (dd.style.display === "block") {
+        dd.style.display = "none";
+        return;
+    }
+    const rect = ev.target.getBoundingClientRect();
+    dd.style.top = (rect.bottom + 4) + "px";
+    dd.style.left = Math.min(rect.left, window.innerWidth - 320) + "px";
+    dd.style.display = "block";
+}
+
+function insertSyntaxSnippet(type) {
+    const editor = document.getElementById("integrated-syntax-editor");
+    const dd = document.getElementById("syntax-snippets-dropdown");
+    if (dd) dd.style.display = "none";
+    if (!editor) return;
+
+    const cols = (APP.columns || []).map(c => c.name);
+    const c1 = cols[0] || "var1";
+    const c2 = cols[1] || "var2";
+    const c3 = cols[2] || "var3";
+
+    let snippet = "";
+    if (type === "desc") snippet = `sess.descriptives(vars=['${c1}', '${c2}'])`;
+    else if (type === "ttest") snippet = `sess.ttest(dep='${c1}', group='${c2}')`;
+    else if (type === "anova") snippet = `sess.anova(dep='${c1}', factors=['${c2}'])`;
+    else if (type === "reg") snippet = `sess.regression(dep='${c1}', covs=['${c2}', '${c3}'])`;
+    else if (type === "corr") snippet = `sess.correlation(vars=['${c1}', '${c2}', '${c3}'])`;
+    else if (type === "spatial") snippet = `sess.spatial_regression(dep='${c1}', covs=['${c2}'], lat='latitude', lon='longitude', model_type='lag')`;
+    else if (type === "sem") snippet = `sess.sem(model="F1 =~ ${c1} + ${c2} + ${c3}")`;
+    else if (type === "panel") snippet = `sess.panel(dep='${c1}', entity='firm_id', time='year', covs=['${c2}'])`;
+    else if (type === "survival") snippet = `sess.survival(time='time', event='status', covs=['${c1}'])`;
+    else if (type === "network") snippet = `sess.network(vars=['${c1}', '${c2}', '${c3}'])`;
+    else if (type === "summary_ttest") snippet = `sess.summary_ttest(m1=25.4, s1=4.2, n1=50, m2=21.1, s2=3.9, n2=50)`;
+    else if (type === "stata_ttest") snippet = `ttest ${c1}, by(${c2})`;
+    else if (type === "stata_reg") snippet = `reg ${c1} ${c2} ${c3}`;
+    else if (type === "stata_gen") snippet = `gen log_${c1} = log(${c1})`;
+    else if (type === "export_hwpx") snippet = `sess.export_results("reports/analysis_report.hwpx", title="연구 분석 보고서")`;
+    else if (type === "export_pdf") snippet = `sess.export_results("reports/analysis_report.pdf", title="연구 분석 보고서")`;
+
+    logToSyntaxConsole("스니펫 삽입", snippet);
+}
+
+/* --- Interactive SEM Builder (Stata SEM Builder / Amos Style) --- */
+const SEM_BUILDER = {
+    nodes: [],
+    links: [],
+    selectedTool: "select",
+    sourceNode: null,
+    dragNode: null,
+    dragOffset: { x: 0, y: 0 }
+};
+
+function openSemBuilderModal() {
+    const modal = document.getElementById("sem-builder-modal");
+    if (!modal) return;
+    modal.style.display = "flex";
+
+    const chipsBox = document.getElementById("sem-var-chips");
+    if (chipsBox) {
+        chipsBox.innerHTML = APP.columns.map(c => 
+            `<button class="silky-small-btn" onclick="addObservedNode('${c.name.replace(/'/g, "\\'")}')" style="white-space:nowrap;padding:2px 8px;font-size:11px;">+ ${escapeHtml(c.name)}</button>`
+        ).join("");
+    }
+
+    initSemModelFromParams();
+    renderSemCanvas();
+    updateSemSyntaxPreview();
+}
+
+function closeSemBuilderModal() {
+    const modal = document.getElementById("sem-builder-modal");
+    if (modal) modal.style.display = "none";
+}
+
+function setSemTool(tool) {
+    SEM_BUILDER.selectedTool = tool;
+    SEM_BUILDER.sourceNode = null;
+    document.querySelectorAll("#sem-tool-select, #sem-tool-arrow, #sem-tool-covar").forEach(btn => btn.classList.remove("active"));
+    const activeBtn = document.getElementById("sem-tool-" + tool);
+    if (activeBtn) activeBtn.classList.add("active");
+    renderSemCanvas();
+}
+
+function addNewLatentPrompt() {
+    const defaultName = `F${SEM_BUILDER.nodes.filter(n => n.type === 'latent').length + 1}`;
+    const name = prompt("생성할 잠재변수(타원) 이름을 입력하세요:", defaultName);
+    if (!name || !name.trim()) return;
+    const cleanName = name.trim().replace(/\s+/g, "_");
+    SEM_BUILDER.nodes.push({
+        id: cleanName,
+        name: cleanName,
+        type: "latent",
+        x: 140 + (SEM_BUILDER.nodes.length % 5) * 80,
+        y: 120 + Math.floor(SEM_BUILDER.nodes.length / 5) * 70
+    });
+    renderSemCanvas();
+    updateSemSyntaxPreview();
+}
+
+function addObservedNode(varName) {
+    if (SEM_BUILDER.nodes.some(n => n.id === varName)) {
+        showToast(`'${varName}' 변수가 이미 캔버스에 존재합니다.`);
+        return;
+    }
+    SEM_BUILDER.nodes.push({
+        id: varName,
+        name: varName,
+        type: "observed",
+        x: 340 + (SEM_BUILDER.nodes.length % 4) * 90,
+        y: 100 + Math.floor(SEM_BUILDER.nodes.length / 4) * 60
+    });
+    renderSemCanvas();
+    updateSemSyntaxPreview();
+}
+
+function clearSemCanvas() {
+    SEM_BUILDER.nodes = [];
+    SEM_BUILDER.links = [];
+    SEM_BUILDER.sourceNode = null;
+    renderSemCanvas();
+    updateSemSyntaxPreview();
+}
+
+function initSemModelFromParams() {
+    if (SEM_BUILDER.nodes.length > 0) return;
+
+    const cols = (APP.columns || []).map(c => c.name);
+    const numCols = cols.filter(c => {
+        const m = APP.columns.find(x => x.name === c);
+        return m && (m.dataType === "Decimal" || m.dataType === "Integer");
+    });
+
+    const ind1 = numCols.slice(0, 3);
+    if (ind1.length >= 2) {
+        SEM_BUILDER.nodes.push({ id: "F1", name: "F1", type: "latent", x: 120, y: 160 });
+        ind1.forEach((v, idx) => {
+            SEM_BUILDER.nodes.push({ id: v, name: v, type: "observed", x: 300, y: 90 + idx * 70 });
+            SEM_BUILDER.links.push({ from: "F1", to: v, type: "measurement" });
+        });
+    }
+}
+
+function renderSemCanvas() {
+    const svg = document.getElementById("sem-canvas-svg");
+    if (!svg) return;
+
+    let html = `<defs>
+        <marker id="arrow-end" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#0D9488" />
+        </marker>
+        <marker id="arrow-covar" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#6366F1" />
+        </marker>
+    </defs>`;
+
+    for (const link of SEM_BUILDER.links) {
+        const fromNode = SEM_BUILDER.nodes.find(n => n.id === link.from);
+        const toNode = SEM_BUILDER.nodes.find(n => n.id === link.to);
+        if (!fromNode || !toNode) continue;
+
+        if (link.type === "covariance") {
+            const midX = (fromNode.x + toNode.x) / 2;
+            const midY = Math.min(fromNode.y, toNode.y) - 40;
+            const d = `M ${fromNode.x} ${fromNode.y} Q ${midX} ${midY} ${toNode.x} ${toNode.y}`;
+            html += `<path d="${d}" fill="none" stroke="#6366F1" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#arrow-covar)" marker-start="url(#arrow-covar)"/>`;
+        } else {
+            const dx = toNode.x - fromNode.x;
+            const dy = toNode.y - fromNode.y;
+            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+            const padTo = toNode.type === "latent" ? 48 : 44;
+            const endX = toNode.x - (dx / dist) * padTo;
+            const endY = toNode.y - (dy / dist) * 18;
+
+            html += `<line x1="${fromNode.x}" y1="${fromNode.y}" x2="${endX}" y2="${endY}" stroke="#0D9488" stroke-width="2" marker-end="url(#arrow-end)"/>`;
+        }
+    }
+
+    for (const node of SEM_BUILDER.nodes) {
+        const isSrc = SEM_BUILDER.sourceNode && SEM_BUILDER.sourceNode.id === node.id;
+        const strokeColor = isSrc ? "#22C55E" : (node.type === "latent" ? "#0284C7" : "#64748B");
+        const strokeW = isSrc ? "3" : "1.8";
+
+        if (node.type === "latent") {
+            html += `<g class="sem-node" data-id="${escapeHtml(node.id)}" onmousedown="handleSemNodeMouseDown(event, '${escapeHtml(node.id)}')">
+                <ellipse cx="${node.x}" cy="${node.y}" rx="46" ry="26" fill="#F0F9FF" stroke="${strokeColor}" stroke-width="${strokeW}" style="cursor:pointer;"/>
+                <text x="${node.x}" y="${node.y + 4}" text-anchor="middle" font-size="12" font-weight="700" fill="#0369A1" pointer-events="none">${escapeHtml(node.name)}</text>
+            </g>`;
+        } else {
+            html += `<g class="sem-node" data-id="${escapeHtml(node.id)}" onmousedown="handleSemNodeMouseDown(event, '${escapeHtml(node.id)}')">
+                <rect x="${node.x - 42}" y="${node.y - 18}" width="84" height="36" rx="4" fill="#FFFFFF" stroke="${strokeColor}" stroke-width="${strokeW}" style="cursor:pointer;"/>
+                <text x="${node.x}" y="${node.y + 4}" text-anchor="middle" font-size="11.5" font-weight="600" fill="#1E293B" pointer-events="none">${escapeHtml(node.name)}</text>
+            </g>`;
+        }
+    }
+
+    svg.innerHTML = html;
+}
+
+function handleSemNodeMouseDown(e, nodeId) {
+    e.stopPropagation();
+    const node = SEM_BUILDER.nodes.find(n => n.id === nodeId);
+    if (!node) return;
+
+    if (SEM_BUILDER.selectedTool === "select") {
+        SEM_BUILDER.dragNode = node;
+        SEM_BUILDER.dragOffset = { x: e.clientX - node.x, y: e.clientY - node.y };
+    } else if (SEM_BUILDER.selectedTool === "arrow" || SEM_BUILDER.selectedTool === "covar") {
+        if (!SEM_BUILDER.sourceNode) {
+            SEM_BUILDER.sourceNode = node;
+            renderSemCanvas();
+        } else {
+            if (SEM_BUILDER.sourceNode.id !== node.id) {
+                const isCovar = SEM_BUILDER.selectedTool === "covar";
+                const linkType = isCovar ? "covariance" : (SEM_BUILDER.sourceNode.type === "latent" && node.type === "observed" ? "measurement" : "regression");
+                SEM_BUILDER.links.push({
+                    from: SEM_BUILDER.sourceNode.id,
+                    to: node.id,
+                    type: linkType
+                });
+                updateSemSyntaxPreview();
+            }
+            SEM_BUILDER.sourceNode = null;
+            renderSemCanvas();
+        }
+    }
+}
+
+function handleSemCanvasMouseMove(e) {
+    if (SEM_BUILDER.dragNode) {
+        const svg = document.getElementById("sem-canvas-svg");
+        const rect = svg.getBoundingClientRect();
+        SEM_BUILDER.dragNode.x = Math.max(50, Math.min(rect.width - 50, e.clientX - rect.left));
+        SEM_BUILDER.dragNode.y = Math.max(30, Math.min(rect.height - 30, e.clientY - rect.top));
+        renderSemCanvas();
+    }
+}
+
+function handleSemCanvasMouseUp() {
+    SEM_BUILDER.dragNode = null;
+}
+
+function handleSemCanvasMouseDown(e) {
+    if (SEM_BUILDER.selectedTool !== "select") {
+        SEM_BUILDER.sourceNode = null;
+        renderSemCanvas();
+    }
+}
+
+function updateSemSyntaxPreview() {
+    const latents = {};
+    const regressions = {};
+    const covariances = [];
+
+    for (const link of SEM_BUILDER.links) {
+        if (link.type === "measurement") {
+            if (!latents[link.from]) latents[link.from] = [];
+            latents[link.from].push(link.to);
+        } else if (link.type === "regression") {
+            if (!regressions[link.to]) regressions[link.to] = [];
+            regressions[link.to].push(link.from);
+        } else if (link.type === "covariance") {
+            covariances.push(`${link.from} ~~ ${link.to}`);
+        }
+    }
+
+    const lines = [];
+    for (const [lat, items] of Object.entries(latents)) {
+        lines.push(`${lat} =~ ${items.join(" + ")}`);
+    }
+    for (const [dep, indeps] of Object.entries(regressions)) {
+        lines.push(`${dep} ~ ${indeps.join(" + ")}`);
+    }
+    for (const cov of covariances) {
+        lines.push(cov);
+    }
+
+    const syntaxText = lines.join("\n");
+    const previewEl = document.getElementById("sem-builder-syntax");
+    if (previewEl) previewEl.value = syntaxText;
+    return syntaxText;
+}
+
+function applySemBuilderToModel(runNow = false) {
+    const syntaxText = updateSemSyntaxPreview();
+    if (!syntaxText.trim()) {
+        showToast("생성된 SEM 모델 문법이 없습니다.");
+        return;
+    }
+
+    if (!APP.currentParams) APP.currentParams = {};
+    APP.currentParams.model = syntaxText;
+    closeSemBuilderModal();
+
+    if (APP.currentType === "sem") {
+        renderOptionsPanel();
+    } else {
+        openAnalysis("sem");
+    }
+
+    logToSyntaxConsole("SEM 모델러 작성", `sess.sem(model="""\n${syntaxText}\n""")`, "Stata SEM Builder 그래픽 모델");
+
+    if (runNow) {
+        executeCurrentAnalysis();
+    } else {
+        showToast("SEM 모델 문법이 옵션 패널에 적용되었습니다.");
+    }
+}
+
 /* --- Bootstrap Application cleanly with ZERO event.target errors --- */
 window.addEventListener("DOMContentLoaded", async () => {
     switchRibbonTab("analyses");
@@ -5255,6 +6123,59 @@ window.addEventListener("DOMContentLoaded", async () => {
     <div class="dd-item" onclick="insertSyntaxSnippet('stata_gen')"><span>💻 Stata 명령: gen newvar = log(x)</span></div>
     <div class="dd-item" onclick="insertSyntaxSnippet('export_hwpx')"><span>📄 한글(HWPX) 리포트 자동 내보내기</span></div>
     <div class="dd-item" onclick="insertSyntaxSnippet('export_pdf')"><span>📄 PDF 리포트 자동 내보내기</span></div>
+</div>
+
+<!-- Interactive SEM Builder Modal (Stata SEM Builder / Amos Style) -->
+<div id="sem-builder-modal" class="modal-backdrop" style="display:none;" onclick="if(event.target===this) closeSemBuilderModal()">
+    <div class="modal-dialog" style="max-width:980px;width:95vw;height:85vh;background:#FFFFFF;border-radius:8px;box-shadow:0 16px 40px rgba(15,23,42,0.35);display:flex;flex-direction:column;overflow:hidden;">
+        <!-- Top Toolbar -->
+        <div style="padding:10px 16px;background:#1E3A5F;color:#FFFFFF;display:flex;justify-content:space-between;align-items:center;">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-weight:700;font-size:15px;">🎨 대화형 SEM 빌더 (SEM Builder — Stata &amp; Amos 스타일)</span>
+                <span style="font-size:11.5px;color:#93C5FD;background:#172554;padding:2px 8px;border-radius:12px;">잠재변수·관측변수 드래그 &amp; 경로 화살표 연결</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+                <button class="py-btn run" onclick="applySemBuilderToModel(true)" style="background:#0D9488;color:#FFFFFF;border:none;padding:5px 12px;font-weight:600;border-radius:4px;cursor:pointer;">✓ 모델 적용 &amp; 추정 실행 ▶</button>
+                <button onclick="closeSemBuilderModal()" style="background:none;border:none;color:#FFFFFF;font-size:18px;cursor:pointer;">✕</button>
+            </div>
+        </div>
+        <!-- Middle Toolbar: Tools & Variable Palette -->
+        <div style="padding:8px 14px;background:#F1F5F9;border-bottom:1px solid #CBD5E1;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:4px;">
+                <span style="font-size:11px;font-weight:700;color:#475569;">도구:</span>
+                <button class="silky-small-btn active" id="sem-tool-select" onclick="setSemTool('select')" title="노드 선택 및 위치 이동">👆 선택 / 이동</button>
+                <button class="silky-small-btn" id="sem-tool-latent" onclick="addNewLatentPrompt()" title="새 잠재변수 (타원) 생성">⭕ + 잠재변수(타원)</button>
+                <button class="silky-small-btn" id="sem-tool-arrow" onclick="setSemTool('arrow')" title="단방향 회귀/측정 경로 화살표 (클릭-클릭)">➔ 경로 화살표</button>
+                <button class="silky-small-btn" id="sem-tool-covar" onclick="setSemTool('covar')" title="양방향 공분산 곡선 화살표">↔ 공분산 화살표</button>
+                <button class="silky-small-btn" onclick="clearSemCanvas()" title="캔버스 전체 초기화">🧹 초기화</button>
+            </div>
+            <div style="height:18px;width:1px;background:#CBD5E1;"></div>
+            <div style="display:flex;align-items:center;gap:6px;flex:1 1 auto;overflow-x:auto;">
+                <span style="font-size:11px;font-weight:700;color:#475569;white-space:nowrap;">관측변수 추가:</span>
+                <div id="sem-var-chips" style="display:flex;gap:4px;overflow-x:auto;padding:2px 0;"></div>
+            </div>
+        </div>
+        <!-- Center Canvas Area -->
+        <div style="flex:1 1 auto;position:relative;background:#FAFAFA;overflow:hidden;display:flex;">
+            <!-- Interactive SVG Drawing Canvas -->
+            <svg id="sem-canvas-svg" style="width:100%;height:100%;cursor:default;" onmousedown="handleSemCanvasMouseDown(event)" onmousemove="handleSemCanvasMouseMove(event)" onmouseup="handleSemCanvasMouseUp(event)"></svg>
+            <!-- Overlay Guide Text -->
+            <div id="sem-canvas-hint" style="position:absolute;bottom:10px;left:14px;background:rgba(255,255,255,0.88);padding:6px 12px;border-radius:4px;border:1px solid #E2E8F0;font-size:11px;color:#64748B;pointer-events:none;">
+                💡 <strong>사용법:</strong> 상단 관측변수 칩을 클릭하여 캔버스에 추가 | ⭕ 잠재변수 생성 | ➔ 경로 화살표 도구 선택 후 소스 노드 클릭 ➔ 대상 노드 클릭!
+            </div>
+        </div>
+        <!-- Bottom Syntax Live Preview -->
+        <div style="padding:10px 14px;background:#FFFFFF;border-top:1px solid #CBD5E1;display:flex;align-items:center;gap:12px;">
+            <div style="flex:1 1 auto;">
+                <div style="font-size:11px;font-weight:700;color:#334155;margin-bottom:4px;">실시간 생성된 lavaan / semopy 모델 문법:</div>
+                <textarea id="sem-builder-syntax" readonly style="width:100%;height:52px;font-family:monospace;font-size:11.5px;padding:6px;border:1px solid #CBD5E1;border-radius:4px;background:#F8FAFC;resize:none;"></textarea>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+                <button class="silky-small-btn" onclick="applySemBuilderToModel(false)" style="padding:6px 12px;">옵션 패널에 문법 복사</button>
+                <button class="stata-cmd-btn" onclick="applySemBuilderToModel(true)" style="padding:6px 14px;">✓ 모델 적용 &amp; 실행</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 </body>

@@ -29,6 +29,7 @@ from .analyses import (
     FactorAnalysis,
     NetworkAnalysis,
     SummaryTTest,
+    SpatialAnalysis,
     SEM,
     Mediation,
     Moderation,
@@ -94,6 +95,7 @@ ANALYSIS_CATALOG: List[Dict[str, Any]] = [
     {"id": "panel", "group": "Linear Models", "title": "Panel Econometrics (FE / RE / Hausman)", "module": "plm", "icon": "analysis-linearmodels.svg"},
     {"id": "mixedModel", "group": "Linear Models", "title": "Linear Mixed Model (Multilevel)", "module": "gamlj", "icon": "analysis-linearmodels.svg"},
     {"id": "survival", "group": "Survival", "title": "Kaplan-Meier & Cox PH Survival", "module": "jsurvival", "icon": "analysis-survival.svg"},
+    {"id": "spatial", "group": "Spatial", "title": "GIS Spatial Analysis & Regression (GeoDa / Stata)", "module": "geoda", "icon": "analysis-scatr-jmvscatter.svg"},
     {"id": "graph", "group": "Graphs", "title": "Graph Builder (15 Chart Types)", "module": "openstat", "icon": "analysis-scatr-jmvbar.svg"},
 ]
 
@@ -549,6 +551,21 @@ def _dispatch_inner(analysis_type: str, df: pd.DataFrame, p: Dict[str, Any]) -> 
             group=_as_single(p.get("group")),
             covs=_as_list(p.get("covs")),
             km_plot=bool(p.get("kmPlot", True))
+        )
+
+    elif t in ("spatial", "spatialAnalysis", "spatial_regression", "spregress"):
+        return SpatialAnalysis(
+            df,
+            dep=_as_single(p.get("dep") or p.get("y")),
+            covs=_as_list(p.get("covs") or p.get("x") or p.get("indeps")),
+            lat=_as_single(p.get("lat") or p.get("latitude")),
+            lon=_as_single(p.get("lon") or p.get("longitude")),
+            region_id=_as_single(p.get("region_id") or p.get("region")),
+            weights_method=str(p.get("weightsMethod", p.get("method", "knn"))),
+            k=int(p.get("k", 4)),
+            model_type=str(p.get("modelType", p.get("model_type", p.get("model", "lag")))),
+            plot_moran=bool(p.get("plotMoran", True)),
+            plot_map=bool(p.get("plotMap", True))
         )
 
     # Dynamic Clean-Room Plugin Dispatch (for newly added jamovi features)

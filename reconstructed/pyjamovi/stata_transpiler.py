@@ -120,6 +120,20 @@ def transpile_stata_line(line: str) -> Optional[str]:
         spec = m.group(1)
         return f"sess.sem(formula={spec!r})"
 
+    # 13. spregress dep indep1 ..., dvarlag(W) / errorlag(W)
+    m = re.match(r"^spregress\s+([A-Za-z0-9_]+)\s+([^,]+)(?:,\s*(.*))?", s, re.IGNORECASE)
+    if m:
+        dep = m.group(1)
+        indeps = [x.strip() for x in m.group(2).split() if x.strip()]
+        opt_str = (m.group(3) or "").lower()
+        m_type = "error" if "errorlag" in opt_str else "lag"
+        return f"sess.spatial_regression(dep={dep!r}, covs={indeps!r}, model_type={m_type!r})"
+
+    # 14. moran var
+    m = re.match(r"^moran\s+([A-Za-z0-9_]+)", s, re.IGNORECASE)
+    if m:
+        return f"sess.spatial_regression(dep={m.group(1)!r}, model_type='moran_only')"
+
     # Return as-is if no rule matched
     return s
 
