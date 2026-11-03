@@ -1,0 +1,6 @@
+<!-- Original Vector Asset by OpenStat Studio Contributors | License: MIT / CC0-1.0 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none">
+  <rect x="3" y="5" width="13" height="14" rx="1.5" stroke="#1E3A5F" stroke-width="1.5"/>
+  <line x1="3" y1="10" x2="16" y2="10" stroke="#1E3A5F" stroke-width="1.4"/>
+  <path d="M16 16h6" stroke="#E11D48" stroke-width="2.1" stroke-linecap="round"/>
+</svg>

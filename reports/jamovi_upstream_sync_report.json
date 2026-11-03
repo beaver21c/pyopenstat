@@ -1,0 +1,93 @@
+{
+  "checkedAt": "2026-11-04T07:48:41.496804",
+  "sourceMode": "offline_reference_snapshot",
+  "latestJamoviRelease": "v2.7+ (reference)",
+  "openstatVersion": "3.0.0",
+  "openstatTotalAnalyses": 29,
+  "jmvCoreCoveredCount": 20,
+  "openstatExtendedModules": [
+    "scatr",
+    "pareto",
+    "bayesTTestIS",
+    "bayesANOVA",
+    "bayesCorr",
+    "mediation",
+    "moderation",
+    "panel",
+    "mixedModel",
+    "survival",
+    "graph"
+  ],
+  "availableExtensionsToScaffold": [
+    {
+      "upstreamStem": "anovarmnp",
+      "suggestedId": "friedman",
+      "title": "Repeated Measures ANOVA (Non-parametric Friedman)",
+      "group": "ANOVA",
+      "scaffoldCommand": "openstat sync-jamovi --scaffold friedman"
+    },
+    {
+      "upstreamStem": "conttablespaired",
+      "suggestedId": "mcnemar",
+      "title": "Paired Samples Contingency (McNemar χ²)",
+      "group": "Frequencies",
+      "scaffoldCommand": "openstat sync-jamovi --scaffold mcnemar"
+    },
+    {
+      "upstreamStem": "logismult",
+      "suggestedId": "logRegMult",
+      "title": "N Outcomes (Multinomial Logistic Regression)",
+      "group": "Regression",
+      "scaffoldCommand": "openstat sync-jamovi --scaffold logRegMult"
+    },
+    {
+      "upstreamStem": "logisord",
+      "suggestedId": "logRegOrd",
+      "title": "Ordinal Outcomes (Proportional Odds Logistic)",
+      "group": "Regression",
+      "scaffoldCommand": "openstat sync-jamovi --scaffold logRegOrd"
+    },
+    {
+      "upstreamStem": "loglinear",
+      "suggestedId": "logLinear",
+      "title": "Log-Linear Contingency Regression",
+      "group": "Frequencies",
+      "scaffoldCommand": "openstat sync-jamovi --scaffold logLinear"
+    },
+    {
+      "upstreamStem": "logregmulti",
+      "suggestedId": "logRegMult",
+      "title": "N Outcomes (Multinomial Logistic Regression)",
+      "group": "Regression",
+      "scaffoldCommand": "openstat sync-jamovi --scaffold logRegMult"
+    },
+    {
+      "upstreamStem": "logregord",
+      "suggestedId": "logRegOrd",
+      "title": "Ordinal Outcomes (Proportional Odds Logistic)",
+      "group": "Regression",
+      "scaffoldCommand": "openstat sync-jamovi --scaffold logRegOrd"
+    },
+    {
+      "upstreamStem": "mancova",
+      "suggestedId": "mancova",
+      "title": "MANCOVA (Multivariate Analysis of Covariance)",
+      "group": "ANOVA",
+      "scaffoldCommand": "openstat sync-jamovi --scaffold mancova"
+    },
+    {
+      "upstreamStem": "proptest2",
+      "suggestedId": "propTest2",
+      "title": "2 Outcomes (Binomial Proportion Test)",
+      "group": "Frequencies",
+      "scaffoldCommand": "openstat sync-jamovi --scaffold propTest2"
+    },
+    {
+      "upstreamStem": "proptestn",
+      "suggestedId": "propTestN",
+      "title": "N Outcomes (χ² Goodness of Fit)",
+      "group": "Frequencies",
+      "scaffoldCommand": "openstat sync-jamovi --scaffold propTestN"
+    }
+  ]
+}

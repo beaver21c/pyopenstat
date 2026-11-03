@@ -1,0 +1,33 @@
+{
+  "rebuiltAt": "2026-11-04T06:08:39.720815",
+  "passed": true,
+  "elapsedSeconds": 21.324,
+  "totalAnalyses": 29,
+  "steps": [
+    {
+      "step": "Regenerate Clean-Room SVG Assets",
+      "passed": true,
+      "output": "Generated 45 clean-room MIT/CC0 SVG icons in /mnt/share/temp/fun_4/reconstructed/pyjamovi/web/assets"
+    },
+    {
+      "step": "Editable Package Build (`pip install -e .`)",
+      "passed": true,
+      "output": "Installed openstat-studio==3.0.0"
+    },
+    {
+      "step": "Sync Analysis & Plugin Catalog",
+      "passed": true,
+      "output": "29 analyses registered"
+    },
+    {
+      "step": "API & Syntax Drift Self-Diagnostics",
+      "passed": true,
+      "output": "6/6 subsystems healthy"
+    },
+    {
+      "step": "Automated Regression Test Suite (`pytest`)",
+      "passed": true,
+      "output": "14 passed, 5 warnings in 18.24s"
+    }
+  ]
+}

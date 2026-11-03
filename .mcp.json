@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "openstat": {
+      "command": "/mnt/share/temp/pyjamovi/.venv/bin/openstat-mcp",
+      "args": [],
+      "env": {
+        "PYTHONPATH": "/mnt/share/temp/pyjamovi/reconstructed"
+      }
+    }
+  }
+}

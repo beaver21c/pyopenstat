@@ -1,0 +1,26 @@
+# Byte-compiled / virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+.pytest_cache/
+
+# Runtime workspace state & user exports
+workspace/live_session.json
+workspace/live_session.py
+workspace/doctor_env_cache.json
+reports/*.log
+reports/*.pid
+reports/*.png
+reports/operational_test/
+reports/export_session.omv
+
+# OS / Editor metadata
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

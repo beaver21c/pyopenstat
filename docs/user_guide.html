@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenStat Studio v3.0 — 초보자를 위한 클릭 투 클릭(Click-to-Click) 실전 사용 설명서</title>
+<style>
+:root {
+    --primary: #1E3A5F;
+    --primary-light: #2563EB;
+    --accent: #0D9488;
+    --accent-light: #CCFBF1;
+    --amber: #D97706;
+    --amber-light: #FEF3C7;
+    --bg-page: #F8FAFC;
+    --bg-card: #FFFFFF;
+    --border: #E2E8F0;
+    --text-main: #0F172A;
+    --text-muted: #64748B;
+    --font-stack: -apple-system, BlinkMacSystemFont, "Pretendard", "KoPubDotum", "Malgun Gothic", sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: var(--font-stack);
+    background-color: var(--bg-page);
+    color: var(--text-main);
+    line-height: 1.65;
+    font-size: 15px;
+}
+
+/* Header */
+.guide-header {
+    background: linear-gradient(135deg, var(--primary) 0%, #0F172A 100%);
+    color: #FFFFFF;
+    padding: 36px 32px 30px;
+    border-bottom: 3px solid var(--accent);
+}
+.header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+.header-badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #FFFFFF;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+.guide-title {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+}
+.guide-subtitle {
+    font-size: 14.5px;
+    color: #94A3B8;
+}
+.header-actions {
+    display: flex;
+    gap: 10px;
+}
+.header-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #FFFFFF;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13.5px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.header-btn:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+/* Search bar */
+.search-box-wrap {
+    background: #FFFFFF;
+    border-bottom: 1px solid var(--border);
+    padding: 12px 32px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+.search-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.search-input {
+    flex: 1;
+    padding: 9px 16px;
+    font-size: 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.15s;
+}
+.search-input:focus { border-color: var(--primary-light); }
+
+/* Main Container Layout */
+.guide-container {
+    max-width: 1200px;
+    margin: 28px auto 60px;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 32px;
+}
+
+/* Sticky Navigation Sidebar */
+.guide-sidebar {
+    position: sticky;
+    top: 72px;
+    height: calc(100vh - 90px);
+    overflow-y: auto;
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 12px;
+}
+.sidebar-title {
+    font-size: 12.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 6px 12px 10px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+}
+.nav-link {
+    display: block;
+    padding: 8px 12px;
+    color: var(--text-main);
+    text-decoration: none;
+    font-size: 13.5px;
+    border-radius: 6px;
+    margin-bottom: 2px;
+    transition: all 0.15s;
+    font-weight: 500;
+}
+.nav-link:hover {
+    background: #F1F5F9;
+    color: var(--primary-light);
+}
+.nav-link.active {
+    background: var(--accent-light);
+    color: #0F766E;
+    font-weight: 700;
+}
+
+/* Content Area */
+.guide-content {
+    min-width: 0;
+}
+
+/* Section Cards */
+.guide-card {
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+.card-hdr {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 2px solid #F1F5F9;
+    padding-bottom: 14px;
+    margin-bottom: 20px;
+}
+.card-num {
+    background: var(--primary);
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: 800;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.card-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--primary);
+}
+.card-desc {
+    font-size: 14.5px;
+    color: #475569;
+    margin-bottom: 20px;
+}
+
+/* Step-by-Step Flow */
+.step-box {
+    background: #F8FAFC;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+}
+.step-hdr {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.step-pill {
+    background: var(--accent);
+    color: #FFFFFF;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+.step-title {
+    font-size: 15.5px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+.step-body {
+    font-size: 14px;
+    color: #334155;
+    margin-bottom: 8px;
+}
+
+/* UI Simulator Tags */
+.ui-click {
+    display: inline-flex;
+    align-items: center;
+    background: #EEF2F6;
+    border: 1px solid #CBD5E1;
+    color: #1E293B;
+    font-size: 12.5px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-family: inherit;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    vertical-align: middle;
+    margin: 0 2px;
+}
+.ui-click.primary { background: #DBEAFE; border-color: #93C5FD; color: #1E40AF; }
+.ui-click.teal { background: #CCFBF1; border-color: #99F6E4; color: #0F766E; }
+.ui-click.amber { background: #FEF3C7; border-color: #FDE68A; color: #92400E; }
+.ui-click.arrow { background: #0D9488; color: #FFFFFF; border-color: #0D9488; font-weight: 800; padding: 2px 8px; }
+
+/* Tip & Alert Boxes */
+.alert-tip {
+    background: #F0FDF4;
+    border: 1px solid #BBF7D0;
+    border-left: 4px solid #16A34A;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 13.5px;
+    color: #166534;
+}
+.alert-tip strong { color: #14532D; }
+
+.alert-warn {
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+    border-left: 4px solid #D97706;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 13.5px;
+    color: #92400E;
+}
+.alert-warn strong { color: #78350F; }
+
+/* Mockup UI Panel */
+.ui-mockup {
+    background: #FFFFFF;
+    border: 1.5px solid #CBD5E1;
+    border-radius: 8px;
+    padding: 14px;
+    margin: 14px 0;
+    font-size: 13px;
+    background: #FAFBFD;
+}
+.mockup-bar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    background: #E2E8F0;
+    padding: 6px 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+.mockup-grid {
+    display: grid;
+    grid-template-columns: 180px 40px 180px;
+    align-items: center;
+    gap: 8px;
+}
+.mockup-box {
+    border: 1px solid #CBD5E1;
+    background: #FFFFFF;
+    border-radius: 4px;
+    padding: 8px;
+    min-height: 80px;
+}
+
+/* Table */
+.guide-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 13.5px;
+}
+.guide-table th {
+    background: #F1F5F9;
+    color: var(--primary);
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 2px solid var(--border);
+    font-weight: 700;
+}
+.guide-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+/* Footer */
+.guide-footer {
+    text-align: center;
+    padding: 30px;
+    color: var(--text-muted);
+    font-size: 13px;
+    border-top: 1px solid var(--border);
+}
+
+@media (max-width: 900px) {
+    .guide-container { grid-template-columns: 1fr; }
+    .guide-sidebar { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="guide-header">
+    <div class="header-inner">
+        <div>
+            <div class="header-badge">OpenStat Studio v3.0 Official Manual</div>
+            <h1 class="guide-title">초보자를 위한 클릭 투 클릭(Click-to-Click) 실전 사용 설명서</h1>
+            <p class="guide-subtitle">통계 소프트웨어를 처음 쓰는 연구자·학생도 화면의 버튼 클릭 순서대로 100% 따라할 수 있는 완벽 가이드</p>
+        </div>
+        <div class="header-actions">
+            <button class="header-btn" onclick="window.print()">🖨️ 설명서 인쇄 / PDF 저장</button>
+            <a href="index.html" class="header-btn">🚀 프로그램 열기</a>
+        </div>
+    </div>
+</header>
+
+<!-- Search Box -->
+<div class="search-box-wrap">
+    <div class="search-inner">
+        <span style="font-size:16px;">🔍</span>
+        <input type="text" class="search-input" id="search-input" placeholder="원하는 통계 분석이나 기능을 검색해 보세요 (예: t-검정, 분산분석, 사후검정, 재코딩, 그래프, 한글 내보내기, Claude)..." onkeyup="filterGuide()">
+    </div>
+</div>
+
+<div class="guide-container">
+    <!-- Sticky Table of Contents -->
+    <nav class="guide-sidebar">
+        <div class="sidebar-title">목차 (Quick Navigation)</div>
+        <a href="#ch-layout" class="nav-link active">1. 화면 구성 & 3분할 이해하기</a>
+        <a href="#ch-open" class="nav-link">2. 엑셀/CSV 데이터 불러오기</a>
+        <a href="#ch-ttest" class="nav-link">3. 두 집단 비교 (독립표본 T-검정)</a>
+        <a href="#ch-anova" class="nav-link">4. 세 집단 이상 비교 (분산분석 ANOVA)</a>
+        <a href="#ch-dataops" class="nav-link">5. 데이터 가공 (변수 계산 & 재코딩)</a>
+        <a href="#ch-charts" class="nav-link">6. 15종 논문용 차트 빌더</a>
+        <a href="#ch-export" class="nav-link">7. 결과 보고서 내보내기 (.hwpx, .xlsx)</a>
+        <a href="#ch-ai" class="nav-link">8. Claude Code AI로 말로 분석하기</a>
+        <a href="#ch-colab" class="nav-link">9. Colab 및 외부 파이썬 환경 실행</a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="guide-content">
+
+        <!-- Chapter 1: Layout -->
+        <section id="ch-layout" class="guide-card">
+            <div class="card-hdr">
+                <span class="card-num">1</span>
+                <h2 class="card-title">화면 구성 및 3분할 구조 완벽 이해</h2>
+            </div>
+            <p class="card-desc">OpenStat Studio는 자모비(jamovi)의 직관적인 디자인을 계승하여 <strong>데이터 스프레드시트</strong>, <strong>분석 옵션 창</strong>, <strong>결과 문서 창</strong>이 한 화면에 동시에 펼쳐지는 반응형 워크스페이스입니다.</p>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">핵심 영역</span>
+                    <span class="step-title">화면의 3개 주요 구역</span>
+                </div>
+                <div class="step-body">
+                    <ol style="padding-left: 20px; line-height: 1.8;">
+                        <li><strong>[좌측 영역] 스프레드시트 & 변수 보기</strong>: 엑셀처럼 표 형태로 데이터를 확인하고, 상단 탭에서 <span class="ui-click teal">변수 보기</span>를 누르면 변수별 척도(명목/순서/연속)와 결측치를 한눈에 검토할 수 있습니다.</li>
+                        <li><strong>[중앙 영역] 분석 옵션 패널</strong>: 분석 메뉴를 클릭했을 때 나타나는 설정 창입니다. 왼쪽의 변수 목록을 오른쪽 종속변수/집단변수 상자로 이동시키고 가설검정 옵션을 체크합니다.</li>
+                        <li><strong>[우측 영역] APA 결과 시트 (Results)</strong>: 옵션을 클릭하는 즉시 학술 논문 규격(APA 7th)의 통계 표와 고해상도 그래프가 실시간으로 자동 렌더링됩니다.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="alert-tip">
+                <strong>💡 언어 선택 팁:</strong> 상단 우측의 <span class="ui-click primary">한국어</span> / <span class="ui-click">English</span> 버튼을 누르면 언제든지 모든 메뉴와 통계 용어가 한글/영문으로 1초 만에 전환됩니다. (기본값: 한국어)
+            </div>
+        </section>
+
+        <!-- Chapter 2: Data Open -->
+        <section id="ch-open" class="guide-card">
+            <div class="card-hdr">
+                <span class="card-num">2</span>
+                <h2 class="card-title">엑셀 / CSV / jamovi 데이터 불러오기</h2>
+            </div>
+            <p class="card-desc">연구자의 엑셀(`.xlsx`), 텍스트(`.csv`), 또는 jamovi 바이너리 컨테이너(`.omv`) 파일을 1클릭으로 불러옵니다.</p>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">1단계</span>
+                    <span class="step-title">파일 메뉴 열기</span>
+                </div>
+                <p class="step-body">화면 맨 왼쪽 상단의 메뉴 버튼 <span class="ui-click primary">☰</span> 을 클릭합니다.</p>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">2단계</span>
+                    <span class="step-title">내 파일 선택 또는 샘플 데이터 선택</span>
+                </div>
+                <p class="step-body">
+                    • 내 컴퓨터 파일 열기: <span class="ui-click">[열기...]</span> 버튼을 눌러 내 엑셀/CSV 파일을 선택합니다.<br>
+                    • 실습용 데이터 열기: <span class="ui-click teal">[샘플 데이터 라이브러리]</span> 를 누르고 <code>ToothGrowth.csv</code>(비타민C 투여 치아성장 실험 데이터)를 클릭합니다.
+                </p>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">3단계</span>
+                    <span class="step-title">변수 척도(측정 수준) 확인 및 변경</span>
+                </div>
+                <p class="step-body">
+                    상단 탭에서 <span class="ui-click">[변수(Variables)]</span> 를 클릭합니다. 각 변수의 열 머리글 아이콘을 클릭하여 척도를 손쉽게 변경할 수 있습니다:
+                </p>
+                <table class="guide-table">
+                    <tr><th>아이콘</th><th>측정 척도</th><th>설명 및 적용 대상</th></tr>
+                    <tr><td>📊 자 모양</td><td><strong>연속형 (Continuous)</strong></td><td>신장, 체중, 점수, 소득 등 연속적인 수치형 데이터 (T-검정, ANOVA의 종속변수)</td></tr>
+                    <tr><td>📶 계단 모양</td><td><strong>순서형 (Ordinal)</strong></td><td>만족도(1~5점 리커트 척도), 학력 수준 등 순서가 있는 데이터</td></tr>
+                    <tr><td>🟢 세 원 모양</td><td><strong>명목형 (Nominal)</strong></td><td>성별(남/여), 투여방식(OJ/VC), 실험집단(A/B/C) 등 순서 없는 범주형 데이터</td></tr>
+                    <tr><td>🆔 ID 카드</td><td><strong>ID 변수</strong></td><td>참여자 번호, 고유 식별자 (통계 분석 계산에서 자동 제외)</td></tr>
+                </table>
+            </div>
+        </section>
+
+        <!-- Chapter 3: T-Test -->
+        <section id="ch-ttest" class="guide-card">
+            <div class="card-hdr">
+                <span class="card-num">3</span>
+                <h2 class="card-title">두 집단 평균 비교: 독립표본 T-검정 (Click-to-Click)</h2>
+            </div>
+            <p class="card-desc">실습 예시: <code>ToothGrowth.csv</code> 데이터에서 두 가지 비타민C 투여 방식(OJ: 오렌지주스 vs VC: 아스코르브산)에 따라 기니피그 치아 길이(len)의 평균에 통계적으로 유의한 차이가 있는지 검정합니다.</p>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">Step 1</span>
+                    <span class="step-title">T-검정 메뉴 클릭</span>
+                </div>
+                <p class="step-body">상단 <span class="ui-click">[분석(Analyses)]</span> 탭 → <span class="ui-click primary">[T-검정 ▾]</span> 클릭 → <span class="ui-click teal">[독립표본 T-검정 (Independent Samples T-Test)]</span> 을 클릭합니다.</p>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">Step 2</span>
+                    <span class="step-title">변수를 상자로 투입하기</span>
+                </div>
+                <p class="step-body">
+                    1. 왼쪽 변수 목록에서 <strong>len</strong>(치아 길이)을 마우스로 클릭하고, [종속변수] 옆의 <span class="ui-click arrow">▶</span> 화살표 버튼을 클릭합니다.<br>
+                    2. 왼쪽 변수 목록에서 <strong>supp</strong>(투여 방식 OJ/VC)를 클릭하고, [집단변수] 옆의 <span class="ui-click arrow">▶</span> 화살표 버튼을 클릭합니다.
+                </p>
+                <div class="ui-mockup">
+                    <div class="mockup-bar">옵션 패널: 독립표본 T-검정 (Independent Samples T-Test)</div>
+                    <div class="mockup-grid">
+                        <div class="mockup-box"><strong>변수 목록</strong><br>• len<br>• supp<br>• dose</div>
+                        <div style="text-align:center;"><span class="ui-click arrow">▶</span><br><br><span class="ui-click arrow">▶</span></div>
+                        <div class="mockup-box"><strong>종속변수 (Dependent)</strong><br>[ len ]<br><br><strong>집단변수 (Grouping)</strong><br>[ supp ]</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">Step 3</span>
+                    <span class="step-title">필수 학술 옵션 체크</span>
+                </div>
+                <p class="step-body">
+                    옵션 패널 하단에서 다음 항목들의 체크박스를 선택합니다:<br>
+                    • ☑ <strong>Student's t</strong> &amp; ☑ <strong>Welch's t</strong> (등분산 가정이 위배되었을 때 안전하게 사용)<br>
+                    • ☑ <strong>등분산성 검정 (Homogeneity test - Levene's)</strong><br>
+                    • ☑ <strong>효과크기 (Effect size - Cohen's d)</strong><br>
+                    • ☑ <strong>기술통계 도표 (Descriptives Plot - 집단별 평균 및 95% 신뢰구간)</strong>
+                </p>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">Step 4</span>
+                    <span class="step-title">결과 확인 및 APA 해석</span>
+                </div>
+                <p class="step-body">
+                    우측 결과창에 즉시 APA 3선 통계표가 나타납니다:<br>
+                    • <strong>통계량</strong>: $t(58) = 1.915, p = .060$<br>
+                    • <strong>해석</strong>: 유의확률 $p = 0.060$으로 유의수준 5%($\alpha=.05$) 기준에서 두 투여방식 간에 통계적으로 유의미한 차이가 나타나지 않았습니다.
+                </p>
+            </div>
+        </section>
+
+        <!-- Chapter 4: ANOVA -->
+        <section id="ch-anova" class="guide-card">
+            <div class="card-hdr">
+                <span class="card-num">4</span>
+                <h2 class="card-title">세 집단 이상 비교: 일원배치 분산분석 & 5종 사후검정</h2>
+            </div>
+            <p class="card-desc">실습 예시: 비타민C 투여 용량(<code>dose</code>: 0.5mg, 1.0mg, 2.0mg의 3개 집단)에 따라 치아 성장 길이(<code>len</code>)에 유의미한 차이가 있는지 검정하고 사후검정(Post-Hoc)을 수행합니다.</p>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">Step 1</span>
+                    <span class="step-title">분산분석 메뉴 선택</span>
+                </div>
+                <p class="step-body">상단 <span class="ui-click">[분석]</span> 탭 → <span class="ui-click primary">[분산분석(ANOVA) ▾]</span> → <span class="ui-click teal">[일원배치 분산분석 (One-Way ANOVA)]</span> 클릭!</p>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">Step 2</span>
+                    <span class="step-title">변수 투입</span>
+                </div>
+                <p class="step-body">
+                    • [종속변수] 상자에 <strong>len</strong> 투입<br>
+                    • [집단변수] 상자에 <strong>dose</strong> 투입
+                </p>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">Step 3</span>
+                    <span class="step-title">사후검정(Post-Hoc) 방법 선택</span>
+                </div>
+                <p class="step-body">
+                    집단 간 분산이 같지 않은 경우(등분산 기각)를 대비하여 사후검정 드롭다운에서 <span class="ui-click amber">Games-Howell</span> 을 선택합니다. (등분산이 만족되면 <span class="ui-click">Tukey HSD</span> 선택).
+                </p>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">Step 4</span>
+                    <span class="step-title">분석 결과 확인</span>
+                </div>
+                <p class="step-body">
+                    • <strong>One-Way ANOVA 표</strong>: $F(2, 57) = 67.42, p < .001, \eta^2 = 0.703$<br>
+                    • <strong>사후검정 표</strong>: 0.5mg vs 1.0mg ($p < .001$), 1.0mg vs 2.0mg ($p < .001$), 0.5mg vs 2.0mg ($p < .001$) 모두 유의미한 차이가 확인되어, 투여 용량이 증가할수록 치아 길이가 뚜렷하게 길어짐을 실증합니다.
+                </p>
+            </div>
+        </section>
+
+        <!-- Chapter 5: Data Ops -->
+        <section id="ch-dataops" class="guide-card">
+            <div class="card-hdr">
+                <span class="card-num">5</span>
+                <h2 class="card-title">데이터 가공: 변수 계산, 재코딩, 행 필터링</h2>
+            </div>
+            <p class="card-desc">Stata의 <code>generate</code>, <code>recode</code>, <code>keep if</code>, <code>merge</code>, <code>reshape</code> 명령을 마우스 버튼 클릭만으로 수행합니다.</p>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">기능 1</span>
+                    <span class="step-title">새 변수 수식 계산 (Compute)</span>
+                </div>
+                <p class="step-body">
+                    1. <span class="ui-click">[데이터]</span> 탭에서 <span class="ui-click teal">[계산(Compute)]</span> 버튼을 누릅니다.<br>
+                    2. 상단에 계산 바가 열리면 새 변수명(예: <code>len_sq</code>)과 수식(예: <code>len ** 2</code> 또는 <code>weight / (height/100)**2</code>)을 입력하고 <span class="ui-click primary">[계산]</span>을 누릅니다.<br>
+                    3. 스프레드시트 맨 우측에 새 열이 즉시 생성됩니다!
+                </p>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">기능 2</span>
+                    <span class="step-title">값 재코딩 및 범주화 (Recode)</span>
+                </div>
+                <p class="step-body">
+                    1. <span class="ui-click teal">[재코딩(Recode)]</span> 버튼을 누릅니다.<br>
+                    2. 원본 변수로 <code>dose</code>를 선택하고, 새 변수명으로 <code>dose_group</code>을 적습니다.<br>
+                    3. 규칙 추가: <code>0.0 ~ 1.0</code> → 값 <code>1</code> (라벨: <code>저용량</code>), <code>1.1 ~ 2.0</code> → 값 <code>2</code> (라벨: <code>고용량</code>)을 설정한 후 <span class="ui-click primary">[재코딩 실행]</span>을 누르면 새로운 범주형 변수가 생성됩니다.
+                </p>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">기능 3</span>
+                    <span class="step-title">조건에 맞는 데이터 필터링 (Filter)</span>
+                </div>
+                <p class="step-body">
+                    1. <span class="ui-click teal">[필터(Filter)]</span> 버튼을 누릅니다.<br>
+                    2. 조건식 상자에 <code>len >= 15 and supp == 'OJ'</code> 와 같이 조건을 입력하고 <span class="ui-click primary">[필터 적용]</span>을 누릅니다.<br>
+                    3. 조건에 맞는 행만 추출되어 즉시 분석에 반영됩니다. 실수한 경우 <span class="ui-click amber">[실행 취소(Undo)]</span>를 누르면 1초 만에 원상 복구됩니다!
+                </p>
+            </div>
+        </section>
+
+        <!-- Chapter 6: Charts -->
+        <section id="ch-charts" class="guide-card">
+            <div class="card-hdr">
+                <span class="card-num">6</span>
+                <h2 class="card-title">15종 독립형 학술 차트 빌더 & 디자인 스튜디오</h2>
+            </div>
+            <p class="card-desc">통계 검정과 별개로, 데이터만으로 논문에 실을 수 있는 15가지 출판용 고해상도 그래프를 그립니다.</p>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">Step 1</span>
+                    <span class="step-title">차트 빌더 열기</span>
+                </div>
+                <p class="step-body">상단 <span class="ui-click">[그래프 및 디자인]</span> 탭 클릭 → <span class="ui-click teal">[차트 빌더(Graph Builder)]</span> 또는 원하는 차트(Bar, Line, Raincloud, Scatter 등)를 클릭합니다.</p>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">Step 2</span>
+                    <span class="step-title">축 및 그룹 변수 지정</span>
+                </div>
+                <p class="step-body">
+                    • <strong>X축</strong>: 범주 또는 기준 변수 (예: <code>dose</code>)<br>
+                    • <strong>Y축</strong>: 수치 변수 (예: <code>len</code>)<br>
+                    • <strong>색상/그룹 분할</strong>: 집단 변수 (예: <code>supp</code>)
+                </p>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">Step 3</span>
+                    <span class="step-title">학술 컬러 팔레트 &amp; 테마 선택</span>
+                </div>
+                <p class="step-body">
+                    상단의 <span class="ui-click amber">[🎨 그래프 디자인]</span> 버튼을 누르면 학술지에 맞춤화된 10종 컬러 팔레트를 고를 수 있습니다:<br>
+                    • <strong>kihasa</strong>: 한국보건사회연구원/공공기관 보고서 전용 스틸블루 &amp; 웜 코랄<br>
+                    • <strong>apa_bw</strong>: 논문 심사용 순수 흑백(Grayscale) APA 패턴<br>
+                    • <strong>nature / lancet</strong>: 세계적 의과학 저널 스타일<br>
+                    • <strong>okabe_ito</strong>: 색각이상자(Colorblind) 배려 유니버설 팔레트
+                </p>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">Step 4</span>
+                    <span class="step-title">무손실 벡터 SVG / 인쇄용 PDF 다운로드</span>
+                </div>
+                <p class="step-body">결과창 그래프 상단의 <span class="ui-click">[⬇ SVG]</span> 또는 <span class="ui-click">[⬇ PDF]</span> 버튼을 누르면 인쇄 시 글자가 전혀 깨지지 않는 벡터 그래픽 파일이 즉시 다운로드됩니다.</p>
+            </div>
+        </section>
+
+        <!-- Chapter 7: Export -->
+        <section id="ch-export" class="guide-card">
+            <div class="card-hdr">
+                <span class="card-num">7</span>
+                <h2 class="card-title">분석 결과 보고서 1초 내보내기 (.hwpx, .xlsx, .pdf)</h2>
+            </div>
+            <p class="card-desc">분석한 모든 통계 표와 렌더링된 그래프를 한글(HWPX), 엑셀, 워드, PDF로 한 번에 내보냅니다.</p>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">실행 방법</span>
+                    <span class="step-title">상단 [📄 결과 내보내기 ▾] 클릭</span>
+                </div>
+                <p class="step-body">
+                    화면 상단 우측의 <span class="ui-click primary">[📄 결과 내보내기 ▾]</span> 버튼을 클릭하고 원하는 파일 형식을 선택합니다:
+                </p>
+                <table class="guide-table">
+                    <tr><th>내보내기 형식</th><th>특징 및 장점</th></tr>
+                    <tr><td><strong>한글 문서 (.hwpx)</strong></td><td>한글(HWP) 프로그램에서 선 두께, 글자, 숫자를 바로 수정할 수 있는 네이티브 표(<code>&lt;hp:tbl&gt;</code>)와 그래프 이미지(<code>&lt;hp:pic&gt;</code>)가 본문에 자동 배치되어 즉시 보고서로 제출 가능합니다.</td></tr>
+                    <tr><td><strong>출판용 PDF (.pdf)</strong></td><td>APA 7th 스타일 3선 테두리 표와 고해상도 그림, 통계적 유의성 해석 문구가 포함된 다면 출판 품질 PDF입니다.</td></tr>
+                    <tr><td><strong>엑셀 워크북 (.xlsx)</strong></td><td>APA 테두리 서식이 적용된 표 시트와 고화질 차트 이미지 시트가 별도로 저장되어 추가 계산에 용이합니다.</td></tr>
+                    <tr><td><strong>마이크로소프트 워드 (.docx)</strong></td><td>워드 네이티브 표와 차트가 삽입된 정식 Word 문서입니다.</td></tr>
+                </table>
+            </div>
+        </section>
+
+        <!-- Chapter 8: AI Agent -->
+        <section id="ch-ai" class="guide-card">
+            <div class="card-hdr">
+                <span class="card-num">8</span>
+                <h2 class="card-title">Claude Code AI 에이전트로 말하듯이 분석하기</h2>
+            </div>
+            <p class="card-desc">터미널에서 AI 코딩 에이전트(Claude Code, Antigravity, Cursor 등)를 켜고 자연어로 말하면, AI가 OpenStat 엔진을 직접 가동하여 분석과 보고서를 만듭니다.</p>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">1회 설정</span>
+                    <span class="step-title">AI 연동 원클릭 스크립트 실행</span>
+                </div>
+                <p class="step-body">
+                    • Windows: 폴더 안의 <span class="ui-click primary">SETUP_CLAUDE_CODE.bat</span> 더블클릭!<br>
+                    • Mac/Linux: 터미널에서 <span class="ui-click">./SETUP_CLAUDE_CODE.sh</span> 실행!
+                </p>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">실전 명령</span>
+                    <span class="step-title">Claude Code에 자연어로 지시하기</span>
+                </div>
+                <p class="step-body">
+                    터미널에서 <code>claude</code>를 켜고 다음과 같이 자연스럽게 말해 보세요:
+                </p>
+                <div style="background:#0F172A;color:#E2E8F0;padding:14px;border-radius:6px;font-family:monospace;font-size:13.5px;line-height:1.7;">
+                    &gt; "ToothGrowth.csv 데이터 열어서 dose별 치아길이 일원배치 분산분석 돌려줘. Games-Howell 사후검정이랑 박스플롯도 그리고 결과를 한글(HWPX) 파일로 만들어줘"<br>
+                    &gt; "Grunfeld_Panel.csv 패널 데이터로 고정효과(Fixed Effects) 모형 추정하고 하우스만 검정 해석해줘"<br>
+                    &gt; "체중과 신장으로 BMI 변수 새로 계산(compute)하고 엑셀 파일로 저장해줘"
+                </div>
+            </div>
+        </section>
+
+        <!-- Chapter 9: Colab & Python -->
+        <section id="ch-colab" class="guide-card">
+            <div class="card-hdr">
+                <span class="card-num">9</span>
+                <h2 class="card-title">Colab 및 외부 파이썬 환경에서 분석 재현하기</h2>
+            </div>
+            <p class="card-desc">OpenStat Studio가 자동 생성한 파이썬 스크립트(<code>live_session.py</code>)는 유니버설 로더(Universal Loader)가 내장되어 있어, 독립 실행뿐만 아니라 Google Colab이나 Jupyter에서도 100% 동일하게 재현 실행됩니다.</p>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">파이썬 코드</span>
+                    <span class="step-title">3줄로 끝나는 파이썬 분석 예시</span>
+                </div>
+                <div style="background:#0F172A;color:#E2E8F0;padding:16px;border-radius:6px;font-family:monospace;font-size:13px;line-height:1.7;">
+<span style="color:#38BDF8;">import</span> openstat <span style="color:#38BDF8;">as</span> ost<br><br>
+<span style="color:#64748B;"># 1. 세션 생성 및 데이터 불러오기</span><br>
+sess = ost.Session(<span style="color:#A7F3D0;">"sample_data/ToothGrowth.csv"</span>)<br><br>
+<span style="color:#64748B;"># 2. ANOVA 분석 및 학술 차트 디자인</span><br>
+res = sess.anova_oneway(deps=<span style="color:#A7F3D0;">"len"</span>, group=<span style="color:#A7F3D0;">"dose"</span>, descPlot=<span style="color:#FBBF24;">True</span>)<br><br>
+<span style="color:#64748B;"># 3. 한글 보고서 및 엑셀로 한 번에 내보내기</span><br>
+res.export_results(<span style="color:#A7F3D0;">"reports/anova_report.hwpx"</span>)<br>
+res.export_results(<span style="color:#A7F3D0;">"reports/anova_report.xlsx"</span>)
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<footer class="guide-footer">
+    <p>OpenStat Studio v3.0 — 100% Pure Python Open-Source Statistical Computing Suite (MIT License)</p>
+    <p style="margin-top:4px;font-size:12px;">Analytical models and taxonomy designed with reference to <a href="https://www.jamovi.org" target="_blank" style="color:var(--primary-light);">The jamovi project</a>.</p>
+</footer>
+
+<script>
+function filterGuide() {
+    const q = document.getElementById("search-input").value.toLowerCase();
+    const cards = document.querySelectorAll(".guide-card");
+    cards.forEach(c => {
+        const text = c.textContent.toLowerCase();
+        if (text.includes(q)) {
+            c.style.display = "block";
+        } else {
+            c.style.display = "none";
+        }
+    });
+}
+
+// Active link highlighting on scroll
+window.addEventListener("scroll", () => {
+    const cards = document.querySelectorAll(".guide-card");
+    const links = document.querySelectorAll(".guide-sidebar a");
+    let currentId = "";
+    cards.forEach(c => {
+        const rect = c.getBoundingClientRect();
+        if (rect.top <= 140 && rect.bottom >= 140) {
+            currentId = c.id;
+        }
+    });
+    if (currentId) {
+        links.forEach(l => {
+            if (l.getAttribute("href") === "#" + currentId) {
+                l.classList.add("active");
+            } else {
+                l.classList.remove("active");
+            }
+        });
+    }
+});
+</script>
+</body>
+</html>

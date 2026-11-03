@@ -1,0 +1,43 @@
+from setuptools import setup, find_packages
+
+setup(
+    name="openstat-studio",
+    version="3.0.0",
+    license="MIT",
+    description="OpenStat Studio: Standalone MIT-Licensed Pure-Python Statistical Engine, Customizable Plot Studio, Multi-Format Table Exporter & Claude Code Runtime (modeled with reference to jamovi)",
+    author="OpenStat Studio Contributors",
+    package_dir={"": "reconstructed"},
+    packages=find_packages(where="reconstructed"),
+    include_package_data=True,
+    package_data={
+        "pyjamovi": ["web/*.html", "web/assets/*.svg"],
+    },
+    install_requires=[
+        "numpy>=2.0.0",
+        "scipy>=1.14.0",
+        "pandas>=2.2.0",
+        "statsmodels>=0.14.0",
+        "pingouin>=0.5.5",
+        "scikit-learn>=1.5.0",
+        "factor_analyzer>=0.5.1",
+        "semopy>=2.3.11",
+        "linearmodels>=6.1",
+        "lifelines>=0.30.0",
+        "matplotlib>=3.9.0",
+        "seaborn>=0.13.0",
+        "openpyxl>=3.1.0",
+        "python-docx>=1.1.0",
+        "tabulate>=0.9.0",
+        "fastapi>=0.115.0",
+        "uvicorn>=0.32.0",
+        "python-multipart>=0.0.12",
+    ],
+    entry_points={
+        "console_scripts": [
+            "openstat = openstat.cli:main",
+            "openstat-mcp = openstat.mcp_server:main",
+            "pyjamovi = pyjamovi.cli:main",
+            "pyjamovi-mcp = pyjamovi.mcp_server:main",
+        ],
+    },
+)

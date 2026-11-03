@@ -1,0 +1,101 @@
+{
+  "timestamp": "2026-11-03T18:51:32.025010",
+  "target": "jamovi Desktop v2.7 & Extended Module Library (jmv, scatr, jsq, semlj, medmod, plm, gamlj, jsurvival)",
+  "reconstructed_system": "pyjamovi v2.0.0 (Pure-Python Clean-Room Architecture & Authentic Desktop UI)",
+  "gates": {
+    "gate1": {
+      "name": "Gate 1: .omv Binary Container & Byte-Offset Integrity",
+      "checks": [
+        {
+          "check": "OMV ZIP archive generation (MANIFEST.MF, metadata.json, xdata.json, data.bin, serialized analysis)",
+          "passed": true
+        },
+        {
+          "check": "Dimensions & column schema roundtrip fidelity",
+          "passed": true
+        },
+        {
+          "check": "IEEE-754 little-endian double (<d) exact binary fidelity",
+          "passed": true,
+          "max_error": 0.0
+        },
+        {
+          "check": "Categorical string table & integer sentinel (-2147483648) mapping",
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    "gate2": {
+      "name": "Gate 2: Full-Spectrum Statistical & Visual Numerical Equivalence",
+      "checks": [
+        {
+          "check": "T-Test Suite (Student t=1.9153, Welch t, Mann-Whitney U, Paired, One-Sample)",
+          "passed": true
+        },
+        {
+          "check": "ANOVA Spectrum (One-Way F=119.26, Factorial Type III \u03b7\u00b2p, ANCOVA, RM-ANOVA Mauchly W/GG, Kruskal-Wallis)",
+          "passed": true
+        },
+        {
+          "check": "Post-Hoc Suite (Tukey HSD, Games-Howell, Scheff\u00e9, Bonferroni, Holm)",
+          "passed": true
+        },
+        {
+          "check": "Bayesian Statistics (JZS Cauchy BF10, Prior/Posterior Pizza & Robustness Plots, Bayesian ANOVA BF_M, Bayesian Corr)",
+          "passed": true
+        },
+        {
+          "check": "Regression Spectrum (Hierarchical OLS \u0394R\u00b2/VIF/DW/2\u00d72 Diagnostics + Binomial Logistic Odds Ratios & ROC/AUC)",
+          "passed": true
+        },
+        {
+          "check": "Psychometrics Suite (Cronbach \u03b1, McDonald \u03c9, Item-Rest, PCA/EFA KMO & Bartlett, Parallel Scree Plot)",
+          "passed": true
+        },
+        {
+          "check": "Structural Equation Modeling (3-Factor CFA + Latent Regression, CFI > 0.90, RMSEA < 0.10, Path Diagram)",
+          "passed": true
+        },
+        {
+          "check": "Mediation & Moderation (Bootstrap 95% CI Indirect Effect ab + Simple Slopes \u00b11SD Plot)",
+          "passed": true
+        },
+        {
+          "check": "Panel Econometrics (Entity/Two-Way FE, Random Effects, Hausman Test), MixedLM (ICC) & Survival (KM, Log-Rank, Cox PH)",
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    "gate3": {
+      "name": "Gate 3: Live Desktop UI & Direct AI Agent Operation",
+      "checks": [
+        {
+          "check": "Dual-Port Live Web Engine Active (http://localhost:8500 & UFW-open http://192.168.137.2:8000)",
+          "passed": true
+        },
+        {
+          "check": "Official jamovi Client SVG Icons Extracted & Mounted (46 SVGs)",
+          "passed": true
+        },
+        {
+          "check": "One-Click Native App-Window Launchers (START_JAMOVI.bat, JAMOVI_\uc2e4\ud589.bat, START_JAMOVI.sh)",
+          "passed": true
+        },
+        {
+          "check": "AI Agent SDK (JamoviSession), CLI & MCP Server Full-Spectrum Execution",
+          "passed": true
+        }
+      ],
+      "passed": true
+    }
+  },
+  "summary": {
+    "passed": true,
+    "total_checks": 17,
+    "passed_checks": 17,
+    "score": 100.0,
+    "elapsed_seconds": 2.274
+  }
+}

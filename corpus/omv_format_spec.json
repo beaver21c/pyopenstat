@@ -1,0 +1,101 @@
+{
+  "specification_name": "jamovi Open Matrix Vector (.omv) Binary & Container Format Specification",
+  "version": "1.0.0",
+  "archive_version": "11.0",
+  "data_archive_version": "1.0.2",
+  "container_type": "ZIP (DEFLATED / STORED)",
+  "endianness": "Little-Endian (<)",
+  "missing_value_sentinels": {
+    "integer_nominal_ordinal": -2147483648,
+    "hex": "0x80000000",
+    "decimal": "NaN (IEEE 754 Quiet NaN)"
+  },
+  "required_archive_files": {
+    "meta": {
+      "description": "Archive manifest metadata header",
+      "format": "text/plain (UTF-8, key-value colon separated)",
+      "example": "Manifest-Version: 1.0\nData-Archive-Version: 1.0.2\njamovi-Archive-Version: 11.0\nCreated-By: pyjamovi 1.0.0\n"
+    },
+    "metadata.json": {
+      "description": "Dataset schema and column dictionary",
+      "format": "application/json",
+      "schema": {
+        "document": {
+          "resultsLanguage": "en"
+        },
+        "dataSet": {
+          "rowCount": "int (total number of observations)",
+          "columnCount": "int",
+          "fields": [
+            {
+              "name": "string (variable name)",
+              "id": "int (unique column id)",
+              "columnType": "Data | Computed | Transformed | Filter | Output",
+              "dataType": "Decimal | Integer | Text",
+              "measureType": "Continuous | Nominal | Ordinal | ID",
+              "formula": "string (optional computed formula)",
+              "missingValues": "list of values treated as missing",
+              "width": "int (display width, default 100)"
+            }
+          ],
+          "transforms": [],
+          "weights": "string | null (weight variable name)"
+        }
+      }
+    },
+    "xdata.json": {
+      "description": "Categorical levels and labels mapping",
+      "format": "application/json",
+      "structure": {
+        "<column_name>": {
+          "labels": [
+            [
+              "int (internal integer code in data.bin)",
+              "string (user-facing label text)",
+              "int | string (import value)",
+              "bool (pinned flag, true if levels should not be auto-trimmed)"
+            ]
+          ]
+        }
+      }
+    },
+    "data.bin": {
+      "description": "Column-major contiguous raw binary data buffer",
+      "format": "binary stream",
+      "layout": {
+        "order": "Column-Major (all rows for column 0, then all rows for column 1, ...)",
+        "column_length_bytes": "rowCount * elem_width",
+        "types": {
+          "Decimal (Continuous)": {
+            "format": "<d",
+            "bytes_per_element": 8,
+            "missing": "NaN"
+          },
+          "Integer / Nominal / Ordinal": {
+            "format": "<i",
+            "bytes_per_element": 4,
+            "missing": -2147483648
+          },
+          "Text (ID) with strings.bin": {
+            "format": "<i",
+            "bytes_per_element": 4,
+            "value_semantics": "Byte offset in strings.bin, -2147483648 indicates empty/missing"
+          }
+        }
+      }
+    },
+    "strings.bin": {
+      "description": "Null-terminated (\\x00) UTF-8 string pool for text/ID columns",
+      "format": "binary string table (optional, only when text columns exist)"
+    },
+    "index.html": {
+      "description": "Self-contained HTML report of analysis results",
+      "format": "text/html (UTF-8)"
+    }
+  },
+  "analysis_artifact_directory": {
+    "naming_convention": "{analysis_id:02d} {analysis_name}/analysis",
+    "description": "Serialized analysis options and results element tree",
+    "format": "Protocol Buffers (jamovi.proto) or structured JSON representation"
+  }
+}

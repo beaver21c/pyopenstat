@@ -1,0 +1,80 @@
+{
+  "timestamp": "2026-11-04T07:48:34.762268",
+  "project": "OpenStat Studio v3.0.0 (MIT Open-Source Statistical Suite)",
+  "attribution": "Analytical models, menu taxonomy & .omv container interoperability modeled with reference to jamovi (https://www.jamovi.org)",
+  "gates": {
+    "gate1": {
+      "name": "Gate 1: .omv Binary Container & MIT Copyright-Clean Provenance",
+      "checks": [
+        {
+          "check": "OMV ZIP archive generation (MANIFEST.MF, metadata.json, xdata.json, data.bin, serialized analysis)",
+          "passed": true
+        },
+        {
+          "check": "IEEE-754 little-endian double (<d) & categorical table roundtrip fidelity",
+          "passed": true
+        },
+        {
+          "check": "MIT LICENSE + NOTICE.md jamovi attribution + ZERO copied jamovi V logo (`logo-v.svg` absent, 45 clean SVGs)",
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    "gate2": {
+      "name": "Gate 2: Statistical Engines, Customizable PlotStyle & 10-Format Exporters",
+      "checks": [
+        {
+          "check": "T-Test, ANOVA/RM-ANOVA, 5 Post-Hoc Methods & JZS Bayesian Suite (BF10)",
+          "passed": true
+        },
+        {
+          "check": "Structural Equation Modeling (CFA & Latent Path SEM via lavaan syntax, CFI > 0.90, RMSEA < 0.10, Path Diagram)",
+          "passed": true
+        },
+        {
+          "check": "Panel Econometrics (Entity/Two-Way FE, Random Effects, Hausman Test), MixedLM, MedMod & Cox Survival",
+          "passed": true
+        },
+        {
+          "check": "Standalone GraphBuilder (All 15 Chart Types -> Results), PlotStyle (.svg/.pdf/.png) & 11-Format Results/Graph Exporter (.pdf/.hwpx/.docx/.xlsx/...)",
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    "gate3": {
+      "name": "Gate 3: Live .py Authoring, Claude Code Control, Doctor Self-Check & Upstream Sync",
+      "checks": [
+        {
+          "check": "Bidirectional Live .py Syntax Authoring/Execution & Claude Code MCP (`openstat-mcp` / `.mcp.json`)",
+          "passed": true
+        },
+        {
+          "check": "Package Freshness & Syntax/API Drift Self-Diagnostics (`doctor`: 6/6 subsystems healthy)",
+          "passed": true
+        },
+        {
+          "check": "On-Demand Upstream jamovi Feature Sync & Dynamic Clean-Room Plugin Scaffolder (`sync-jamovi` / `rebuild`)",
+          "passed": true
+        },
+        {
+          "check": "In-Process Web Studio UI & On-Demand Launchers Verified (Zero Persistent Background Server)",
+          "passed": true
+        },
+        {
+          "check": "Stata .do-Equivalent Command Pipeline Script Recording & 100% Numerical Reproduction (Wrangling -> ANOVA/Tukey -> Graphs -> Exports)",
+          "passed": true
+        }
+      ],
+      "passed": true
+    }
+  },
+  "summary": {
+    "passed": true,
+    "total_checks": 12,
+    "passed_checks": 12,
+    "score": 100.0,
+    "elapsed_seconds": 6.749
+  }
+}

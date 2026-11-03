@@ -1,0 +1,8 @@
+<!-- Original Vector Asset by OpenStat Studio Contributors | License: MIT / CC0-1.0 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none">
+  <path d="M3.5 4v16.5h17" stroke="#1E3A5F" stroke-width="1.5"/>
+  <circle cx="7.5" cy="15" r="2" fill="#2563EB"/>
+  <circle cx="11.5" cy="11" r="2" fill="#0D9488"/>
+  <circle cx="15.5" cy="13" r="2" fill="#D97706"/>
+  <circle cx="17.5" cy="7.5" r="2" fill="#2563EB"/>
+</svg>

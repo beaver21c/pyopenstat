@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>jamovi Analysis Report</title>
+    <style>
+        :root {
+            --jamovi-blue: #005696;
+            --jamovi-navy: #1a365d;
+            --jamovi-accent: #2b6cb0;
+            --jamovi-bg: #f4f6f8;
+            --jamovi-card-bg: #ffffff;
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --border-color: #e2e8f0;
+            --table-border: #cbd5e0;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--jamovi-bg);
+            color: var(--text-primary);
+            line-height: 1.5;
+            margin: 0;
+            padding: 32px 24px;
+        }
+        .container {
+            max-width: 1080px;
+            margin: 0 auto;
+        }
+        .header-bar {
+            background: linear-gradient(135deg, var(--jamovi-navy) 0%, var(--jamovi-blue) 100%);
+            color: white;
+            padding: 24px 32px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .header-bar h1 {
+            margin: 0 0 6px 0;
+            font-size: 26px;
+            font-weight: 700;
+        }
+        .header-bar p {
+            margin: 0;
+            opacity: 0.85;
+            font-size: 14px;
+        }
+        .jamovi-card {
+            background: var(--jamovi-card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+        .jamovi-card-header {
+            background: #fafbfc;
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .jamovi-badge {
+            background: var(--jamovi-blue);
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+        }
+        .jamovi-card-header h2 {
+            margin: 0;
+            font-size: 18px;
+            color: var(--jamovi-navy);
+        }
+        .jamovi-card-body {
+            padding: 20px 24px;
+        }
+        .jamovi-table-container {
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+        .jamovi-table-container h4 {
+            margin: 0 0 8px 0;
+            font-size: 15px;
+            color: #2b6cb0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        th, td {
+            padding: 8px 12px;
+            text-align: left;
+        }
+        th {
+            border-top: 2px solid var(--table-border);
+            border-bottom: 1px solid var(--table-border);
+            font-weight: 600;
+            color: #1a202c;
+            background: #f7fafc;
+        }
+        td {
+            border-bottom: 1px solid var(--border-color);
+        }
+        tr:last-child td {
+            border-bottom: 2px solid var(--table-border);
+        }
+        .footnote {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            font-style: italic;
+        }
+        .apa-summary {
+            background: #ebf8ff;
+            border-left: 4px solid var(--jamovi-blue);
+            padding: 12px 16px;
+            border-radius: 0 6px 6px 0;
+            font-size: 14px;
+            color: #2c5282;
+            margin-top: 16px;
+        }
+        footer {
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-bar">
+            <h1>jamovi Analysis Report</h1>
+            <p>Executed by pyjamovi Clean-Room Engine · Open Matrix Vector (.omv) Architecture</p>
+        </div>
+        
+        <section class="jamovi-card">
+            <header class="jamovi-card-header">
+                <span class="jamovi-badge">ANALYSIS 1</span>
+                <h2>Independent Samples T-Test</h2>
+            </header>
+            <div class="jamovi-card-body">
+                <div class='analysis-block'>
+<div class='jamovi-table-container'><h4>Independent Samples T-Test</h4><table><thead><tr><th>Dependent Variable</th><th>Test</th><th>Statistic</th><th>df</th><th>p</th><th>Mean difference</th><th>SE difference</th><th>Cohen's d</th></tr></thead><tbody><tr><td>len</td><td>Student's t</td><td>1.915</td><td>58.000</td><td>.060</td><td>3.700</td><td>1.932</td><td>0.495</td></tr><tr><td>len</td><td>Welch's t</td><td>1.915</td><td>55.309</td><td>.061</td><td>3.700</td><td>1.932</td><td>0.495</td></tr></tbody></table></div>
+<div class='jamovi-table-container'><h4>Group Descriptives</h4><table><thead><tr><th>Variable</th><th>Group</th><th>N</th><th>Mean</th><th>Median</th><th>SD</th><th>SE</th></tr></thead><tbody><tr><td>len</td><td>OJ</td><td>30</td><td>20.663</td><td>22.700</td><td>6.606</td><td>1.206</td></tr><tr><td>len</td><td>VC</td><td>30</td><td>16.963</td><td>16.500</td><td>8.266</td><td>1.509</td></tr></tbody></table></div>
+<p class='apa-summary'><strong>APA Summary:</strong> For len, the difference between OJ (M = 20.66, SD = 6.61) and VC (M = 16.96, SD = 8.27) was non-significant, t(58) = 1.92, p = 0.060, d = 0.49.</p>
+</div>
+            </div>
+        </section>
+        
+        <footer>
+            Generated automatically by <strong>pyjamovi</strong> — Claude Agentic Runtime for jamovi.
+        </footer>
+    </div>
+</body>
+</html>

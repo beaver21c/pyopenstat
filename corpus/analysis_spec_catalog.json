@@ -1,0 +1,315 @@
+{
+  "project": "OpenStat Studio",
+  "version": "3.0.0",
+  "license": "MIT",
+  "rebuiltAt": "2026-11-04T06:08:19.751796",
+  "reference_attribution": "Modeled with reference to jamovi (https://www.jamovi.org)",
+  "totalAnalyses": 29,
+  "catalog": [
+    {
+      "id": "descriptives",
+      "group": "Exploration",
+      "title": "Descriptives",
+      "module": "jmv",
+      "icon": "analysis-descriptives.svg"
+    },
+    {
+      "id": "scatr",
+      "group": "Exploration",
+      "title": "Scatterplot",
+      "module": "scatr",
+      "icon": "analysis-scatr-jmvscatter.svg"
+    },
+    {
+      "id": "pareto",
+      "group": "Exploration",
+      "title": "Pareto Chart",
+      "module": "scatr",
+      "icon": "analysis-scatr-jmvbar.svg"
+    },
+    {
+      "id": "ttestIS",
+      "group": "T-Tests",
+      "title": "Independent Samples T-Test",
+      "module": "jmv",
+      "icon": "analysis-ttest.svg"
+    },
+    {
+      "id": "ttestPS",
+      "group": "T-Tests",
+      "title": "Paired Samples T-Test",
+      "module": "jmv",
+      "icon": "analysis-ttest.svg"
+    },
+    {
+      "id": "ttestOneS",
+      "group": "T-Tests",
+      "title": "One Sample T-Test",
+      "module": "jmv",
+      "icon": "analysis-ttest.svg"
+    },
+    {
+      "id": "bayesTTestIS",
+      "group": "T-Tests",
+      "title": "Bayesian Independent T-Test",
+      "module": "jsq",
+      "icon": "analysis-ttest.svg"
+    },
+    {
+      "id": "anovaOneW",
+      "group": "ANOVA",
+      "title": "One-Way ANOVA",
+      "module": "jmv",
+      "icon": "analysis-anova.svg"
+    },
+    {
+      "id": "anovaFactorial",
+      "group": "ANOVA",
+      "title": "ANOVA (Factorial)",
+      "module": "jmv",
+      "icon": "analysis-anova.svg"
+    },
+    {
+      "id": "anovaRM",
+      "group": "ANOVA",
+      "title": "Repeated Measures ANOVA",
+      "module": "jmv",
+      "icon": "analysis-anova.svg"
+    },
+    {
+      "id": "ancova",
+      "group": "ANOVA",
+      "title": "ANCOVA",
+      "module": "jmv",
+      "icon": "analysis-anova.svg"
+    },
+    {
+      "id": "kruskal",
+      "group": "ANOVA",
+      "title": "One-Way ANOVA (Non-parametric)",
+      "module": "jmv",
+      "icon": "analysis-anova.svg"
+    },
+    {
+      "id": "bayesANOVA",
+      "group": "ANOVA",
+      "title": "Bayesian ANOVA",
+      "module": "jsq",
+      "icon": "analysis-anova.svg"
+    },
+    {
+      "id": "corrMatrix",
+      "group": "Regression",
+      "title": "Correlation Matrix",
+      "module": "jmv",
+      "icon": "analysis-regression.svg"
+    },
+    {
+      "id": "partCorr",
+      "group": "Regression",
+      "title": "Partial Correlation",
+      "module": "jmv",
+      "icon": "analysis-regression.svg"
+    },
+    {
+      "id": "bayesCorr",
+      "group": "Regression",
+      "title": "Bayesian Correlation",
+      "module": "jsq",
+      "icon": "analysis-regression.svg"
+    },
+    {
+      "id": "linReg",
+      "group": "Regression",
+      "title": "Linear Regression",
+      "module": "jmv",
+      "icon": "analysis-regression.svg"
+    },
+    {
+      "id": "logRegBin",
+      "group": "Regression",
+      "title": "2 Outcomes (Binomial Logistic)",
+      "module": "jmv",
+      "icon": "analysis-regression.svg"
+    },
+    {
+      "id": "contTables",
+      "group": "Frequencies",
+      "title": "Independent Samples (χ² Association)",
+      "module": "jmv",
+      "icon": "analysis-frequencies.svg"
+    },
+    {
+      "id": "reliability",
+      "group": "Factor",
+      "title": "Reliability Analysis",
+      "module": "jmv",
+      "icon": "analysis-factor.svg"
+    },
+    {
+      "id": "pca",
+      "group": "Factor",
+      "title": "Principal Component Analysis",
+      "module": "jmv",
+      "icon": "analysis-factor.svg"
+    },
+    {
+      "id": "efa",
+      "group": "Factor",
+      "title": "Exploratory Factor Analysis",
+      "module": "jmv",
+      "icon": "analysis-factor.svg"
+    },
+    {
+      "id": "sem",
+      "group": "SEM",
+      "title": "Structural Equation Modeling (SEMLj)",
+      "module": "semlj",
+      "icon": "analysis-sem.svg"
+    },
+    {
+      "id": "mediation",
+      "group": "MedMod",
+      "title": "Mediation",
+      "module": "medmod",
+      "icon": "analysis-medmod.svg"
+    },
+    {
+      "id": "moderation",
+      "group": "MedMod",
+      "title": "Moderation",
+      "module": "medmod",
+      "icon": "analysis-medmod.svg"
+    },
+    {
+      "id": "panel",
+      "group": "Linear Models",
+      "title": "Panel Econometrics (FE / RE / Hausman)",
+      "module": "plm",
+      "icon": "analysis-linearmodels.svg"
+    },
+    {
+      "id": "mixedModel",
+      "group": "Linear Models",
+      "title": "Linear Mixed Model (Multilevel)",
+      "module": "gamlj",
+      "icon": "analysis-linearmodels.svg"
+    },
+    {
+      "id": "survival",
+      "group": "Survival",
+      "title": "Kaplan-Meier & Cox PH Survival",
+      "module": "jsurvival",
+      "icon": "analysis-survival.svg"
+    },
+    {
+      "id": "graph",
+      "group": "Graphs",
+      "title": "Graph Builder (15 Chart Types)",
+      "module": "openstat",
+      "icon": "analysis-scatr-jmvbar.svg"
+    }
+  ],
+  "palettes": {
+    "openstat": [
+      "#0D9488",
+      "#2563EB",
+      "#D97706",
+      "#E11D48",
+      "#7C3AED",
+      "#0284C7"
+    ],
+    "apa_bw": [
+      "#111827",
+      "#4B5563",
+      "#9CA3AF",
+      "#D1D5DB",
+      "#374151",
+      "#6B7280"
+    ],
+    "nature": [
+      "#E64B35",
+      "#4DBBD5",
+      "#00A087",
+      "#3C5488",
+      "#F39B7F",
+      "#8491B4"
+    ],
+    "lancet": [
+      "#00468B",
+      "#ED0000",
+      "#42B540",
+      "#0099B4",
+      "#925E9F",
+      "#FDAF91"
+    ],
+    "okabe_ito": [
+      "#0072B2",
+      "#E69F00",
+      "#009E73",
+      "#D55E00",
+      "#CC79A7",
+      "#56B4E9"
+    ],
+    "kihasa": [
+      "#00457C",
+      "#2A7B9B",
+      "#D97724",
+      "#5C6F84",
+      "#8FA3B8",
+      "#B84A39"
+    ],
+    "viridis": [
+      "#440154",
+      "#3B528B",
+      "#21918C",
+      "#5EC962",
+      "#FDE725",
+      "#287C8E"
+    ],
+    "warm": [
+      "#C2410C",
+      "#EA580C",
+      "#F59E0B",
+      "#E11D48",
+      "#9333EA",
+      "#B45309"
+    ],
+    "pastel": [
+      "#60A5FA",
+      "#34D399",
+      "#FBBF24",
+      "#F87171",
+      "#A78BFA",
+      "#38BDF8"
+    ],
+    "classic_blue": [
+      "#2B5C8F",
+      "#D97724",
+      "#3B9A6C",
+      "#C94A4A",
+      "#7B61A8",
+      "#2B9EB3"
+    ]
+  },
+  "themes": [
+    "clean",
+    "apa_classic",
+    "whitegrid",
+    "minimal",
+    "dark"
+  ],
+  "export_formats": [
+    "xlsx",
+    "docx",
+    "hwpx",
+    "pdf",
+    "tex",
+    "csv",
+    "tsv",
+    "md",
+    "html",
+    "json",
+    "omv"
+  ]
+}

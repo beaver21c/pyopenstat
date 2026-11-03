@@ -1,0 +1,28 @@
+{
+  "project_name": "jamovi-rea-python",
+  "workspace_root": "/mnt/share/temp/pyjamovi",
+  "windows_root": "z:\\temp\\fun_4",
+  "python_interpreter": "/mnt/share/temp/pyjamovi/.venv/bin/python",
+  "target_system": "jamovi (Desktop & Engine Architecture)",
+  "version": "1.0.0",
+  "rea_protocol": {
+    "stage1_corpus": "corpus/",
+    "stage2_reconstructed": "reconstructed/",
+    "stage3_audit": "rea_core/audit_3gate_engine.py"
+  },
+  "modules": [
+    "descriptives",
+    "ttestIS",
+    "ttestPS",
+    "ttestOneS",
+    "anovaOneW",
+    "corrMatrix",
+    "linReg",
+    "conttables"
+  ],
+  "agent_interfaces": {
+    "cli": "reconstructed/pyjamovi/cli.py",
+    "sdk": "reconstructed/pyjamovi/agent.py",
+    "mcp": "reconstructed/pyjamovi/mcp_server.py"
+  }
+}

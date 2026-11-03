@@ -1,0 +1,6 @@
+<!-- Original Vector Asset by OpenStat Studio Contributors | License: MIT / CC0-1.0 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none">
+  <circle cx="12" cy="12" r="9" stroke="#1E3A5F" stroke-width="1.7"/>
+  <ellipse cx="12" cy="12" rx="4.5" ry="9" stroke="#0D9488" stroke-width="1.5"/>
+  <line x1="3" y1="12" x2="21" y2="12" stroke="#1E3A5F" stroke-width="1.5"/>
+</svg>
