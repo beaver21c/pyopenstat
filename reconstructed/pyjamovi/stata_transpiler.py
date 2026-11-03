@@ -1,0 +1,136 @@
+"""
+OpenStat / pyjamovi Stata Syntax Transpiler
+Translates classic Stata command lines (.do syntax) into equivalent OpenStat / pyjamovi Python calls.
+Allows users to type Stata commands in the Command Bar or Do-file Editor and execute them directly!
+"""
+
+import re
+from typing import Optional, Tuple
+
+
+def transpile_stata_line(line: str) -> Optional[str]:
+    """
+    Translates a single Stata command line into an OpenStat Python session expression.
+    If the line is already valid Python or comments, returns it unchanged or None.
+    """
+    s = line.strip()
+    if not s or s.startswith("#") or s.startswith("*") or s.startswith("//"):
+        return None
+
+    # Already Python?
+    if s.startswith("sess.") or s.startswith("ost.") or s.startswith("jmv.") or s.startswith("df[") or s.startswith("import "):
+        return s
+
+    # 1. ttest dep, by(group)
+    m = re.match(r"^ttest\s+([A-Za-z0-9_]+)\s*,\s*by\s*\(\s*([A-Za-z0-9_]+)\s*\)", s, re.IGNORECASE)
+    if m:
+        dep, grp = m.group(1), m.group(2)
+        return f"sess.ttest(dep={dep!r}, group={grp!r})"
+
+    # ttest dep == val
+    m = re.match(r"^ttest\s+([A-Za-z0-9_]+)\s*==\s*([0-9\.\-]+)", s, re.IGNORECASE)
+    if m:
+        dep, val = m.group(1), float(m.group(2))
+        return f"sess.ttest_one_sample(dep={dep!r}, test_value={val})"
+
+    # 2. regress / reg dep indep1 indep2 ...
+    m = re.match(r"^(?:regress|reg)\s+([A-Za-z0-9_]+)\s+(.+)$", s, re.IGNORECASE)
+    if m:
+        dep = m.group(1)
+        indeps = [x.strip() for x in m.group(2).split() if x.strip() and not x.startswith(",")]
+        return f"sess.regression(dep={dep!r}, covs={indeps!r})"
+
+    # 3. anova dep factor1 factor2 ...
+    m = re.match(r"^anova\s+([A-Za-z0-9_]+)\s+(.+)$", s, re.IGNORECASE)
+    if m:
+        dep = m.group(1)
+        factors = [x.strip() for x in m.group(2).split() if x.strip() and not x.startswith(",")]
+        return f"sess.anova(dep={dep!r}, factors={factors!r})"
+
+    # 4. summarize / sum var1 var2 ...
+    m = re.match(r"^(?:summarize|sum|su)\b(?:\s+(.+))?$", s, re.IGNORECASE)
+    if m:
+        rest = m.group(1)
+        vars_list = [x.strip() for x in rest.split() if x.strip() and not x.startswith(",")] if rest else []
+        if vars_list:
+            return f"sess.descriptives(vars={vars_list!r})"
+        return "sess.descriptives()"
+
+    # 5. tabulate / tab var1 [var2]
+    m = re.match(r"^(?:tabulate|tab)\s+([A-Za-z0-9_]+)(?:\s+([A-Za-z0-9_]+))?", s, re.IGNORECASE)
+    if m:
+        r_var = m.group(1)
+        c_var = m.group(2)
+        if c_var:
+            return f"sess.crosstab(rows={r_var!r}, cols={c_var!r})"
+        return f"sess.descriptives(vars=[{r_var!r}], freq=True)"
+
+    # 6. correlate / corr var1 var2 ...
+    m = re.match(r"^(?:correlate|corr|pwcorr)\s+(.+)$", s, re.IGNORECASE)
+    if m:
+        vars_list = [x.strip() for x in m.group(1).split() if x.strip() and not x.startswith(",")]
+        return f"sess.corr_matrix(vars={vars_list!r})"
+
+    # 7. generate / gen newvar = formula
+    m = re.match(r"^(?:generate|gen)\s+([A-Za-z0-9_]+)\s*=\s*(.+)$", s, re.IGNORECASE)
+    if m:
+        var = m.group(1)
+        form = m.group(2).strip()
+        return f"sess.compute({var + ' = ' + form!r})"
+
+    # replace var = formula
+    m = re.match(r"^replace\s+([A-Za-z0-9_]+)\s*=\s*(.+)$", s, re.IGNORECASE)
+    if m:
+        var = m.group(1)
+        form = m.group(2).strip()
+        return f"sess.compute({var + ' = ' + form!r})"
+
+    # 8. keep if condition / drop if condition
+    m = re.match(r"^keep\s+if\s+(.+)$", s, re.IGNORECASE)
+    if m:
+        cond = m.group(1).strip()
+        return f"sess.filter_rows({cond!r})"
+    m = re.match(r"^drop\s+if\s+(.+)$", s, re.IGNORECASE)
+    if m:
+        cond = m.group(1).strip()
+        return f"sess.filter_rows('not (' + {cond!r} + ')')"
+
+    # 9. drop var1 var2
+    m = re.match(r"^drop\s+(.+)$", s, re.IGNORECASE)
+    if m and not s.lower().startswith("drop if"):
+        cols = [x.strip() for x in m.group(1).split() if x.strip()]
+        return f"sess.drop_vars({cols!r})"
+
+    # 10. rename old new
+    m = re.match(r"^rename\s+([A-Za-z0-9_]+)\s+([A-Za-z0-9_]+)", s, re.IGNORECASE)
+    if m:
+        return f"sess.rename_var({m.group(1)!r}, {m.group(2)!r})"
+
+    # 11. xtreg dep indep1 ..., fe / re
+    m = re.match(r"^xtreg\s+([A-Za-z0-9_]+)\s+([^,]+)(?:,\s*(fe|re))?", s, re.IGNORECASE)
+    if m:
+        dep = m.group(1)
+        indeps = [x.strip() for x in m.group(2).split() if x.strip()]
+        model_type = m.group(3).lower() if m.group(3) else "fe"
+        return f"sess.panel(dep={dep!r}, indeps={indeps!r}, model={model_type!r})"
+
+    # 12. sem (path specification)
+    m = re.match(r"^sem\s*\((.+)\)", s, re.IGNORECASE)
+    if m:
+        spec = m.group(1)
+        return f"sess.sem(formula={spec!r})"
+
+    # Return as-is if no rule matched
+    return s
+
+
+def transpile_stata_script(script_text: str) -> str:
+    """Translates a full multi-line Stata .do script into Python syntax."""
+    py_lines = []
+    for line in script_text.splitlines():
+        transpiled = transpile_stata_line(line)
+        if transpiled is not None:
+            py_lines.append(transpiled)
+        else:
+            py_lines.append(f"# {line}")
+    return "\n".join(py_lines)

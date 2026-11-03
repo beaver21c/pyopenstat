@@ -14,7 +14,7 @@ import os
 import urllib.request
 from playwright.sync_api import sync_playwright
 
-REPORTS_DIR = "/mnt/share/temp/fun_4/reports"
+REPORTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "reports")
 os.makedirs(REPORTS_DIR, exist_ok=True)
 
 

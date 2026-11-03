@@ -421,6 +421,14 @@ class ExecuteSyntaxRequest(BaseModel):
     replace_existing: bool = True
 
 
+class SyntheticDataRequest(BaseModel):
+    n_samples: Optional[int] = None
+    cols: Optional[List[str]] = None
+    epsilon: Optional[float] = None
+    dataset_name: Optional[str] = "synthetic_data.csv"
+    as_new_dataset: bool = True
+
+
 class PlotRestyleRequest(BaseModel):
     analysis_id: Optional[int] = None
     plot_style: Dict[str, Any] = {}
@@ -666,6 +674,39 @@ def reshape_data_endpoint(req: ReshapeRequest):
         raise HTTPException(status_code=400, detail=f"Reshape error: {e}")
 
 
+@app.post("/api/data/synthetic")
+def generate_synthetic_endpoint(req: SyntheticDataRequest):
+    """Generates realistic synthetic microdata preserving empirical correlations and marginals (with optional DP)."""
+    try:
+        from .synthetic_data import generate_synthetic_dataset
+        if STATE.session.df is None or len(STATE.session.df) == 0:
+            raise ValueError("No active dataset loaded to synthesize from.")
+        synth_df = generate_synthetic_dataset(
+            STATE.session.df,
+            n_samples=req.n_samples,
+            cols=req.cols,
+            epsilon=req.epsilon
+        )
+        if req.as_new_dataset:
+            STATE.session = JamoviSession(synth_df, auto_sync_workspace=False)
+            STATE.dataset_name = req.dataset_name or "synthetic_dataset.csv"
+            STATE.analyses_store = []
+            STATE.analysis_objects = {}
+            STATE.next_id = 1
+            STATE.measure_overrides = {}
+            STATE.sync_to_workspace()
+            STATE.revision += 1
+            return STATE.dataset_payload()
+        else:
+            return {
+                "status": "success",
+                "shape": synth_df.shape,
+                "preview": synth_df.head(10).to_dict(orient="records")
+            }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Synthetic data error: {e}")
+
+
 @app.post("/api/data/undo")
 def undo_data_endpoint():
     """Undoes the most recent data operation."""
@@ -790,11 +831,13 @@ def get_current_syntax():
 
 @app.post("/api/syntax/execute")
 def execute_syntax_endpoint(req: ExecuteSyntaxRequest):
-    """Executes user- or Claude-edited Python (`.py`) code directly and updates the Results Sheet & workspace."""
+    """Executes user- or Claude-edited Python (`.py`) or Stata (`.do`) code directly and updates the Results Sheet & workspace."""
     try:
+        from .stata_transpiler import transpile_stata_script
+        code_to_run = transpile_stata_script(req.code)
         default_path = os.path.join(SAMPLE_DIR, STATE.dataset_name)
         analyses, stdout_log, final_df, final_ds_name = execute_python_syntax(
-            req.code,
+            code_to_run,
             default_df=STATE.session.df,
             default_dataset_path=default_path if os.path.isfile(default_path) else None,
             sync_workspace=False

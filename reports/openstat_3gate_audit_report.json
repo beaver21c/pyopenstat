@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-11-04T07:48:34.762268",
+  "timestamp": "2026-11-04T08:24:49.238770",
   "project": "OpenStat Studio v3.0.0 (MIT Open-Source Statistical Suite)",
   "attribution": "Analytical models, menu taxonomy & .omv container interoperability modeled with reference to jamovi (https://www.jamovi.org)",
   "gates": {
@@ -75,6 +75,6 @@
     "total_checks": 12,
     "passed_checks": 12,
     "score": 100.0,
-    "elapsed_seconds": 6.749
+    "elapsed_seconds": 6.503
   }
 }

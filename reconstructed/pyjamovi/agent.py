@@ -444,6 +444,10 @@ class JamoviSession:
     def bayes_ttest(self, dep: Union[str, List[str]], group: str, **kwargs):
         return self.run("bayesTTestIS", vars=dep, group=group, **kwargs)
 
+    def summary_ttest(self, m1: float, s1: float, n1: int, m2: float, s2: float, n2: int, **kwargs):
+        """JASP-style summary statistics independent samples t-test without raw microdata."""
+        return self.run("summaryTTest", m1=m1, s1=s1, n1=n1, m2=m2, s2=s2, n2=n2, **kwargs)
+
     def anova(self, dep: Union[str, List[str]], group: str, welchs: bool = True, **kwargs):
         return self.run("anovaOneW", deps=dep, group=group, welchs=welchs, **kwargs)
 
@@ -492,6 +496,16 @@ class JamoviSession:
 
     def efa(self, vars: List[str], **kwargs):
         return self.run("efa", vars=vars, **kwargs)
+
+    def network_analysis(self, vars: List[str], method: str = "ebicglasso", gamma: float = 0.25, **kwargs):
+        """JASP-style Network Analysis (EBICglasso partial correlations & centrality measures)."""
+        return self.run("networkAnalysis", vars=vars, method=method, gamma=gamma, **kwargs)
+
+    def synthetic_data(self, n_samples: Optional[int] = None, cols: Optional[List[str]] = None, epsilon: Optional[float] = None, **kwargs) -> pd.DataFrame:
+        """Generates privacy-preserving synthetic microdata preserving multivariate correlations and empirical marginals."""
+        from .synthetic_data import generate_synthetic_dataset
+        self._require_df()
+        return generate_synthetic_dataset(self.df, n_samples=n_samples, cols=cols, epsilon=epsilon, **kwargs)
 
     def sem(self, model_syntax: str, **kwargs):
         return self.run("sem", model=model_syntax, **kwargs)

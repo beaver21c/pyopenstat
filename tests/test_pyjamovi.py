@@ -554,3 +554,43 @@ def test_data_ops_and_stata_do_pipeline_reproducibility(tmp_path):
     })
     rsh_json = json.loads(rsh_b.decode("utf-8"))
     assert st_rsh == 200 and rsh_json["rowCount"] == 360
+
+
+def test_jasp_features_synthetic_data_and_stata_transpiler():
+    """Verifies JASP modules (SummaryTTest, NetworkAnalysis), Synthetic Data Generator & Stata Transpiler."""
+    from pyjamovi.analyses import SummaryTTest, NetworkAnalysis
+    from pyjamovi.synthetic_data import generate_synthetic_dataset
+    from pyjamovi.stata_transpiler import transpile_stata_line, transpile_stata_script
+
+    # 1. SummaryTTest (JASP)
+    st = SummaryTTest(m1=22.0, s1=4.5, n1=35, m2=18.0, s2=4.0, n2=35)
+    tbl = st.tables[0].to_dict()
+    assert tbl["rows"][0]["test"] == "Student's t"
+    assert tbl["rows"][0]["t"] > 3.5
+    assert tbl["rows"][0]["bf10"] > 10.0
+
+    # 2. NetworkAnalysis (JASP)
+    tooth_df = pd.read_csv(os.path.join(SAMPLE_DIR, "ToothGrowth.csv"), sep=None, engine="python")
+    net = NetworkAnalysis(tooth_df, vars=["len", "dose"])
+    assert len(net.tables) == 2
+    assert len(net.plots) == 2
+
+    # 3. Synthetic Data Generator
+    synth = generate_synthetic_dataset(tooth_df, n_samples=50, epsilon=1.0)
+    assert len(synth) == 50
+    assert set(synth.columns) == set(tooth_df.columns)
+
+    # 4. Stata Transpiler
+    assert transpile_stata_line("ttest len, by(supp)") == "sess.ttest(dep='len', group='supp')"
+    assert transpile_stata_line("reg len supp dose") == "sess.regression(dep='len', covs=['supp', 'dose'])"
+    assert transpile_stata_line("gen log_len = log(len)") == "sess.compute('log_len = log(len)')"
+
+    # 5. Stata script execution via ASGI
+    _asgi_request("POST", "/api/dataset/load", query={"name": "ToothGrowth.csv"})
+    st_stata, b_stata = _asgi_request("POST", "/api/syntax/execute", json_body={
+        "code": "ttest len, by(supp)\nsum len",
+        "replace_existing": True
+    })
+    assert st_stata == 200
+    res_stata = json.loads(b_stata.decode("utf-8"))
+    assert len(res_stata["analyses"]) >= 1

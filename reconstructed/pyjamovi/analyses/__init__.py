@@ -20,6 +20,8 @@ from .bayesian import (
     jzs_bayes_factor_correlation
 )
 from .factor_suite import Reliability, FactorAnalysis
+from .network_module import NetworkAnalysis
+from .summary_stats import SummaryTTest
 from .sem_module import SEM
 from .medmod import Mediation, Moderation
 from .panel_module import PanelAnalysis
@@ -76,6 +78,8 @@ __all__ = [
     "BayesianCorrelation",
     "Reliability",
     "FactorAnalysis",
+    "NetworkAnalysis",
+    "SummaryTTest",
     "SEM",
     "Mediation",
     "Moderation",

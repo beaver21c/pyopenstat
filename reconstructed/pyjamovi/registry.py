@@ -27,6 +27,8 @@ from .analyses import (
     BayesianCorrelation,
     Reliability,
     FactorAnalysis,
+    NetworkAnalysis,
+    SummaryTTest,
     SEM,
     Mediation,
     Moderation,
@@ -63,6 +65,7 @@ ANALYSIS_CATALOG: List[Dict[str, Any]] = [
     {"id": "ttestIS", "group": "T-Tests", "title": "Independent Samples T-Test", "module": "jmv", "icon": "analysis-ttest.svg"},
     {"id": "ttestPS", "group": "T-Tests", "title": "Paired Samples T-Test", "module": "jmv", "icon": "analysis-ttest.svg"},
     {"id": "ttestOneS", "group": "T-Tests", "title": "One Sample T-Test", "module": "jmv", "icon": "analysis-ttest.svg"},
+    {"id": "summaryTTest", "group": "T-Tests", "title": "Summary Statistics T-Test (JASP)", "module": "jasp", "icon": "analysis-ttest.svg"},
     {"id": "bayesTTestIS", "group": "T-Tests", "title": "Bayesian Independent T-Test", "module": "jsq", "icon": "analysis-ttest.svg"},
 
     {"id": "anovaOneW", "group": "ANOVA", "title": "One-Way ANOVA", "module": "jmv", "icon": "analysis-anova.svg"},
@@ -83,6 +86,7 @@ ANALYSIS_CATALOG: List[Dict[str, Any]] = [
     {"id": "reliability", "group": "Factor", "title": "Reliability Analysis", "module": "jmv", "icon": "analysis-factor.svg"},
     {"id": "pca", "group": "Factor", "title": "Principal Component Analysis", "module": "jmv", "icon": "analysis-factor.svg"},
     {"id": "efa", "group": "Factor", "title": "Exploratory Factor Analysis", "module": "jmv", "icon": "analysis-factor.svg"},
+    {"id": "networkAnalysis", "group": "Factor", "title": "Network Analysis (JASP)", "module": "jasp", "icon": "analysis-factor.svg"},
 
     {"id": "sem", "group": "SEM", "title": "Structural Equation Modeling (SEMLj)", "module": "semlj", "icon": "analysis-sem.svg"},
     {"id": "mediation", "group": "MedMod", "title": "Mediation", "module": "medmod", "icon": "analysis-medmod.svg"},
@@ -271,6 +275,20 @@ def _dispatch_inner(analysis_type: str, df: pd.DataFrame, p: Dict[str, Any]) -> 
             plots=bool(p.get("plots", False))
         )
 
+    elif t in ("summaryTTest", "summary_ttest", "summaryttest"):
+        return SummaryTTest(
+            m1=float(p.get("m1", 0.0)),
+            s1=float(p.get("s1", 1.0)),
+            n1=int(p.get("n1", 30)),
+            m2=float(p.get("m2", 0.0)),
+            s2=float(p.get("s2", 1.0)),
+            n2=int(p.get("n2", 30)),
+            group1_name=str(p.get("group1_name", p.get("g1_name", "Group 1"))),
+            group2_name=str(p.get("group2_name", p.get("g2_name", "Group 2"))),
+            hypothesis=str(p.get("hypothesis", "different")),
+            prior_width=float(p.get("priorWidth", p.get("prior_width", 0.707)))
+        )
+
     elif t == "bayesTTestIS":
         return BayesianTTestIS(
             df,
@@ -455,6 +473,16 @@ def _dispatch_inner(analysis_type: str, df: pd.DataFrame, p: Dict[str, Any]) -> 
             kmo_bartlett=bool(p.get("kmoBartlett", True)),
             eigen=bool(p.get("eigen", True)),
             scree_plot=bool(p.get("screePlot", True))
+        )
+
+    elif t in ("networkAnalysis", "network_analysis", "network"):
+        return NetworkAnalysis(
+            df,
+            vars=_as_list(p.get("vars")),
+            method=str(p.get("method", "ebicglasso")),
+            gamma=float(p.get("gamma", 0.25)),
+            plot_network=bool(p.get("plotNetwork", p.get("plot_network", True))),
+            plot_centrality=bool(p.get("plotCentrality", p.get("plot_centrality", True)))
         )
 
     elif t == "sem":
