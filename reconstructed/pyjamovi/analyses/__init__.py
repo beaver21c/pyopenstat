@@ -21,6 +21,8 @@ from .bayesian import (
 )
 from .factor_suite import Reliability, FactorAnalysis
 from .network_module import NetworkAnalysis
+from .graph_network_module import GraphNetworkAnalysis
+from .text_module import TextKeywords, TextNetwork, TextCluster
 from .summary_stats import SummaryTTest
 from .spatial_module import SpatialAnalysis
 from .sem_module import SEM
@@ -80,6 +82,10 @@ __all__ = [
     "Reliability",
     "FactorAnalysis",
     "NetworkAnalysis",
+    "GraphNetworkAnalysis",
+    "TextKeywords",
+    "TextNetwork",
+    "TextCluster",
     "SummaryTTest",
     "SpatialAnalysis",
     "SEM",

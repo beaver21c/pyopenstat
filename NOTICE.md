@@ -36,6 +36,12 @@ OpenStat Studio does not bundle or vendor any third-party package source. All de
 - `matplotlib` (PSF/BSD-compatible) — Publication Vector/Raster Graphics (`PlotStyle`)
 - `openpyxl` (MIT), `python-docx` (MIT) — Multi-format APA Table Export (`.xlsx`, `.docx`, plus built-in clean-room `.hwpx` OWPML & `.tex` exporters)
 - `fastapi`, `uvicorn`, `pydantic` (MIT) — Optional on-demand local Web Studio & REST API
+- `kiwipiepy`, `kiwipiepy_model` (Apache-2.0) — Korean morphological analysis for text mining
+- `wordcloud` (MIT) — Word clouds
+- `networkx` (BSD-3-Clause) — Keyword co-occurrence & relational networks, centrality, Louvain communities
+- `umap-learn` (BSD-3-Clause) with `pynndescent` (BSD-2-Clause), `numba` (BSD-2-Clause), `llvmlite` (BSD-2-Clause / Apache-2.0 with LLVM exception) — Dimension reduction for document clustering
+- `pypdf` (BSD-3-Clause) — Text extraction from PDF files
+- Optional (`requirements-embedding.txt`, not installed by default): `sentence-transformers` (Apache-2.0), `torch` (BSD-3-Clause); embedding models are downloaded from Hugging Face under their own model licenses (e.g. `BAAI/bge-m3`: MIT)
 
 ### 3.2 GPL-licensed dependencies (copyleft)
 

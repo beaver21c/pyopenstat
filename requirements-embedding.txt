@@ -1,0 +1,7 @@
+# Optional: sentence-embedding models for document clustering (textCluster, embedding="sbert")
+# 문서 군집 분석의 '문장 임베딩 모델'(BAAI/bge-m3 등) 사용 시에만 설치
+#   pip install -r requirements-embedding.txt
+# NVIDIA GPU PC: install the CUDA build of torch first (https://pytorch.org/get-started/locally/).
+# CPU only (smaller download): pip install torch --index-url https://download.pytorch.org/whl/cpu
+sentence-transformers>=3.0
+torch>=2.4

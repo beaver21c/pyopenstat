@@ -123,6 +123,14 @@ sess.save_py("reports/analysis_script.py")       # 100% 재현 가능한 파이�
 통계 검정과 완전히 독립적으로 논문용 차트를 그리고 결과 시트에 추가할 수 있습니다:
 - `bar`, `stacked_bar`, `line`, `area`, `pie`, `donut`, `histogram`, `density`, `box`, `violin`, `raincloud`, `scatter` (버블 + OLS/LOESS 회귀선), `pairplot`, `heatmap`, `errorbar` (Forest CI 플롯).
 
+### 3-1. 텍스트 분석 & 관계망 분석 (리본 [텍스트 분석]·[관계망 분석])
+- **텍스트 파일 불러오기**: `.txt` `.md` `.docx` `.pdf` `.hwpx` 파일·폴더 → 문서 1건 = 1행 데이터 (문서ID·파일명·폴더·형식·글자수·본문). SDK: `ost.load_texts("폴더")`
+- **키워드 분석** (`textKeywords`): kiwipiepy 형태소 분석, 사용자 사전·불용어·유의어 통합, 빈도·문서 빈도·TF-IDF 표, 집단별 특징 키워드(c-TF-IDF), 워드클라우드
+- **키워드 동시출현 관계망** (`textNetwork`): 문장·문서 단위 동시출현, 빈도·Jaccard·NPMI 연결 강도, 중심성, Louvain 묶음, 관계망 그림
+- **문서 군집 분석** (`textCluster`): TF-IDF+LSA(기본) 또는 문장 임베딩(`BAAI/bge-m3` 등, `requirements-embedding.txt` 선택 설치) → UMAP → HDBSCAN·k-평균·Ward, 군집별 대표 키워드(c-TF-IDF), 미분류 재배정, 상위 주제 묶음, 시드 3개 안정성(ARI), 군집 분포도·군집 관계망·문서 유사도 관계망
+- **관계망 분석** (`graphNetwork`): 연결 목록(출발·도착·가중치) → 밀도·경로 길이·군집계수, 중심성 6종(연결·가중 연결정도·매개·근접·고유벡터·PageRank), Louvain 묶음, 관계망 그림
+- 예제 데이터: `sample_data/Text_PolicyDocs.csv` (합성 정책문서 150건), `sample_data/Network_Collaboration.csv` (합성 기관 협력 86건)
+
 ### 4. 11개 포맷 결과 보고서 내보내기 (통계 표 + 고해상도 그림)
 - **`.hwpx`**: 한글 OWPML 네이티브 편집 가능 표(`<hp:tbl>`) **+ 삽입된 PNG 그림(`<hp:pic>`)**
 - **`.pdf`**: 다면 출판 품질의 APA 3선 표 및 고해상도 그래프 리포트

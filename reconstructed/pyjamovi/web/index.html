@@ -900,6 +900,30 @@ table.jmv-grid td[contenteditable="true"]:focus {
     resize: vertical;
 }
 
+/* --- Option panel helpers: intro, hints, info boxes, manual run bar --- */
+.silky-section-body > .span-2 { grid-column: 1 / -1; }
+.silky-help { font-size: 10.8px; color: #64748B; line-height: 1.35; }
+.silky-info { background: #EFF6FF; border: 1px solid #BFDBFE; color: #1E3A5F; border-radius: 3px; padding: 6px 8px; font-size: 11.3px; line-height: 1.5; }
+.slot-hint { font-size: 10.6px; color: #64748B; margin-top: 3px; line-height: 1.3; }
+.opt-intro { background: #F8FAFC; border: 1px solid #CBD5E1; border-left: 3px solid #0D9488; padding: 7px 10px; font-size: 11.5px; color: #334155; margin-bottom: 10px; line-height: 1.5; }
+.opt-runbar { position: sticky; top: -12px; z-index: 6; display: flex; align-items: center; gap: 10px; background: #FFFFFF; border: 1px solid #94A3B8; border-radius: 4px; padding: 7px 10px; margin: 0 0 10px 0; box-shadow: 0 2px 6px rgba(15, 23, 42, 0.10); }
+.opt-runbar .run-btn { background: #0D9488; color: #FFFFFF; border: none; border-radius: 3px; padding: 6px 14px; font-weight: 700; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
+.opt-runbar .run-btn:hover { background: #0F766E; }
+.opt-runbar .run-btn:disabled { background: #94A3B8; cursor: default; }
+.opt-runbar .run-msg { font-size: 11.5px; color: #475569; flex: 1; line-height: 1.35; }
+.opt-runbar.dirty { border-color: #D97706; }
+.opt-runbar.dirty .run-msg { color: #B45309; font-weight: 600; }
+.opt-runbar.error { border-color: #DC2626; }
+.opt-runbar.error .run-msg { color: #B91C1C; }
+.run-spinner { width: 12px; height: 12px; border: 2px solid #CBD5E1; border-top-color: #0D9488; border-radius: 50%; display: inline-block; animation: ost-spin 0.8s linear infinite; vertical-align: -2px; margin-right: 5px; }
+@keyframes ost-spin { to { transform: rotate(360deg); } }
+/* Text file import */
+.ti-drop { border: 2px dashed #94A3B8; border-radius: 6px; padding: 18px; text-align: center; color: #475569; background: #F8FAFC; }
+.ti-drop.drag { border-color: #0D9488; background: #F0FDFA; }
+.ti-list { max-height: 190px; overflow-y: auto; border: 1px solid #E2E8F0; margin-top: 8px; font-size: 11.5px; }
+.ti-list > div { display: flex; justify-content: space-between; gap: 10px; padding: 3px 8px; border-bottom: 1px solid #F1F5F9; }
+.ti-list .bad { color: #B91C1C; }
+
 /* --- Right Results View (Authentic jamovi Output Document) --- */
 #welcome-screen {
     height: 100%;
@@ -1072,6 +1096,13 @@ table.jmv-apa-table td {
     padding: 4px 12px;
     color: #222222;
     white-space: nowrap;
+}
+
+table.jmv-apa-table td.long {
+    white-space: normal;
+    min-width: 220px;
+    max-width: 460px;
+    line-height: 1.45;
 }
 
 table.jmv-apa-table tbody tr:last-child {
@@ -1612,6 +1643,10 @@ table.jmv-apa-table tbody tr:last-child {
                     <img class="rb-icon" src="assets/menu-variable-edit.svg" alt="Data Library">
                     <span class="rb-label" data-i18n="data_library">데이터 라이브러리</span>
                 </button>
+                <button class="ribbon-btn" onclick="openTextImportModal()" title="텍스트 파일(.txt .md .docx .pdf .hwpx)을 문서 1건 = 1행 데이터로 불러오기">
+                    <img class="rb-icon" src="assets/analysis-text.svg" alt="Import Texts">
+                    <span class="rb-label" data-i18n="data_import_texts">텍스트 불러오기</span>
+                </button>
                 <button class="ribbon-btn" onclick="toggleComputeBar()" title="Compute Derived Variable (Stata: generate / replace)">
                     <img class="rb-icon" src="assets/menu-compute.svg" alt="Compute">
                     <span class="rb-label" data-i18n="var_compute">변수 계산</span>
@@ -1704,6 +1739,14 @@ table.jmv-apa-table tbody tr:last-child {
                 <button class="ribbon-btn" id="rb-spatial" onclick="openRibbonMenu(event, 'spatial')">
                     <img class="rb-icon" src="assets/analysis-scatr-jmvscatter.svg" alt="Spatial GIS">
                     <span class="rb-label"><span data-i18n="ana_spatial">공간분석 (GIS)</span> <span class="rb-caret">▾</span></span>
+                </button>
+                <button class="ribbon-btn" id="rb-text" onclick="openRibbonMenu(event, 'text')" title="키워드·워드클라우드·동시출현 관계망·문서 군집">
+                    <img class="rb-icon" src="assets/analysis-text.svg" alt="Text">
+                    <span class="rb-label"><span data-i18n="ana_text">텍스트 분석</span> <span class="rb-caret">▾</span></span>
+                </button>
+                <button class="ribbon-btn" id="rb-network" onclick="openRibbonMenu(event, 'network')" title="연결 목록 관계망·변수 네트워크">
+                    <img class="rb-icon" src="assets/analysis-network.svg" alt="Network">
+                    <span class="rb-label"><span data-i18n="ana_network">관계망 분석</span> <span class="rb-caret">▾</span></span>
                 </button>
 
                 <div class="ribbon-spacer"></div>
@@ -2154,6 +2197,40 @@ table.jmv-apa-table tbody tr:last-child {
 </div>
 
 <!-- Recode Variable Modal (Stata: recode ..., generate()) -->
+<div class="ost-modal-backdrop" id="textimport-modal" onclick="if(event.target===this) closeTextImportModal()">
+    <div class="ost-modal-box" style="width:640px;">
+        <div class="ost-modal-hdr">
+            <span>📄 텍스트 파일 불러오기 (문서 1건 = 1행)</span>
+            <button class="silky-small-btn" onclick="closeTextImportModal()">닫기</button>
+        </div>
+        <div class="ost-modal-body">
+            <div style="font-size:12px;color:#475569;margin-bottom:10px;line-height:1.55;">
+                지원 형식: <b>.txt · .md · .docx · .pdf · .hwpx</b> (구형 .hwp는 한글에서 HWPX로 저장 후 사용, 스캔 PDF는 글자 추출 불가).<br>
+                결과 데이터 변수: <b>문서ID · 파일명 · 폴더 · 형식 · 글자수 · 본문</b>. 하위 폴더 이름은 '폴더' 변수에 기록되어 집단 비교에 사용 가능. 현재 데이터는 불러온 데이터로 교체됨.
+            </div>
+            <div class="ti-drop" id="ti-drop" ondragover="event.preventDefault(); this.classList.add('drag');" ondragleave="this.classList.remove('drag');" ondrop="tiHandleDrop(event)">
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;">파일 또는 폴더를 여기에 끌어다 놓기</div>
+                <button class="silky-small-btn" onclick="document.getElementById('ti-files').click()">파일 선택...</button>
+                <button class="silky-small-btn" onclick="document.getElementById('ti-folder').click()">폴더 선택...</button>
+                <input type="file" id="ti-files" multiple accept=".txt,.md,.docx,.pdf,.hwpx,.hwp" style="display:none" onchange="tiAddFiles(Array.from(this.files)); this.value='';">
+                <input type="file" id="ti-folder" webkitdirectory directory multiple style="display:none" onchange="tiAddFiles(Array.from(this.files)); this.value='';">
+            </div>
+            <div id="ti-summary" style="font-size:12px;color:#334155;margin-top:10px;"></div>
+            <div class="ti-list" id="ti-list" style="display:none;"></div>
+            <div class="silky-field" style="margin-top:12px;">
+                <label><strong>데이터 이름</strong></label>
+                <input type="text" id="ti-name" placeholder="예: 면담기록_2026 (비우면 '텍스트문서')">
+            </div>
+            <div id="ti-result" style="margin-top:10px;font-size:12px;line-height:1.5;"></div>
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid #E2E8F0;">
+                <button class="silky-small-btn" onclick="tiClear()">목록 비우기</button>
+                <button class="silky-small-btn" onclick="closeTextImportModal()">취소</button>
+                <button class="py-btn run" id="ti-submit" onclick="submitTextImport()" disabled>▶ 불러오기</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="ost-modal-backdrop" id="recode-modal" onclick="if(event.target===this) closeRecodeModal()">
     <div class="ost-modal-box" style="width:620px;">
         <div class="ost-modal-hdr">
@@ -2369,6 +2446,9 @@ const I18N = {
         ana_panel: "패널 &amp; 혼합",
         ana_survival: "생존분석",
         ana_spatial: "공간분석 (GIS)",
+        ana_text: "텍스트 분석",
+        ana_network: "관계망 분석",
+        data_import_texts: "텍스트 불러오기",
         ana_doctor: "자가진단 &amp; 동기화",
         ana_modules: "추가 모듈",
 
@@ -2443,6 +2523,9 @@ const I18N = {
         ana_panel: "Panel &amp; Mixed",
         ana_survival: "Survival",
         ana_spatial: "Spatial (GIS)",
+        ana_text: "Text Mining",
+        ana_network: "Networks",
+        data_import_texts: "Import Texts",
         ana_doctor: "Doctor &amp; Sync",
         ana_modules: "Modules",
 
@@ -2554,6 +2637,27 @@ const RIBBON_MENUS_I18N = {
             { id: "spatial", label: "공간회귀 모형 (Spatial Lag & Error / spregress)", badge: "GIS" },
             { id: "spatial_moran", label: "모란 지수 및 LISA 공간 클러스터 (Moran's I)", badge: "GeoDa" }
         ],
+        text: [
+            { section: "텍스트 자료" },
+            { action: "openTextImportModal()", label: "텍스트 파일 불러오기 (txt·md·docx·pdf·hwpx → 데이터)", badge: "불러오기" },
+            { sep: true },
+            { section: "키워드·관계망" },
+            { id: "textKeywords", label: "키워드 분석 (빈도·TF-IDF·워드클라우드)" },
+            { id: "textNetwork", label: "키워드 동시출현 관계망 (중심성·묶음)" },
+            { sep: true },
+            { section: "문서 분류" },
+            { id: "textCluster", label: "문서 군집 분석 (임베딩·UMAP·HDBSCAN·주제 묶음)", badge: "임베딩" }
+        ],
+        network: [
+            { section: "관계 자료 (연결 목록)" },
+            { id: "graphNetwork", label: "관계망 분석 (출발·도착·가중치 → 중심성·묶음)" },
+            { sep: true },
+            { section: "변수 간 네트워크" },
+            { id: "networkAnalysis", label: "변수 네트워크 (편상관 EBICglasso·중심성)", badge: "JASP" },
+            { sep: true },
+            { section: "텍스트" },
+            { id: "textNetwork", label: "키워드 동시출현 관계망" }
+        ],
         export_tables: [
             { section: "문서 및 논문 보고서 (.hwpx, .docx, .pdf)" },
             { action: "exportFullSessionResults('hwpx')", label: "한글 문서 (.hwpx) — 네이티브 편집 가능 표 + 그림", badge: "한글" },
@@ -2637,6 +2741,26 @@ const RIBBON_MENUS_I18N = {
             { section: "Spatial Econometrics & Autocorrelation" },
             { id: "spatial", label: "Spatial Regression (SAR / SEM / spregress)", badge: "GIS" },
             { id: "spatial_moran", label: "Moran's I & LISA Spatial Clusters", badge: "GeoDa" }
+        ],
+        text: [
+            { section: "Text data" },
+            { action: "openTextImportModal()", label: "Import text files (txt·md·docx·pdf·hwpx → dataset)", badge: "Import" },
+            { sep: true },
+            { section: "Keywords & networks" },
+            { id: "textKeywords", label: "Keyword Analysis (Frequency · TF-IDF · Word Cloud)" },
+            { id: "textNetwork", label: "Keyword Co-occurrence Network" },
+            { sep: true },
+            { section: "Document classification" },
+            { id: "textCluster", label: "Document Clustering (Embedding · UMAP · HDBSCAN)", badge: "Embedding" }
+        ],
+        network: [
+            { section: "Relational data (edge list)" },
+            { id: "graphNetwork", label: "Relational Network (Source · Target · Weight)" },
+            { sep: true },
+            { section: "Variable networks" },
+            { id: "networkAnalysis", label: "Variable Network (EBICglasso)", badge: "JASP" },
+            { sep: true },
+            { id: "textNetwork", label: "Keyword Co-occurrence Network" }
         ],
         export_tables: [
             { section: "Full Results (Tables + Embedded Graphs)" },
@@ -2849,8 +2973,172 @@ const PALETTE_SWATCHES = {
     classic_blue: ["#1E40AF", "#3B82F6", "#93C5FD", "#1E3A8A", "#60A5FA", "#2563EB"]
 };
 
+/* Shared Korean text pre-processing options (kiwipiepy) for the three text analyses */
+const TEXT_PREP_SECTION = {
+    title: "전처리 (형태소 분석)",
+    collapsed: true,
+    items: [
+        { type: "select", key: "posMode", label: "추출 품사", def: "nouns_foreign", options: [["nouns", "명사"], ["nouns_foreign", "명사 + 영문·한자 (권장)"], ["nouns_predicates", "명사 + 영문·한자 + 동사·형용사"]] },
+        { type: "number", key: "minLen", label: "최소 글자 수", def: 2, min: 1, max: 5, step: 1 },
+        { type: "check", key: "compound", label: "붙여 쓴 명사 결합 (지역+사회 → 지역사회)", def: true, span2: true },
+        { type: "check", key: "defaultStop", label: "기본 불용어 적용 (것·수·등·및·관련 등 72개)", def: true, span2: true },
+        { type: "textarea", key: "stopwords", label: "추가 불용어", def: "", rows: 2, placeholder: "쉼표·띄어쓰기·줄바꿈으로 구분\n예: 연구, 분석, 결과" },
+        { type: "textarea", key: "userWords", label: "사용자 사전 (한 단어로 인식할 용어)", def: "", rows: 2, placeholder: "예: 통합돌봄, 사회서비스, 기본소득" },
+        { type: "textarea", key: "synonyms", label: "유의어 통합 (한 줄에 규칙 하나)", def: "", rows: 3, placeholder: "대표어: 유의어1, 유의어2\n예) 노인: 어르신, 고령자" }
+    ]
+};
+
+const TEXT_SLOT = { key: "text", label: "텍스트 변수 (본문)", multi: false, req: true, prefer: "text", hint: "문서 1건 = 1행. 파일 묶음은 [텍스트 분석 ▸ 텍스트 파일 불러오기]로 먼저 변환" };
+
+const TEXT_NETWORK_SCHEMAS = {
+    textKeywords: {
+        title: "키워드 분석 (빈도·TF-IDF·워드클라우드)",
+        intro: "텍스트 변수에서 형태소 분석으로 단어를 추출하여 빈도·문서 빈도·TF-IDF 표와 워드클라우드 산출. 비교 집단 지정 시 집단별 특징 키워드(c-TF-IDF) 추가.",
+        slots: [
+            TEXT_SLOT,
+            { key: "group", label: "비교 집단 (선택)", multi: false, req: false, prefer: "cat", hint: "집단별 특징 키워드·집단별 워드클라우드" }
+        ],
+        sections: [
+            TEXT_PREP_SECTION,
+            {
+                title: "키워드 표",
+                items: [
+                    { type: "select", key: "rankBy", label: "정렬 기준", def: "freq", options: [["freq", "빈도"], ["tfidf", "TF-IDF 합계"], ["df", "문서 빈도"]] },
+                    { type: "number", key: "topN", label: "상위 키워드 수", def: 30, min: 5, max: 500, step: 5 },
+                    { type: "number", key: "groupTopN", label: "집단별 키워드 수", def: 10, min: 3, max: 50, step: 1, showIf: { group: "__filled__" } }
+                ]
+            },
+            {
+                title: "워드클라우드·도표",
+                items: [
+                    { type: "check", key: "wordcloud", label: "워드클라우드", def: true },
+                    { type: "check", key: "barPlot", label: "상위 키워드 막대도표", def: true },
+                    { type: "select", key: "cloudWeight", label: "글자 크기 기준", def: "freq", options: [["freq", "빈도"], ["tfidf", "TF-IDF"]], showIf: { wordcloud: true } },
+                    { type: "select", key: "cloudShape", label: "모양", def: "rect", options: [["rect", "직사각형"], ["circle", "원형"]], showIf: { wordcloud: true } },
+                    { type: "number", key: "maxWords", label: "표시 단어 수", def: 120, min: 20, max: 400, step: 10, showIf: { wordcloud: true } },
+                    { type: "check", key: "groupCloud", label: "집단별 워드클라우드 (최대 6개 집단)", def: false, span2: true, showIf: { group: "__filled__" } }
+                ]
+            }
+        ]
+    },
+    textNetwork: {
+        title: "키워드 동시출현 관계망",
+        intro: "같은 문장(또는 문서)에 함께 나온 단어를 선으로 연결한 관계망. 선 굵기 = 연결 강도, 원 크기 = 빈도, 색 = Louvain 묶음.",
+        slots: [TEXT_SLOT],
+        sections: [
+            TEXT_PREP_SECTION,
+            {
+                title: "동시출현 기준",
+                items: [
+                    { type: "select", key: "unit", label: "분석 단위", def: "sentence", options: [["sentence", "문장 (권장)"], ["document", "문서 전체"]] },
+                    { type: "select", key: "edgeMetric", label: "연결 강도", def: "count", options: [["count", "동시출현 빈도"], ["jaccard", "Jaccard 계수 (빈도 보정)"], ["npmi", "NPMI (우연 대비 연관성)"]] },
+                    { type: "number", key: "topNodes", label: "대상 단어 수 (빈도 상위)", def: 60, min: 10, max: 300, step: 10 },
+                    { type: "number", key: "minCooc", label: "최소 동시출현 횟수", def: 2, min: 1, max: 200, step: 1 },
+                    { type: "number", key: "maxEdges", label: "최대 연결 수", def: 150, min: 20, max: 1000, step: 10 },
+                    { type: "number", key: "topPairs", label: "단어 쌍 표 행 수", def: 30, min: 5, max: 300, step: 5 }
+                ]
+            },
+            {
+                title: "묶음·그림",
+                items: [
+                    { type: "check", key: "community", label: "Louvain 묶음(커뮤니티) 색 구분", def: true, span2: true },
+                    { type: "number", key: "resolution", label: "묶음 해상도 (클수록 잘게)", def: 1.0, min: 0.2, max: 3, step: 0.1, showIf: { community: true } },
+                    { type: "select", key: "layout", label: "배치 방식", def: "spring", options: [["spring", "스프링 (기본)"], ["kamada_kawai", "Kamada-Kawai"], ["circular", "원형"]] },
+                    { type: "number", key: "labelTop", label: "이름 표시 단어 수", def: 40, min: 0, max: 300, step: 5 }
+                ]
+            }
+        ]
+    },
+    textCluster: {
+        title: "문서 군집 분석 (임베딩·주제 분류)",
+        intro: "문서를 벡터로 표현(임베딩)한 뒤 UMAP 차원 축소와 HDBSCAN 등으로 군집화하고, 군집별 대표 키워드(c-TF-IDF)·상위 주제 묶음·관계망 산출. 계산량이 많아 [분석 실행]을 눌러야 결과 갱신.",
+        manualRun: true,
+        slots: [
+            TEXT_SLOT,
+            { key: "docLabel", label: "문서 이름 (선택)", multi: false, req: false, prefer: "any", hint: "대표 문서·문서 배정 표에 표시할 제목·파일명" },
+            { key: "group", label: "비교 집단 (선택)", multi: false, req: false, prefer: "cat", hint: "집단 × 군집 교차표와 χ² 검정" }
+        ],
+        sections: [
+            TEXT_PREP_SECTION,
+            {
+                title: "문서 표현 (임베딩)",
+                items: [
+                    { type: "select", key: "embedding", label: "표현 방식", def: "tfidf", span2: true, options: [["tfidf", "TF-IDF + LSA (기본, 추가 설치 불필요)"], ["sbert", "문장 임베딩 모델 (bge-m3 등, 선택 설치)"]] },
+                    { type: "number", key: "minDf", label: "최소 문서 빈도 (어휘 기준)", def: 2, min: 1, max: 50, step: 1, showIf: { embedding: "tfidf" } },
+                    { type: "select", key: "model", label: "임베딩 모델", def: "BAAI/bge-m3", span2: true, showIf: { embedding: "sbert" }, options: [["BAAI/bge-m3", "BAAI/bge-m3 (다국어, 이전 연구 설정)"], ["dragonkue/BGE-m3-ko", "dragonkue/BGE-m3-ko (한국어 미세조정)"], ["jhgan/ko-sroberta-multitask", "jhgan/ko-sroberta-multitask (경량 한국어)"]] },
+                    { type: "info", text: "문장 임베딩은 sentence-transformers·torch 설치 필요 (pip install -r requirements-embedding.txt). 모델은 첫 실행 때 내려받음 (bge-m3 약 2.3GB). GPU가 없으면 문서 1,000건 기준 수 분 소요.", showIf: { embedding: "sbert" } }
+                ]
+            },
+            {
+                title: "군집화",
+                items: [
+                    { type: "select", key: "method", label: "군집 방법", def: "hdbscan", span2: true, options: [["hdbscan", "HDBSCAN (군집 수 자동, 미분류 허용)"], ["kmeans", "k-평균"], ["agglomerative", "Ward 계층 군집"]] },
+                    { type: "number", key: "minClusterSize", label: "최소 군집 크기 (0 = 자동)", def: 0, min: 0, max: 1000, step: 1, showIf: { method: "hdbscan" } },
+                    { type: "number", key: "nClusters", label: "군집 수 (0 = 실루엣 자동)", def: 0, min: 0, max: 60, step: 1, showIf: { method: ["kmeans", "agglomerative"] } },
+                    { type: "check", key: "useUmap", label: "UMAP 차원 축소 후 군집화", def: true },
+                    { type: "number", key: "nNeighbors", label: "UMAP 이웃 수", def: 12, min: 2, max: 200, step: 1, showIf: { useUmap: true } },
+                    { type: "check", key: "assignNoise", label: "미분류 문서 재배정", def: true, showIf: { method: "hdbscan" } },
+                    { type: "number", key: "noiseAssignMin", label: "재배정 최소 코사인 유사도", def: 0.6, min: 0, max: 1, step: 0.05, showIf: { method: "hdbscan", assignNoise: true } },
+                    { type: "number", key: "seed", label: "난수 시드", def: 42, min: 0, max: 99999, step: 1 }
+                ]
+            },
+            {
+                title: "주제 묶음·안정성",
+                items: [
+                    { type: "number", key: "kwTop", label: "군집별 대표 키워드 수", def: 8, min: 3, max: 30, step: 1 },
+                    { type: "check", key: "themes", label: "상위 주제 묶음 (군집 3개 이상)", def: true },
+                    { type: "number", key: "themeDistance", label: "주제 결합 코사인 거리", def: 0.3, min: 0.05, max: 1.5, step: 0.05, showIf: { themes: true }, help: "클수록 더 많은 군집이 한 주제로 묶임" },
+                    { type: "check", key: "stability", label: "안정성 점검 (시드 3개 ARI, 시간 약 3배)", def: false, span2: true }
+                ]
+            },
+            {
+                title: "그림·표",
+                items: [
+                    { type: "check", key: "clusterMap", label: "문서 군집 분포도 (2차원)", def: true },
+                    { type: "check", key: "clusterNetwork", label: "군집 관계망 (유사도 선)", def: true },
+                    { type: "check", key: "docNetwork", label: "문서 유사도 관계망 (600건 이하)", def: false },
+                    { type: "number", key: "docSimMin", label: "문서 연결 최소 유사도", def: 0.6, min: 0, max: 1, step: 0.05, showIf: { docNetwork: true } },
+                    { type: "check", key: "docTable", label: "문서별 군집 배정 표", def: true }
+                ]
+            }
+        ]
+    },
+    graphNetwork: {
+        title: "관계망 분석 (연결 목록)",
+        intro: "연결 목록(1행 = 연결 1개: 출발·도착·가중치)으로 관계망을 구성하여 중심성 6종, 밀도·경로 길이, Louvain 묶음과 관계망 그림 산출.",
+        slots: [
+            { key: "source", label: "출발 노드 (Source)", multi: false, req: true, prefer: "cat", hint: "사람·기관·키워드 등 관계의 한쪽 끝" },
+            { key: "target", label: "도착 노드 (Target)", multi: false, req: true, prefer: "cat" },
+            { key: "weight", label: "가중치 (선택, 숫자)", multi: false, req: false, prefer: "num", hint: "비우면 연결마다 1. 같은 쌍이 여러 행이면 합산" }
+        ],
+        sections: [
+            {
+                title: "네트워크 설정",
+                items: [
+                    { type: "check", key: "directed", label: "방향 네트워크 (출발 → 도착 구분)", def: false, span2: true },
+                    { type: "number", key: "minWeight", label: "최소 가중치 (초과 연결만)", def: 0, min: 0, step: 1 },
+                    { type: "select", key: "sizeBy", label: "노드 크기·표 정렬 기준", def: "strength", options: [["strength", "가중 연결정도"], ["degree", "연결 중심성"], ["betweenness", "매개 중심성"], ["closeness", "근접 중심성"], ["eigenvector", "고유벡터 중심성"], ["pagerank", "PageRank"]] }
+                ]
+            },
+            {
+                title: "묶음·그림",
+                items: [
+                    { type: "check", key: "community", label: "Louvain 묶음(커뮤니티)", def: true },
+                    { type: "number", key: "resolution", label: "묶음 해상도 (클수록 잘게)", def: 1.0, min: 0.2, max: 3, step: 0.1, showIf: { community: true } },
+                    { type: "select", key: "layout", label: "배치 방식", def: "spring", options: [["spring", "스프링 (기본)"], ["kamada_kawai", "Kamada-Kawai"], ["circular", "원형"]] },
+                    { type: "number", key: "labelTop", label: "이름 표시 노드 수", def: 30, min: 0, max: 500, step: 5 },
+                    { type: "number", key: "topN", label: "중심성 표 행 수 (0 = 전체)", def: 30, min: 0, max: 5000, step: 10 },
+                    { type: "check", key: "plotNetwork", label: "관계망 그림", def: true },
+                    { type: "check", key: "plotCentrality", label: "중심성 비교 막대도표", def: true }
+                ]
+            }
+        ]
+    }
+};
+
 /* Complete Declarative UI Schema for All 28 Statistical Analyses */
 const ANALYSIS_SCHEMAS = {
+    ...TEXT_NETWORK_SCHEMAS,
     spatial: {
         title: "GIS Spatial Analysis & Regression (GeoDa & Stata spregress)",
         slots: [
@@ -4252,7 +4540,7 @@ function buildDefaultParams(type, preset = {}) {
     }
     for (const sec of schema.sections) {
         for (const it of sec.items) {
-            params[it.key] = it.def;
+            if (it.key) params[it.key] = it.def;
         }
     }
     Object.assign(params, preset);
@@ -4267,6 +4555,9 @@ function openAnalysis(type, existingCard = null, preset = {}) {
 
     const schema = ANALYSIS_SCHEMAS[type];
     if (!schema) return;
+    APP.panelToken = (APP.panelToken || 0) + 1;
+    APP.runDirty = false;
+    APP.runUi = {};
 
     if (existingCard) {
         APP.selectedAnalysisId = existingCard.analysisId;
@@ -4324,6 +4615,28 @@ function autoAssignVariablesIntoParams(type, params) {
         if (type === "spatial") {
             params.covs = remNum.slice(1, 4).length ? remNum.slice(1, 4) : remNum.slice(0, 1);
         }
+        return;
+    }
+
+    if (type === "textKeywords" || type === "textNetwork" || type === "textCluster") {
+        const textCols = cols.filter(c => c.dataType === "Text");
+        const byName = textCols.find(c => /본문|내용|텍스트|text|content|body|abstract|초록|요약|원문/i.test(c.name));
+        const longest = textCols.slice().sort((a, b) => (b.avgLen || 0) - (a.avgLen || 0))[0];
+        params.text = (byName || longest || cols[0]).name;
+        if (type === "textCluster") {
+            const lab = cols.find(c => c.name !== params.text && /제목|title|파일명|filename|문서명|name/i.test(c.name));
+            params.docLabel = lab ? lab.name : "";
+        }
+        return;
+    }
+
+    if (type === "graphNetwork") {
+        const pick = (re, pool) => pool.find(n => re.test(n));
+        const catLike = cols.filter(c => c.dataType === "Text" || c.measureType === "Nominal").map(c => c.name);
+        params.source = pick(/source|from|출발|송신|보낸|시작|ego/i, allNames) || catLike[0] || allNames[0];
+        const rest = allNames.filter(n => n !== params.source);
+        params.target = pick(/target|^to$|도착|수신|받은|alter/i, rest) || catLike.find(n => n !== params.source) || rest[0] || "";
+        params.weight = pick(/weight|가중|횟수|빈도|count|freq|strength/i, numCols.filter(n => n !== params.source && n !== params.target)) || "";
         return;
     }
 
@@ -4437,6 +4750,12 @@ function renderOptionsPanel() {
     }
 
     let html = "";
+    if (schema.intro) {
+        html += `<div class="opt-intro">${escapeHtml(isKo ? schema.intro : (schema.introEn || schema.intro))}</div>`;
+    }
+    if (schema.manualRun) {
+        html += renderRunBar();
+    }
 
     if (APP.currentType === "sem") {
         html += `<div style="margin-bottom:12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:6px;padding:10px;">
@@ -4451,8 +4770,8 @@ function renderOptionsPanel() {
             <div class="silky-variable-supplier" id="var-supplier-box">`;
         for (const col of APP.columns) {
             const sel = APP.selectedSupplierVar === col.name ? " selected" : "";
-            html += `<div class="supplier-item${sel}" onclick="selectSupplierVar('${col.name.replace(/'/g, "\\'")}')" ondblclick="transferToActiveSlot('${col.name.replace(/'/g, "\\'")}')">
-                <img src="${measureIcon(col.measureType)}" alt="">
+            html += `<div class="supplier-item${sel}" onclick="selectSupplierVar('${col.name.replace(/'/g, "\\'")}')" ondblclick="transferToActiveSlot('${col.name.replace(/'/g, "\\'")}')" title="${escapeHtml(col.name)}${col.avgLen ? ` · 평균 ${col.avgLen}자` : ""}">
+                <img src="${columnIcon(col)}" alt="">
                 <span>${escapeHtml(col.name)}</span>
             </div>`;
         }
@@ -4479,61 +4798,165 @@ function renderOptionsPanel() {
                         ${items.map(v => {
                             const cMeta = APP.columns.find(c => c.name === v) || { measureType: "Continuous" };
                             return `<div class="slot-pill">
-                                <span class="slot-pill-left"><img src="${measureIcon(cMeta.measureType)}" alt=""><span>${escapeHtml(v)}</span></span>
+                                <span class="slot-pill-left"><img src="${columnIcon(cMeta)}" alt=""><span>${escapeHtml(v)}</span></span>
                                 <button class="slot-pill-rm" onclick="event.stopPropagation(); removeVarFromSlot('${sl.key}', '${v.replace(/'/g, "\\'")}')">×</button>
                             </div>`;
                         }).join("")}
                     </div>
+                    ${sl.hint ? `<div class="slot-hint">${escapeHtml(sl.hint)}</div>` : ""}
                 </div>
             </div>`;
         }
         html += `</div></div>`;
     }
 
+    const L = (txt) => (isKo && OPTION_LABELS_KO[txt]) ? OPTION_LABELS_KO[txt] : txt;
+    const ph = (txt) => escapeHtml(txt).replace(/\n/g, "&#10;");
+    APP._secKeys = [];
     for (const sec of schema.sections) {
+        if (sec.showIf && !optionVisible(sec.showIf)) continue;
+        const secKey = `${APP.currentType}::${sec.title}`;
+        const secIdx = APP._secKeys.push(secKey) - 1;
+        const collapsed = (APP.sectionState && secKey in APP.sectionState) ? APP.sectionState[secKey] : !!sec.collapsed;
         const colCls = sec.singleCol ? " single-col" : "";
-        html += `<div class="silky-section">
-            <div class="silky-options-h1" onclick="this.parentElement.classList.toggle('collapsed')">
+        html += `<div class="silky-section${collapsed ? " collapsed" : ""}">
+            <div class="silky-options-h1" onclick="toggleOptionSection(this, ${secIdx})">
                 <span class="silky-chevron">▾</span>
-                <span>${escapeHtml((isKo && OPTION_LABELS_KO[sec.title]) ? OPTION_LABELS_KO[sec.title] : sec.title)}</span>
+                <span>${escapeHtml(L(sec.title))}</span>
             </div>
             <div class="silky-section-body${colCls}">`;
 
         for (const it of sec.items) {
+            if (it.showIf && !optionVisible(it.showIf)) continue;
             const cur = APP.currentParams[it.key];
+            const span = (it.span2 || it.type === "textarea" || it.type === "info") ? " span-2" : "";
+            const help = it.help ? `<div class="silky-help">${escapeHtml(it.help)}</div>` : "";
             if (it.type === "check") {
-                html += `<label class="silky-chk">
+                const chk = `<label class="silky-chk">
                     <input type="checkbox" ${cur ? "checked" : ""} onchange="updateOptionParam('${it.key}', this.checked)">
-                    <span>${escapeHtml((isKo && OPTION_LABELS_KO[it.label]) ? OPTION_LABELS_KO[it.label] : it.label)}</span>
+                    <span>${escapeHtml(L(it.label))}</span>
                 </label>`;
+                html += (help || span) ? `<div class="${span.trim()}">${chk}${help}</div>` : chk;
             } else if (it.type === "select") {
-                html += `<div class="silky-field">
-                    <label>${escapeHtml((isKo && OPTION_LABELS_KO[it.label]) ? OPTION_LABELS_KO[it.label] : it.label)}</label>
+                html += `<div class="silky-field${span}">
+                    <label>${escapeHtml(L(it.label))}</label>
                     <select onchange="updateOptionParam('${it.key}', this.value)">
                         ${it.options.map(([ov, ol]) => `<option value="${ov}" ${String(cur) === String(ov) ? "selected" : ""}>${escapeHtml(ol)}</option>`).join("")}
-                    </select>
+                    </select>${help}
                 </div>`;
             } else if (it.type === "number") {
-                html += `<div class="silky-field">
-                    <label>${escapeHtml((isKo && OPTION_LABELS_KO[it.label]) ? OPTION_LABELS_KO[it.label] : it.label)}</label>
-                    <input type="number" step="${it.step || 0.1}" value="${cur !== undefined ? cur : it.def}" onchange="updateOptionParam('${it.key}', parseFloat(this.value))">
+                const mn = it.min !== undefined ? ` min="${it.min}"` : "";
+                const mx = it.max !== undefined ? ` max="${it.max}"` : "";
+                html += `<div class="silky-field${span}">
+                    <label>${escapeHtml(L(it.label))}</label>
+                    <input type="number" step="${it.step || 0.1}"${mn}${mx} value="${cur !== undefined ? cur : it.def}" onchange="updateOptionParam('${it.key}', clampNumberInput(this, ${it.min !== undefined ? it.min : "null"}, ${it.max !== undefined ? it.max : "null"}, ${JSON.stringify(it.def !== undefined ? it.def : 0)}))">${help}
                 </div>`;
             } else if (it.type === "text") {
-                html += `<div class="silky-field">
-                    <label>${escapeHtml((isKo && OPTION_LABELS_KO[it.label]) ? OPTION_LABELS_KO[it.label] : it.label)}</label>
-                    <input type="text" value="${escapeHtml(cur !== undefined ? cur : (it.def || ""))}" oninput="updateOptionParam('${it.key}', this.value, 350)" placeholder="Optional figure caption in Analysis Results">
+                html += `<div class="silky-field${span}">
+                    <label>${escapeHtml(L(it.label))}</label>
+                    <input type="text" value="${escapeHtml(cur !== undefined ? cur : (it.def || ""))}" oninput="updateOptionParam('${it.key}', this.value, 350)" placeholder="${it.placeholder !== undefined ? ph(it.placeholder) : "Optional figure caption in Analysis Results"}">${help}
                 </div>`;
             } else if (it.type === "textarea") {
-                html += `<div class="silky-field">
-                    <label>${escapeHtml((isKo && OPTION_LABELS_KO[it.label]) ? OPTION_LABELS_KO[it.label] : it.label)}</label>
-                    <textarea oninput="updateOptionParam('${it.key}', this.value, 550)" placeholder="F1 =~ x1 + x2 + x3&#10;y1 ~ F1">${escapeHtml(cur || "")}</textarea>
+                const rowsStyle = it.rows ? ` rows="${it.rows}" style="min-height:${it.rows * 18 + 12}px;font-family:inherit;"` : "";
+                html += `<div class="silky-field${span}">
+                    <label>${escapeHtml(L(it.label))}</label>
+                    <textarea${rowsStyle} oninput="updateOptionParam('${it.key}', this.value, 550)" placeholder="${it.placeholder !== undefined ? ph(it.placeholder) : "F1 =~ x1 + x2 + x3&#10;y1 ~ F1"}">${escapeHtml(cur || "")}</textarea>${help}
                 </div>`;
+            } else if (it.type === "info") {
+                html += `<div class="silky-info span-2">${escapeHtml(it.text || "")}</div>`;
             }
         }
         html += `</div></div>`;
     }
 
     container.innerHTML = html;
+}
+
+/* Conditional options: {key: value | [values] | "__filled__"} — every condition must hold. */
+function optionVisible(cond) {
+    for (const [k, v] of Object.entries(cond || {})) {
+        const cur = APP.currentParams[k];
+        if (v === "__filled__") {
+            const filled = Array.isArray(cur) ? cur.length > 0 : !!(cur !== undefined && cur !== null && String(cur).trim() !== "");
+            if (!filled) return false;
+        } else if (Array.isArray(v)) {
+            if (!v.map(String).includes(String(cur))) return false;
+        } else if (String(cur) !== String(v)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function schemaVisibilityKeys(schema) {
+    const keys = new Set();
+    for (const sec of (schema.sections || [])) {
+        Object.keys(sec.showIf || {}).forEach(k => keys.add(k));
+        for (const it of (sec.items || [])) Object.keys(it.showIf || {}).forEach(k => keys.add(k));
+    }
+    return keys;
+}
+
+function toggleOptionSection(headerEl, idx) {
+    const sec = headerEl.parentElement;
+    sec.classList.toggle("collapsed");
+    const key = (APP._secKeys || [])[idx];
+    if (key) {
+        APP.sectionState = APP.sectionState || {};
+        APP.sectionState[key] = sec.classList.contains("collapsed");
+    }
+}
+
+function clampNumberInput(el, min, max, fallback) {
+    let v = parseFloat(el.value);
+    if (!Number.isFinite(v)) v = fallback;
+    if (min !== null && v < min) v = min;
+    if (max !== null && v > max) v = max;
+    if (String(v) !== el.value) el.value = v;
+    return v;
+}
+
+function columnIcon(col) {
+    if (col && col.dataType === "Text" && (col.avgLen || 0) >= 25) return "assets/variable-nominal-text.svg";
+    return measureIcon(col ? col.measureType : null);
+}
+
+/* Manual run bar for heavy analyses (schema.manualRun): options change freely, computation starts on click. */
+function isManualRunType(type) {
+    const sc = ANALYSIS_SCHEMAS[type || APP.currentType];
+    return !!(sc && sc.manualRun);
+}
+
+function renderRunBar() {
+    const ready = hasRequiredSlotsFilled();
+    const st = APP.runUi || {};
+    let cls = "opt-runbar";
+    let msg;
+    if (APP.running && APP.runningType === APP.currentType) {
+        const sec = Math.round((Date.now() - (APP.runStarted || Date.now())) / 1000);
+        msg = `<span class="run-spinner"></span>계산 중 <span id="run-elapsed">${sec}</span>초 경과 (문서 수·방식에 따라 수십 초 이상 소요)`;
+    } else if (!ready) {
+        msg = "필수 변수 지정 필요";
+    } else if (st.error) {
+        cls += " error";
+        msg = "오류: " + escapeHtml(st.error);
+    } else if (APP.runDirty || !APP.selectedAnalysisId) {
+        cls += " dirty";
+        msg = APP.selectedAnalysisId ? "설정 변경됨: [분석 실행]으로 결과 갱신" : "설정 확인 후 [분석 실행]";
+    } else {
+        msg = "결과 반영 완료" + (st.seconds !== undefined ? ` (${st.seconds}초)` : "");
+    }
+    const disabled = (APP.running || !ready) ? " disabled" : "";
+    return `<div class="${cls}" id="opt-runbar"><button class="run-btn" onclick="runCurrentAnalysisNow()"${disabled}>▶ 분석 실행</button><span class="run-msg">${msg}</span></div>`;
+}
+
+function updateRunBar() {
+    const el = document.getElementById("opt-runbar");
+    if (el && isManualRunType()) el.outerHTML = renderRunBar();
+}
+
+function runCurrentAnalysisNow() {
+    executeCurrentAnalysis(true);
 }
 
 function selectSupplierVar(vName) {
@@ -4615,6 +5038,9 @@ function updateOptionParam(key, val, debounceMs = 120) {
     if (APP.currentType === "graph" && key === "chartType") {
         autoAssignVariablesIntoParams("graph", APP.currentParams);
         renderOptionsPanel();
+    } else {
+        const sc = ANALYSIS_SCHEMAS[APP.currentType];
+        if (sc && schemaVisibilityKeys(sc).has(key)) renderOptionsPanel();
     }
     // Option changes are logged once by executeCurrentAnalysis ("분석 실행 완료") after the
     // auto-run finishes; logging here as well duplicated every click and every keystroke.
@@ -4641,6 +5067,12 @@ function hasRequiredSlotsFilled() {
 
 function scheduleAutoRun(immediate = false, delay = 140) {
     clearTimeout(APP.runTimer);
+    if (isManualRunType()) {
+        APP.runDirty = true;
+        APP.runUi = {};
+        updateRunBar();
+        return;
+    }
     if (!hasRequiredSlotsFilled()) return;
     if (immediate) {
         executeCurrentAnalysis();
@@ -4649,18 +5081,40 @@ function scheduleAutoRun(immediate = false, delay = 140) {
     }
 }
 
-async function executeCurrentAnalysis() {
+async function executeCurrentAnalysis(force = false) {
     if (!APP.currentType || !hasRequiredSlotsFilled()) return;
+    if (isManualRunType() && !force) return;
+    if (APP.running) {
+        // One request at a time: a change made during a run is applied right after it finishes.
+        APP.rerunPending = true;
+        return;
+    }
     const statusEl = document.getElementById("engine-status-text");
     statusEl.textContent = "Computing...";
+    const reqType = APP.currentType;
+    const reqToken = APP.panelToken;
+    const reqParams = JSON.parse(JSON.stringify(APP.currentParams));
+    APP.running = true;
+    APP.runningType = reqType;
+    APP.runStarted = Date.now();
+    APP.runDirty = false;
+    APP.runUi = {};
+    updateRunBar();
+    clearInterval(APP.runTick);
+    APP.runTick = setInterval(() => {
+        const sec = Math.round((Date.now() - APP.runStarted) / 1000);
+        const el = document.getElementById("run-elapsed");
+        if (el) el.textContent = sec;
+        if (sec >= 2) statusEl.textContent = `Computing... ${sec}s`;
+    }, 1000);
 
     try {
         const res = await fetch("/api/analysis/run", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                analysis_type: APP.currentType,
-                params: APP.currentParams,
+                analysis_type: reqType,
+                params: reqParams,
                 analysis_id: APP.selectedAnalysisId
             })
         });
@@ -4668,11 +5122,18 @@ async function executeCurrentAnalysis() {
         statusEl.textContent = "Python 3.0 · Claude Ready";
 
         if (!res.ok) {
-            showToast(payload.detail || "Analysis notice");
+            const detail = typeof payload.detail === "string" ? payload.detail : "Analysis notice";
+            showToast(detail);
+            if (APP.panelToken === reqToken) APP.runUi = { error: detail };
             return;
         }
 
-        APP.selectedAnalysisId = payload.analysisId;
+        // The user may have opened another analysis while this one was computing:
+        // keep the new card, but only re-bind the options panel if it still shows this analysis.
+        if (APP.panelToken === reqToken) {
+            APP.selectedAnalysisId = payload.analysisId;
+            APP.runUi = { seconds: ((Date.now() - APP.runStarted) / 1000).toFixed(1) };
+        }
         APP.revision = payload.revision || APP.revision;
         if (typeof payload.pythonCode === "string") {
             APP.pythonCode = payload.pythonCode;
@@ -4689,11 +5150,20 @@ async function executeCurrentAnalysis() {
             APP.analyses.push(payload);
         }
         renderAllResults();
-        const runCode = generateCodeCallForCurrentState(APP.currentType, APP.currentParams);
-        if (runCode) logToSyntaxConsole("분석 실행 완료", runCode, `${payload.title || APP.currentType} 결과 시트 출력`);
+        const runCode = generateCodeCallForCurrentState(reqType, reqParams);
+        if (runCode) logToSyntaxConsole("분석 실행 완료", runCode, `${payload.title || reqType} 결과 시트 출력`);
     } catch (err) {
         statusEl.textContent = "Python 3.0 · Claude Ready";
         showToast("Execution error: " + err.message);
+        if (APP.panelToken === reqToken) APP.runUi = { error: err.message };
+    } finally {
+        clearInterval(APP.runTick);
+        APP.running = false;
+        updateRunBar();
+        if (APP.rerunPending) {
+            APP.rerunPending = false;
+            if (!isManualRunType()) scheduleAutoRun(true);
+        }
     }
 }
 
@@ -4708,6 +5178,9 @@ function formatCell(val, colMeta) {
         }
         if (colMeta.format === "pc") {
             return val.toFixed(1) + "%";
+        }
+        if (colMeta.format === "auto" && Number.isInteger(val)) {
+            return Math.abs(val) >= 1e4 ? val.toLocaleString("en-US") : String(val);
         }
         if (Math.abs(val) >= 1e5 || (Math.abs(val) > 0 && Math.abs(val) < 1e-4)) {
             return val.toExponential(3);
@@ -4767,10 +5240,12 @@ function renderAllResults() {
                 html += `<th${nCls}>${escapeHtml(c.title)}</th>`;
             }
             html += `</tr></thead><tbody>`;
+            // Text columns holding long values (keyword lists, document titles) wrap inside the cell.
+            const longCols = new Set(tbl.columns.filter(c => c.type === "text" && tbl.rows.some(r => typeof r[c.name] === "string" && r[c.name].length > 40)).map(c => c.name));
             for (const r of tbl.rows) {
                 html += `<tr>`;
                 for (const c of tbl.columns) {
-                    const nCls = (c.type === "number" || c.type === "integer") ? " class=\"num\"" : "";
+                    const nCls = (c.type === "number" || c.type === "integer") ? " class=\"num\"" : (longCols.has(c.name) ? " class=\"long\"" : "");
                     html += `<td${nCls}>${formatCell(r[c.name], c)}</td>`;
                 }
                 html += `</tr>`;
@@ -5237,6 +5712,7 @@ async function renderBackstageOpen() {
         <p style="font-size:12px;color:#555;margin-bottom:14px;">Click any benchmark dataset (.csv / .omv) or upload your own file:</p>
         <div style="margin-bottom:14px;">
             <button class="silky-small-btn" style="padding:6px 14px;font-weight:600;" onclick="triggerLocalFileUpload()">Browse Local File (.omv, .csv, .xlsx)...</button>
+            <button class="silky-small-btn" style="padding:6px 14px;font-weight:600;margin-left:6px;" onclick="closeBackstage(); openTextImportModal()">텍스트 파일 불러오기 (.txt .md .docx .pdf .hwpx)...</button>
         </div>`;
 
     for (const item of (data.items || [])) {
@@ -5275,6 +5751,132 @@ async function handleFileUpload(inputEl) {
         showToast("Upload failed");
     }
     inputEl.value = "";
+}
+
+/* --- Text file import (files / folders -> one row per document) --- */
+const TI_EXTS = [".txt", ".md", ".docx", ".pdf", ".hwpx"];
+
+function openTextImportModal() {
+    APP.tiFiles = APP.tiFiles || [];
+    document.getElementById("ti-result").innerHTML = "";
+    tiRenderList();
+    document.getElementById("textimport-modal").classList.add("open");
+}
+
+function closeTextImportModal() {
+    document.getElementById("textimport-modal").classList.remove("open");
+}
+
+function tiClear() {
+    APP.tiFiles = [];
+    document.getElementById("ti-result").innerHTML = "";
+    tiRenderList();
+}
+
+function tiExt(name) {
+    const m = String(name).toLowerCase().match(/\.[^.\/]+$/);
+    return m ? m[0] : "";
+}
+
+function tiAddFiles(files, paths) {
+    APP.tiFiles = APP.tiFiles || [];
+    const seen = new Set(APP.tiFiles.map(f => f.path));
+    files.forEach((f, i) => {
+        const path = (paths && paths[i]) || f.webkitRelativePath || f.name;
+        const base = path.split("/").pop();
+        if (!base || base.startsWith(".") || base.startsWith("~$") || seen.has(path)) return;
+        seen.add(path);
+        APP.tiFiles.push({ file: f, path: path, ok: TI_EXTS.includes(tiExt(base)) });
+    });
+    tiRenderList();
+}
+
+async function tiHandleDrop(ev) {
+    ev.preventDefault();
+    document.getElementById("ti-drop").classList.remove("drag");
+    const items = Array.from(ev.dataTransfer.items || []);
+    const entries = items.map(it => it.webkitGetAsEntry ? it.webkitGetAsEntry() : null).filter(Boolean);
+    if (!entries.length) {
+        tiAddFiles(Array.from(ev.dataTransfer.files || []));
+        return;
+    }
+    const files = [], paths = [];
+    const readAll = (reader) => new Promise(resolve => {
+        const out = [];
+        const next = () => reader.readEntries(batch => { if (!batch.length) resolve(out); else { out.push(...batch); next(); } }, () => resolve(out));
+        next();
+    });
+    const walk = async (entry, prefix) => {
+        if (entry.isFile) {
+            const f = await new Promise(resolve => entry.file(resolve, () => resolve(null)));
+            if (f) { files.push(f); paths.push(prefix + entry.name); }
+        } else if (entry.isDirectory) {
+            for (const child of await readAll(entry.createReader())) await walk(child, prefix + entry.name + "/");
+        }
+    };
+    for (const e of entries) await walk(e, "");
+    tiAddFiles(files, paths);
+}
+
+function tiRenderList() {
+    const list = document.getElementById("ti-list");
+    const summary = document.getElementById("ti-summary");
+    const files = APP.tiFiles || [];
+    const ok = files.filter(f => f.ok);
+    const bytes = ok.reduce((a, f) => a + f.file.size, 0);
+    document.getElementById("ti-submit").disabled = ok.length === 0;
+    if (!files.length) {
+        list.style.display = "none";
+        summary.textContent = "선택된 파일 없음";
+        return;
+    }
+    const byExt = {};
+    ok.forEach(f => { const e = tiExt(f.path); byExt[e] = (byExt[e] || 0) + 1; });
+    summary.innerHTML = `불러올 파일 <b>${ok.length}개</b> (${(bytes / 1048576).toFixed(1)} MB) · ` +
+        Object.entries(byExt).map(([e, n]) => `${e} ${n}`).join(", ") +
+        (files.length > ok.length ? ` · <span style="color:#B91C1C;">제외 ${files.length - ok.length}개 (지원하지 않는 형식)</span>` : "") +
+        (ok.length > 1000 ? ` · <span style="color:#B91C1C;">한 번에 최대 1,000개</span>` : "");
+    list.style.display = "block";
+    list.innerHTML = files.slice(0, 400).map(f => `<div class="${f.ok ? "" : "bad"}"><span>${escapeHtml(f.path)}</span><span>${f.ok ? (f.file.size < 1024 ? f.file.size + " B" : (f.file.size / 1024).toFixed(0) + " KB") : "제외"}</span></div>`).join("") +
+        (files.length > 400 ? `<div><span>... 외 ${files.length - 400}개</span><span></span></div>` : "");
+}
+
+async function submitTextImport() {
+    const ok = (APP.tiFiles || []).filter(f => f.ok).slice(0, 1000);
+    if (!ok.length) return;
+    const btn = document.getElementById("ti-submit");
+    const out = document.getElementById("ti-result");
+    btn.disabled = true;
+    out.innerHTML = `<span class="run-spinner"></span>문서 ${ok.length}개에서 글자 추출 중...`;
+    const fd = new FormData();
+    ok.forEach(f => fd.append("files", f.file, f.file.name));
+    fd.append("paths", JSON.stringify(ok.map(f => f.path)));
+    fd.append("name", document.getElementById("ti-name").value || "");
+    try {
+        const res = await fetch("/api/dataset/import_texts", { method: "POST", body: fd });
+        const data = await res.json();
+        if (!res.ok) {
+            out.innerHTML = `<span style="color:#B91C1C;">불러오기 실패: ${escapeHtml(typeof data.detail === "string" ? data.detail : res.statusText)}</span>`;
+            return;
+        }
+        applyDatasetPayload(data);
+        const im = data.import || {};
+        const skipped = im.skipped || [];
+        out.innerHTML = `<div style="color:#065F46;font-weight:600;">✔ 문서 ${im.documents}건 · ${Number(im.characters || 0).toLocaleString()}자 불러오기 완료 (데이터: ${escapeHtml(im.file || data.name)})</div>` +
+            (skipped.length ? `<div style="color:#B45309;margin-top:4px;">제외 ${skipped.length}건: ${skipped.slice(0, 5).map(s => escapeHtml(s.path + " (" + s.reason + ")")).join("; ")}${skipped.length > 5 ? " ..." : ""}</div>` : "") +
+            `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+                <button class="silky-small-btn" onclick="closeTextImportModal(); openAnalysis('textKeywords')">키워드 분석 시작</button>
+                <button class="silky-small-btn" onclick="closeTextImportModal(); openAnalysis('textNetwork')">동시출현 관계망</button>
+                <button class="silky-small-btn" onclick="closeTextImportModal(); openAnalysis('textCluster')">문서 군집 분석</button>
+            </div>`;
+        APP.tiFiles = [];
+        tiRenderList();
+        showToast(`텍스트 문서 ${im.documents}건 불러옴`);
+    } catch (err) {
+        out.innerHTML = `<span style="color:#B91C1C;">불러오기 실패: ${escapeHtml(err.message)}</span>`;
+    } finally {
+        btn.disabled = !(APP.tiFiles || []).some(f => f.ok);
+    }
 }
 
 function toggleModulesModal(open) {
@@ -5633,6 +6235,10 @@ function generateCodeCallForCurrentState(type, params) {
     else if (type === "spatial" || type === "spatial_moran") funcName = "spatial_regression";
     else if (type === "summaryTTest") funcName = "summary_ttest";
     else if (type === "networkAnalysis") funcName = "network";
+    else if (type === "textKeywords") funcName = "text_keywords";
+    else if (type === "textNetwork") funcName = "text_network";
+    else if (type === "textCluster") funcName = "text_cluster";
+    else if (type === "graphNetwork") funcName = "graph_network";
 
     return `sess.${funcName}(${args.join(", ")})`;
 }

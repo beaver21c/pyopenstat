@@ -146,6 +146,14 @@ res_panel.save_plot("reports/panel_trajectory.pdf")
 
 # 7. Save reproducible standalone Python (.py) script
 sess.save_py("reports/reproducible_study.py")
+
+# 8. Text mining & networks (.txt .md .docx .pdf .hwpx -> one row per document)
+docs = ost.Session(ost.load_texts("interviews/"))          # columns: 문서ID, 파일명, 폴더, 형식, 글자수, 본문
+docs.text_keywords(text="본문", group="폴더", stopwords="연구, 분석", synonyms="노인: 어르신, 고령자")
+docs.text_network(text="본문", unit="sentence", topNodes=60)
+docs.text_cluster(text="본문", docLabel="파일명", embedding="tfidf")   # embedding="sbert" + requirements-embedding.txt for BAAI/bge-m3
+edges = ost.Session("sample_data/Network_Collaboration.csv")
+edges.graph_network(source="출발기관", target="도착기관", weight="협력횟수")
 ```
 
 ---

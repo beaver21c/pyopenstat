@@ -100,6 +100,7 @@ from .upstream_sync import (
     rebuild_openstat_package,
 )
 from .agent import JamoviSession
+from .text_import import load_texts, texts_to_dataframe, SUPPORTED_TEXT_EXTENSIONS
 
 # Proactively apply known upstream Python library compatibility shims on import
 apply_runtime_compat_shims()
@@ -268,6 +269,9 @@ __all__ = [
     "__version__",
     "Session",
     "JamoviSession",
+    "load_texts",
+    "texts_to_dataframe",
+    "SUPPORTED_TEXT_EXTENSIONS",
     "PALETTES",
     "THEMES",
     "use_plot_style",

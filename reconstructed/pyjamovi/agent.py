@@ -78,10 +78,8 @@ class JamoviSession:
             if ext == ".omv":
                 self.df, self.dataset = read_omv(resolved)
             elif ext in (".csv", ".tsv"):
-                try:
-                    self.df = pd.read_csv(resolved, sep=None, engine="python")
-                except Exception:
-                    self.df = pd.read_csv(resolved)
+                from .data_ops import read_csv_robust
+                self.df = read_csv_robust(resolved)
                 self.dataset = JamoviDataset(self.df)
             elif ext in (".xlsx", ".xls"):
                 self.df = pd.read_excel(resolved)
@@ -524,6 +522,33 @@ class JamoviSession:
         return self.run("networkAnalysis", vars=vars, method=method, gamma=gamma, **kwargs)
 
     network = network_analysis
+
+    # --- Text mining & relational networks -------------------------------------------------
+    def load_texts(self, source: Union[str, List[str]], recursive: bool = True) -> "JamoviSession":
+        """Replace the dataset with text files (folder or file list; .txt .md .docx .pdf .hwpx), one row per document."""
+        from .text_import import load_texts as _load_texts
+        return self.load(_load_texts(source, recursive=recursive))
+
+    @classmethod
+    def from_texts(cls, source: Union[str, List[str]], recursive: bool = True, **kwargs) -> "JamoviSession":
+        from .text_import import load_texts as _load_texts
+        return cls(_load_texts(source, recursive=recursive), **kwargs)
+
+    def text_keywords(self, text: str, group: Optional[str] = None, **kwargs):
+        """Keyword frequency / TF-IDF tables, group keywords (c-TF-IDF) and word clouds (kiwipiepy tokenization)."""
+        return self.run("textKeywords", text=text, group=group, **kwargs)
+
+    def text_network(self, text: str, unit: str = "sentence", **kwargs):
+        """Keyword co-occurrence network with centrality and Louvain communities."""
+        return self.run("textNetwork", text=text, unit=unit, **kwargs)
+
+    def text_cluster(self, text: str, embedding: str = "tfidf", method: str = "hdbscan", **kwargs):
+        """Document embedding (TF-IDF+LSA or sentence-transformers) + UMAP + clustering + c-TF-IDF keywords."""
+        return self.run("textCluster", text=text, embedding=embedding, method=method, **kwargs)
+
+    def graph_network(self, source: str, target: str, weight: Optional[str] = None, directed: bool = False, **kwargs):
+        """Relational network analysis from an edge list (centrality, communities, network map)."""
+        return self.run("graphNetwork", source=source, target=target, weight=weight, directed=directed, **kwargs)
 
     def synthetic_data(self, n_samples: Optional[int] = None, cols: Optional[List[str]] = None, epsilon: Optional[float] = None, **kwargs) -> pd.DataFrame:
         """Generates privacy-preserving synthetic microdata preserving multivariate correlations and empirical marginals."""

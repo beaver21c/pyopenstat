@@ -20,6 +20,34 @@ import numpy as np
 import pandas as pd
 
 
+def read_csv_robust(path: str) -> pd.DataFrame:
+    """
+    Read a delimited text file. The delimiter is taken from the header line (',' ';' tab '|'),
+    so long free-text cells (documents, interview transcripts) cannot confuse delimiter sniffing.
+    Encodings tried: UTF-8 (with/without BOM), then CP949 (Korean Excel exports).
+    """
+    last_err: Optional[Exception] = None
+    for enc in ("utf-8-sig", "cp949"):
+        try:
+            with open(path, "r", encoding=enc, newline="") as fh:
+                header = fh.readline()
+        except UnicodeDecodeError as e:
+            last_err = e
+            continue
+        counts = {d: header.count(d) for d in (",", ";", "\t", "|")}
+        sep = max(counts, key=counts.get) if max(counts.values()) > 0 else None
+        if path.lower().endswith(".tsv"):
+            sep = "\t"
+        try:
+            if sep is None:
+                return pd.read_csv(path, sep=None, engine="python", encoding=enc)
+            return pd.read_csv(path, sep=sep, encoding=enc)
+        except UnicodeDecodeError as e:
+            last_err = e
+            continue
+    raise ValueError(f"CSV 파일 읽기 실패 (UTF-8·CP949 모두 실패): {path}") from last_err
+
+
 def load_tabular_source(source: Union[str, pd.DataFrame], root_dir: Optional[str] = None) -> Tuple[pd.DataFrame, Optional[str]]:
     """Loads a DataFrame from a path (.csv, .tsv, .xlsx, .omv) or returns a copy of an in-memory DataFrame."""
     if isinstance(source, pd.DataFrame):
@@ -43,11 +71,7 @@ def load_tabular_source(source: Union[str, pd.DataFrame], root_dir: Optional[str
         df, _ = read_omv(resolved)
         return df, resolved
     elif ext in (".csv", ".tsv"):
-        try:
-            df = pd.read_csv(resolved, sep=None, engine="python")
-        except Exception:
-            df = pd.read_csv(resolved)
-        return df, resolved
+        return read_csv_robust(resolved), resolved
     elif ext in (".xlsx", ".xls"):
         return pd.read_excel(resolved), resolved
     raise ValueError(f"Unsupported dataset format '{ext}'. Expected .csv, .tsv, .xlsx, or .omv.")

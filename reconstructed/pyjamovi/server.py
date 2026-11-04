@@ -15,12 +15,14 @@ import io
 import json
 import math
 import os
+import re
 import tempfile
+from datetime import datetime
 from typing import Dict, Any, List, Optional, Union, Tuple
 import numpy as np
 import pandas as pd
 
-from fastapi import FastAPI, UploadFile, File, Query, Body, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form, Query, Body, HTTPException
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -43,6 +45,7 @@ from pyjamovi.syntax_engine import (
     LIVE_JSON_PATH,
 )
 from pyjamovi.omv.writer import write_omv
+from pyjamovi.text_import import texts_to_dataframe, SUPPORTED_TEXT_EXTENSIONS
 from pyjamovi.renderers.html_renderer import render_jamovi_html_report
 
 PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -79,7 +82,9 @@ DATASET_DESCRIPTIONS: Dict[str, str] = {
     "SEM_Latent3Factor.csv": "3-Factor Latent Construct Dataset (9 Indicators x1..y3, N=300) — CFA, SEM, Reliability, EFA",
     "MedMod_WorkStress.csv": "Occupational Stress, Burnout, Performance & Turnover Risk (N=240) — Mediation, Moderation, Logistic ROC",
     "Clinical_Survival.csv": "Oncology Clinical Trial Time-to-Event Cohort (N=163) — Kaplan-Meier, Log-Rank & Cox PH Survival",
-    "panel_sample.csv": "Compact Balanced Panel Benchmark Dataset — Panel Fixed/Random Effects"
+    "panel_sample.csv": "Compact Balanced Panel Benchmark Dataset — Panel Fixed/Random Effects",
+    "Text_PolicyDocs.csv": "합성 정책문서 말뭉치 (N=150, 분야 5종) — 키워드·워드클라우드, 동시출현 관계망, 문서 군집",
+    "Network_Collaboration.csv": "합성 기관 협력 연결 목록 (기관 30개, 연결 86개) — 관계망 분석, 중심성, 커뮤니티",
 }
 
 MIME_MAP: Dict[str, str] = {
@@ -286,6 +291,12 @@ class GlobalState:
                 d_type = "Text"
 
             levels = [str(v) for v in sorted(s.dropna().unique(), key=str)[:12]] if s.nunique() <= 12 else []
+            avg_len = None
+            if d_type == "Text":
+                try:
+                    avg_len = round(float(s.dropna().astype(str).head(500).str.len().mean()), 1)
+                except Exception:
+                    avg_len = None
             info: Dict[str, Any] = {
                 "name": str(c),
                 "measureType": m_type,
@@ -295,6 +306,8 @@ class GlobalState:
                 "unique": int(s.nunique()),
                 "levels": levels
             }
+            if avg_len is not None:
+                info["avgLen"] = avg_len
             if pd.api.types.is_numeric_dtype(s) and s.notna().any():
                 num = pd.to_numeric(s, errors="coerce")
                 sd = num.std(ddof=1)
@@ -319,12 +332,14 @@ class GlobalState:
                 val = row[col]
                 if val is None or (isinstance(val, (float, np.floating)) and (math.isnan(float(val)) or math.isinf(float(val)))) or pd.isna(val):
                     rec[col] = None
-                elif isinstance(val, (np.integer,)):
+                elif isinstance(val, (np.integer, int)) and not isinstance(val, bool):
                     rec[col] = int(val)
                 elif isinstance(val, (np.floating, float)):
                     rec[col] = round(float(val), 6) if abs(float(val) - round(float(val))) > 1e-9 else float(val)
                 else:
-                    rec[col] = str(val)
+                    sval = str(val)
+                    # Long documents are shown abbreviated in the data grid; analyses use the full text.
+                    rec[col] = sval if len(sval) <= 400 else sval[:400] + " …"
             records.append(rec)
         return records
 
@@ -572,6 +587,41 @@ async def upload_dataset(file: UploadFile = File(...)):
         f.write(contents)
     STATE.load_file(safe_name)
     return STATE.dataset_payload()
+
+
+@app.post("/api/dataset/import_texts")
+async def import_text_files(
+    files: List[UploadFile] = File(...),
+    paths: Optional[str] = Form(None),
+    name: Optional[str] = Form(None),
+):
+    """Text files (.txt .md .docx .pdf .hwpx) -> dataset with one row per document (saved as UTF-8 CSV)."""
+    try:
+        rel_paths = json.loads(paths) if paths else []
+    except Exception:
+        rel_paths = []
+    items = []
+    for i, f in enumerate(files):
+        rel = rel_paths[i] if i < len(rel_paths) and rel_paths[i] else (f.filename or f"file_{i + 1}")
+        items.append((rel, await f.read()))
+    df, skipped = texts_to_dataframe(items)
+    if df.empty:
+        detail = "불러온 문서 없음. 지원 형식: " + ", ".join(SUPPORTED_TEXT_EXTENSIONS)
+        if skipped:
+            detail += " / 제외: " + "; ".join(f"{p} ({r})" for p, r in skipped[:5])
+        raise HTTPException(status_code=400, detail=detail)
+    base = re.sub(r"[^0-9A-Za-z가-힣_\-]+", "_", (name or "").strip()).strip("_") or "텍스트문서"
+    fname = f"{base}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    df.to_csv(os.path.join(SAMPLE_DIR, fname), index=False, encoding="utf-8-sig")
+    STATE.load_file(fname)
+    payload = STATE.dataset_payload()
+    payload["import"] = {
+        "file": fname,
+        "documents": int(len(df)),
+        "characters": int(df["글자수"].sum()),
+        "skipped": [{"path": p, "reason": r} for p, r in skipped],
+    }
+    return payload
 
 
 @app.post("/api/cell/edit")

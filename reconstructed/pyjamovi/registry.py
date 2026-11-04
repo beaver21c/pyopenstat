@@ -28,6 +28,10 @@ from .analyses import (
     Reliability,
     FactorAnalysis,
     NetworkAnalysis,
+    GraphNetworkAnalysis,
+    TextKeywords,
+    TextNetwork,
+    TextCluster,
     SummaryTTest,
     SpatialAnalysis,
     SEM,
@@ -72,6 +76,34 @@ def _require_columns(df: pd.DataFrame, label: str, required: Dict[str, Any], opt
         raise ValueError(f"{label}: column(s) not found: {', '.join(not_found)}. Available columns: {list(df.columns)}")
 
 
+def _opt(p: Dict[str, Any], camel: str, snake: str, default: Any) -> Any:
+    """UI params use camelCase, SDK/CLI users may pass snake_case; None/"" mean 'not given'."""
+    for k in (camel, snake):
+        if k in p and p[k] is not None and p[k] != "":
+            return p[k]
+    return default
+
+
+def _flag(p: Dict[str, Any], camel: str, snake: str, default: bool) -> bool:
+    v = _opt(p, camel, snake, default)
+    if isinstance(v, str):
+        return v.strip().lower() in ("1", "true", "yes", "y", "on")
+    return bool(v)
+
+
+def _text_prep(p: Dict[str, Any]) -> Dict[str, Any]:
+    """Shared Korean text pre-processing options (kiwipiepy tokenization)."""
+    return {
+        "posMode": str(_opt(p, "posMode", "pos_mode", "nouns_foreign")),
+        "minLen": int(_opt(p, "minLen", "min_len", 2)),
+        "compound": _flag(p, "compound", "compound", True),
+        "defaultStop": _flag(p, "defaultStop", "default_stop", True),
+        "stopwords": _opt(p, "stopwords", "stop_words", ""),
+        "userWords": _opt(p, "userWords", "user_words", ""),
+        "synonyms": _opt(p, "synonyms", "synonym_rules", ""),
+    }
+
+
 ANALYSIS_CATALOG: List[Dict[str, Any]] = [
     {"id": "descriptives", "group": "Exploration", "title": "Descriptives", "module": "jmv", "icon": "analysis-descriptives.svg"},
     {"id": "scatr", "group": "Exploration", "title": "Scatterplot", "module": "scatr", "icon": "analysis-scatr-jmvscatter.svg"},
@@ -111,6 +143,11 @@ ANALYSIS_CATALOG: List[Dict[str, Any]] = [
     {"id": "survival", "group": "Survival", "title": "Kaplan-Meier & Cox PH Survival", "module": "jsurvival", "icon": "analysis-survival.svg"},
     {"id": "spatial", "group": "Spatial", "title": "GIS Spatial Analysis & Regression (GeoDa / Stata)", "module": "geoda", "icon": "analysis-scatr-jmvscatter.svg"},
     {"id": "graph", "group": "Graphs", "title": "Graph Builder (15 Chart Types)", "module": "openstat", "icon": "analysis-scatr-jmvbar.svg"},
+
+    {"id": "textKeywords", "group": "Text", "title": "Keyword Analysis (Frequency / TF-IDF / Word Cloud)", "module": "openstat", "icon": "analysis-text.svg"},
+    {"id": "textNetwork", "group": "Text", "title": "Keyword Co-occurrence Network", "module": "openstat", "icon": "analysis-text.svg"},
+    {"id": "textCluster", "group": "Text", "title": "Document Clustering (Embedding / Topics)", "module": "openstat", "icon": "analysis-text.svg"},
+    {"id": "graphNetwork", "group": "Network", "title": "Relational Network Analysis (Edge List)", "module": "openstat", "icon": "analysis-network.svg"},
 ]
 
 BASE_ANALYSIS_CATALOG: List[Dict[str, Any]] = list(ANALYSIS_CATALOG)
@@ -170,6 +207,16 @@ def _dispatch_inner(analysis_type: str, df: pd.DataFrame, p: Dict[str, Any]) -> 
         "rm_anova": "anovaRM",
         "factorial_anova": "anovaFactorial",
         "mixed": "mixedModel",
+        "text_keywords": "textKeywords",
+        "keywords": "textKeywords",
+        "wordcloud": "textKeywords",
+        "text_network": "textNetwork",
+        "cooccurrence": "textNetwork",
+        "text_cluster": "textCluster",
+        "topics": "textCluster",
+        "graph_network": "graphNetwork",
+        "edge_network": "graphNetwork",
+        "sna": "graphNetwork",
     }
     t = alias_map.get(t, t)
 
@@ -598,6 +645,86 @@ def _dispatch_inner(analysis_type: str, df: pd.DataFrame, p: Dict[str, Any]) -> 
             model_type=str(p.get("modelType", p.get("model_type", p.get("model", "lag")))),
             plot_moran=bool(p.get("plotMoran", True)),
             plot_map=bool(p.get("plotMap", True))
+        )
+
+    elif t in ("textKeywords", "textNetwork", "textCluster"):
+        text_c = _as_single(p.get("text") or p.get("text_col"))
+        group_c = _as_single(p.get("group"))
+        label_c = _as_single(p.get("docLabel") or p.get("doc_label"))
+        _require_columns(df, "텍스트 분석", required={"text": text_c}, optional={"group": group_c, "docLabel": label_c})
+        prep = _text_prep(p)
+        seed = int(_opt(p, "seed", "seed", 42))
+        if t == "textKeywords":
+            return TextKeywords(
+                df, text=text_c, group=group_c,
+                rank_by=str(_opt(p, "rankBy", "rank_by", "freq")),
+                top_n=int(_opt(p, "topN", "top_n", 30)),
+                group_top_n=int(_opt(p, "groupTopN", "group_top_n", 10)),
+                wordcloud=_flag(p, "wordcloud", "word_cloud", True),
+                cloud_weight=str(_opt(p, "cloudWeight", "cloud_weight", "freq")),
+                max_words=int(_opt(p, "maxWords", "max_words", 120)),
+                cloud_shape=str(_opt(p, "cloudShape", "cloud_shape", "rect")),
+                bar_plot=_flag(p, "barPlot", "bar_plot", True),
+                group_cloud=_flag(p, "groupCloud", "group_cloud", False),
+                seed=seed, **prep,
+            )
+        if t == "textNetwork":
+            return TextNetwork(
+                df, text=text_c,
+                unit=str(_opt(p, "unit", "unit", "sentence")),
+                top_nodes=int(_opt(p, "topNodes", "top_nodes", 60)),
+                min_cooc=int(_opt(p, "minCooc", "min_cooc", 2)),
+                edge_metric=str(_opt(p, "edgeMetric", "edge_metric", "count")),
+                max_edges=int(_opt(p, "maxEdges", "max_edges", 150)),
+                community=_flag(p, "community", "community", True),
+                resolution=float(_opt(p, "resolution", "resolution", 1.0)),
+                layout=str(_opt(p, "layout", "layout", "spring")),
+                label_top=int(_opt(p, "labelTop", "label_top", 40)),
+                top_pairs=int(_opt(p, "topPairs", "top_pairs", 30)),
+                seed=seed, **prep,
+            )
+        return TextCluster(
+            df, text=text_c, doc_label=label_c, group=group_c,
+            embedding=str(_opt(p, "embedding", "embedding", "tfidf")),
+            model=str(_opt(p, "model", "model_name", "BAAI/bge-m3")),
+            method=str(_opt(p, "method", "method", "hdbscan")),
+            n_clusters=int(_opt(p, "nClusters", "n_clusters", 0)),
+            min_cluster_size=int(_opt(p, "minClusterSize", "min_cluster_size", 0)),
+            use_umap=_flag(p, "useUmap", "use_umap", True),
+            n_neighbors=int(_opt(p, "nNeighbors", "n_neighbors", 12)),
+            assign_noise=_flag(p, "assignNoise", "assign_noise", True),
+            noise_assign_min=float(_opt(p, "noiseAssignMin", "noise_assign_min", 0.6)),
+            themes=_flag(p, "themes", "themes", True),
+            theme_distance=float(_opt(p, "themeDistance", "theme_distance", 0.3)),
+            stability=_flag(p, "stability", "stability", False),
+            kw_top=int(_opt(p, "kwTop", "kw_top", 8)),
+            min_df=int(_opt(p, "minDf", "min_df", 2)),
+            cluster_map=_flag(p, "clusterMap", "cluster_map", True),
+            cluster_network=_flag(p, "clusterNetwork", "cluster_network", True),
+            doc_network=_flag(p, "docNetwork", "doc_network", False),
+            doc_sim_min=float(_opt(p, "docSimMin", "doc_sim_min", 0.6)),
+            doc_table=_flag(p, "docTable", "doc_table", True),
+            seed=seed, **prep,
+        )
+
+    elif t == "graphNetwork":
+        src_c = _as_single(p.get("source") or p.get("from"))
+        tgt_c = _as_single(p.get("target") or p.get("to"))
+        w_c = _as_single(p.get("weight"))
+        _require_columns(df, "관계망 분석", required={"source": src_c, "target": tgt_c}, optional={"weight": w_c})
+        return GraphNetworkAnalysis(
+            df, source=src_c, target=tgt_c, weight=w_c,
+            directed=_flag(p, "directed", "directed", False),
+            min_weight=float(_opt(p, "minWeight", "min_weight", 0.0)),
+            community=_flag(p, "community", "community", True),
+            resolution=float(_opt(p, "resolution", "resolution", 1.0)),
+            size_by=str(_opt(p, "sizeBy", "size_by", "strength")),
+            layout=str(_opt(p, "layout", "layout", "spring")),
+            label_top=int(_opt(p, "labelTop", "label_top", 30)),
+            top_n=int(_opt(p, "topN", "top_n", 30)),
+            plot_network=_flag(p, "plotNetwork", "plot_network", True),
+            plot_centrality=_flag(p, "plotCentrality", "plot_centrality", True),
+            seed=int(_opt(p, "seed", "seed", 42)),
         )
 
     # Dynamic Clean-Room Plugin Dispatch (for newly added jamovi features)

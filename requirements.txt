@@ -19,6 +19,13 @@ semopy>=2.3.11
 linearmodels>=6.1
 lifelines>=0.30.0
 
+# Text Mining (Korean morphological analysis, word clouds, document clustering) & Network Analysis
+kiwipiepy>=0.20.0
+wordcloud>=1.9.0
+networkx>=3.2
+umap-learn>=0.5.5
+pypdf>=4.0.0
+
 # Publication Data Visualization & Plot Styles
 matplotlib>=3.9.0
 seaborn>=0.13.0

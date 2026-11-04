@@ -82,6 +82,13 @@ OpenStat Studio는 파이썬 초보자부터 데이터 사이언티스트까지 
 | | `mediation`, `moderation` | 부트스트랩 매개효과, 상호작용 조절효과 및 단순기울기(Simple Slopes) |
 | | `survival` | Kaplan-Meier 생존곡선 분석, Cox 비례위험 회귀분석 |
 
+| **텍스트 분석** | `textKeywords` | 형태소 분석(kiwipiepy), 빈도·TF-IDF, 집단별 특징 키워드(c-TF-IDF), 워드클라우드 |
+| | `textNetwork` | 키워드 동시출현 관계망, 중심성, Louvain 묶음 |
+| | `textCluster` | 문서 임베딩(TF-IDF+LSA 또는 bge-m3) → UMAP → HDBSCAN 군집, 군집 키워드, 주제 묶음, 관계망 |
+| **관계망 분석** | `graphNetwork` | 연결 목록 기반 중심성 6종, 밀도·경로 길이, Louvain 묶음, 관계망 그림 |
+
+> **텍스트 파일 불러오기**: [텍스트 분석 ▸ 텍스트 파일 불러오기]에서 `.txt` `.md` `.docx` `.pdf` `.hwpx` 파일이나 폴더를 선택하면 문서 1건 = 1행 데이터로 변환 (하위 폴더 이름은 '폴더' 변수에 기록).
+
 ---
 
 ## 📈 4. 독립형 15종 학술 그래프 빌더

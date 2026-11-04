@@ -72,6 +72,8 @@ class ResultsTable:
                 return f"{fval:.3f}"
             elif fmt == "pc":
                 return f"{fval:.1f}%"
+            elif fmt == "auto" and abs(fval - round(fval)) < 1e-9 and abs(fval) < 1e15:
+                return f"{int(round(fval)):,}" if abs(fval) >= 1e4 else str(int(round(fval)))
             else:
                 if abs(fval) >= 1e5 or (0 < abs(fval) < 1e-4):
                     return f"{fval:.3e}"
