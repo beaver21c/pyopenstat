@@ -1682,13 +1682,17 @@ table.jmv-apa-table tbody tr:last-child {
                     <img class="rb-icon" src="assets/menu-data-filter.svg" alt="Filter">
                     <span class="rb-label" data-i18n="data_filter">데이터 필터</span>
                 </button>
-                <button class="ribbon-btn" onclick="openMergeModal()" title="Relational Merge / Append (Stata: merge 1:1 / m:1 / append)">
+                <button class="ribbon-btn" onclick="openMergeModal()" title="자료 결합 (Stata: merge 1:1 / m:1 / 1:m / m:m, joinby, append)">
                     <img class="rb-icon" src="assets/menu-merge.svg" alt="Merge">
                     <span class="rb-label" data-i18n="data_merge">데이터 병합</span>
                 </button>
                 <button class="ribbon-btn" onclick="openReshapeModal()" title="Reshape Wide ↔ Long (Stata: reshape long / wide)">
                     <img class="rb-icon" src="assets/menu-reshape.svg" alt="Reshape">
-                    <span class="rb-label" data-i18n="data_reshape">형태 변환</span>
+                    <span class="rb-label" data-i18n="data_reshape">구조 변환</span>
+                </button>
+                <button class="ribbon-btn" onclick="openConvertModal()" title="변수 형식 변환 (Stata: destring / tostring / encode / decode / label values)">
+                    <img class="rb-icon" src="assets/menu-data-transform.svg" alt="Convert">
+                    <span class="rb-label" data-i18n="data_convert">변수 형식</span>
                 </button>
                 <button class="ribbon-btn" onclick="computeZScoreQuick()" title="Standardize numeric variable (Z)">
                     <img class="rb-icon" src="assets/menu-zscore.svg" alt="Transform">
@@ -1746,6 +1750,10 @@ table.jmv-apa-table tbody tr:last-child {
                 <button class="ribbon-btn" id="rb-sem" onclick="openAnalysis('sem')">
                     <img class="rb-icon" src="assets/analysis-sem.svg" alt="SEM">
                     <span class="rb-label" data-i18n="ana_sem">SEM / CFA</span>
+                </button>
+                <button class="ribbon-btn" id="rb-mixture" onclick="openRibbonMenu(event, 'mixture')" title="잠재계층·잠재프로파일·잠재전이·잠재계층 성장분석 (Mplus 기본 설정)">
+                    <img class="rb-icon" src="assets/analysis-mixture.svg" alt="Mixture">
+                    <span class="rb-label"><span data-i18n="ana_mixture">잠재계층</span> <span class="rb-caret">▾</span></span>
                 </button>
                 <button class="ribbon-btn" id="rb-medmod" onclick="openRibbonMenu(event, 'medmod')">
                     <img class="rb-icon" src="assets/analysis-medmod.svg" alt="MedMod">
@@ -2002,6 +2010,9 @@ table.jmv-apa-table tbody tr:last-child {
                     <span class="quick-pill" onclick="loadDatasetByName('Spatial_Panel_Welfare.csv')">🗺️ 가상 지역 패널 + 경계 (공간패널회귀 SDM·고정효과)</span>
                     <span class="quick-pill" onclick="loadDatasetByName('Spatial_CrossSection_Welfare.csv')">🗺️ 가상 지역 횡단면 + 경계 (Moran's I·공간회귀·GWR)</span>
                     <span class="quick-pill" onclick="loadDatasetByName('Korea_Regional_Welfare_GIS.csv')">🗺️ 서울 복지예산 좌표 (k-최근접 가중행렬)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('Mixture_LCA_Care.csv')">🧩 돌봄 욕구 문항 (잠재계층·잠재프로파일)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('Mixture_LTA_Long.csv')">🧩 정서 문항 3개 차수 (잠재전이분석)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('Mixture_LCGA_Long.csv')">🧩 삶의 만족도 5개 연도 (잠재계층 성장분석)</span>
                     <span class="quick-pill" onclick="loadDatasetByName('Text_PolicyDocs.csv')">📄 정책문서 텍스트 (키워드·문서 군집)</span>
                     <span class="quick-pill" onclick="loadDatasetByName('Network_Collaboration.csv')">🔗 기관 협력 연결 목록 (관계망 분석)</span>
                     <span class="quick-pill" onclick="loadDatasetByName('iris.csv')">Iris 붓꽃 (ANOVA / 회귀분석 / PCA)</span>
@@ -2082,7 +2093,7 @@ table.jmv-apa-table tbody tr:last-child {
         <div class="bs-nav-item" onclick="window.location.href='/api/dataset/export_omv'; closeBackstage();">Save Archive (.omv)</div>
         <div class="bs-nav-item" onclick="window.location.href='/api/dataset/export_csv'; closeBackstage();">Export Raw Data (.csv)</div>
         <div class="bs-nav-item" onclick="window.location.href='/api/report/export_html'; closeBackstage();">Export Full Report (.html)</div>
-        <input type="file" id="hidden-file-input" accept=".omv,.csv,.xlsx,.xls" style="display:none;" onchange="handleFileUpload(this)">
+        <input type="file" id="hidden-file-input" accept=".omv,.csv,.tsv,.xlsx,.xls,.dta,.sav,.zsav,.por,.parquet" style="display:none;" onchange="handleFileUpload(this)">
     </div>
     <div class="backstage-content" id="backstage-body"></div>
 </div>
@@ -2385,39 +2396,148 @@ table.jmv-apa-table tbody tr:last-child {
     </div>
 </div>
 
-<!-- Merge Datasets Modal (Stata: merge 1:1 / m:1 / append) -->
+<!-- Merge Datasets Modal (Stata: merge 1:1 / m:1 / 1:m / m:m, joinby, append) -->
 <div class="ost-modal-backdrop" id="merge-modal" onclick="if(event.target===this) closeMergeModal()">
-    <div class="ost-modal-box" style="width:620px;">
+    <div class="ost-modal-box" style="width:680px;">
         <div class="ost-modal-hdr">
-            <span>🔗 Merge Datasets (Stata: <code>merge 1:1 / m:1 / append</code>)</span>
-            <button class="silky-small-btn" onclick="closeMergeModal()">Close</button>
+            <span>🔗 자료 결합 (Stata: <code>merge</code> · <code>joinby</code> · <code>append</code>)</span>
+            <button class="silky-small-btn" onclick="closeMergeModal()">닫기</button>
         </div>
         <div class="ost-modal-body">
-            <div style="font-size:12px;color:#475569;margin-bottom:12px;">
-                Combine the active dataset with another dataset via key-based horizontal join or vertical row concatenation.
+            <div style="font-size:12px;color:#475569;margin-bottom:12px;line-height:1.55;">
+                현재 자료(master)에 다른 자료(using)를 키 변수 기준으로 붙이거나 행으로 추가. 키 중복으로 행이 늘어나는 결합은 실행 전에 오류로 차단.
             </div>
             <div class="design-grid">
                 <div class="silky-field" style="grid-column: span 2;">
-                    <label><strong>Select Other Dataset to Merge</strong></label>
+                    <label><strong>결합할 자료 (using)</strong></label>
                     <select id="merge-other-source" onchange="autoFillMergeKeys()"></select>
                 </div>
                 <div class="silky-field">
-                    <label><strong>Join Key Variable (`on`)</strong></label>
-                    <input type="text" id="merge-key" placeholder="e.g. subj_id (leave blank for common cols)">
-                </div>
-                <div class="silky-field">
-                    <label><strong>Join Mode (`how`)</strong></label>
-                    <select id="merge-how">
-                        <option value="left">Left Join (keep all active rows, default)</option>
-                        <option value="inner">Inner Join (matched keys only)</option>
-                        <option value="outer">Full Outer Join (union all rows)</option>
-                        <option value="append">Append Rows (stack vertically)</option>
+                    <label><strong>결합 방식</strong></label>
+                    <select id="merge-kind" onchange="toggleMergeFields()">
+                        <option value="">자동 판별 (키 고유성으로 1:1·m:1·1:m 결정)</option>
+                        <option value="1:1">1:1 — 양쪽 모두 키 고유</option>
+                        <option value="m:1">m:1 — 결합 자료의 키 고유 (예: 지역 정보 붙이기)</option>
+                        <option value="1:m">1:m — 현재 자료의 키 고유</option>
+                        <option value="m:m">m:m — 키 안에서 순서대로 짝짓기 (Stata m:m)</option>
+                        <option value="joinby">joinby — 키 안의 모든 조합</option>
+                        <option value="append">append — 행 추가 (변수 이름 기준)</option>
                     </select>
+                </div>
+                <div class="silky-field" id="merge-wrap-key">
+                    <label><strong>키 변수 (쉼표로 여러 개)</strong></label>
+                    <input type="text" id="merge-key" placeholder="예: 지역코드, 연도">
+                </div>
+                <div class="silky-field" id="merge-wrap-keep" style="grid-column: span 2;">
+                    <label><strong>남길 행 (Stata keep)</strong></label>
+                    <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;">
+                        <label><input type="checkbox" id="merge-keep-master" checked> 현재 자료에만 있는 행 (1)</label>
+                        <label><input type="checkbox" id="merge-keep-using" checked> 결합 자료에만 있는 행 (2)</label>
+                        <label><input type="checkbox" id="merge-keep-match" checked> 일치한 행 (3·4·5)</label>
+                    </div>
+                </div>
+                <div class="silky-field" id="merge-wrap-keepusing" style="grid-column: span 2;">
+                    <label><strong>결합 자료에서 가져올 변수 (비우면 전부, Stata keepusing)</strong></label>
+                    <input type="text" id="merge-keepusing" placeholder="예: 인구수, 재정자립도">
+                </div>
+                <div class="silky-field" id="merge-wrap-overlap">
+                    <label><strong>두 자료에 같은 이름의 변수가 있을 때</strong></label>
+                    <select id="merge-overlap">
+                        <option value="master">현재 자료 값 유지 (Stata 기본)</option>
+                        <option value="update">현재 값이 결측이면 결합 자료 값으로 채움 (update)</option>
+                        <option value="replace">결측 채움 + 값이 다르면 결합 자료 값으로 교체 (update replace)</option>
+                    </select>
+                </div>
+                <div class="silky-field" id="merge-wrap-indicator">
+                    <label><strong>결합 결과 표시 변수</strong></label>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <input type="text" id="merge-indicator" value="_merge" style="flex:1;">
+                        <label style="font-size:12px;white-space:nowrap;"><input type="checkbox" id="merge-noind"> 만들지 않음</label>
+                    </div>
+                </div>
+                <div class="silky-field" id="merge-wrap-unmatched" style="display:none;">
+                    <label><strong>짝이 없는 행 (joinby unmatched)</strong></label>
+                    <select id="merge-unmatched">
+                        <option value="none">제외 (기본)</option>
+                        <option value="both">양쪽 모두 유지</option>
+                        <option value="master">현재 자료 쪽만 유지</option>
+                        <option value="using">결합 자료 쪽만 유지</option>
+                    </select>
+                </div>
+                <div class="silky-field" id="merge-wrap-generate" style="display:none;">
+                    <label><strong>자료 출처 표시 변수 (append generate)</strong></label>
+                    <input type="text" id="merge-generate" placeholder="예: 출처 (0 = 현재, 1 = 추가)">
+                </div>
+                <div class="silky-field" id="merge-wrap-force" style="display:none;">
+                    <label><strong>형식 불일치</strong></label>
+                    <label style="font-size:12.5px;"><input type="checkbox" id="merge-force"> 숫자·문자 형식이 다른 변수는 추가 자료 값을 결측 처리 (force)</label>
                 </div>
             </div>
             <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid #E2E8F0;">
-                <button class="silky-small-btn" onclick="closeMergeModal()">Cancel</button>
-                <button class="py-btn run" onclick="submitMergeModal()">▶ Execute Merge</button>
+                <button class="silky-small-btn" onclick="closeMergeModal()">취소</button>
+                <button class="py-btn run" onclick="submitMergeModal()">▶ 결합 실행</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Variable type conversion modal (Stata destring / tostring / encode / decode / label values) -->
+<div class="ost-modal-backdrop" id="convert-modal" onclick="if(event.target===this) closeConvertModal()">
+    <div class="ost-modal-box" style="width:620px;">
+        <div class="ost-modal-hdr">
+            <span>🔁 변수 형태 변환 (Stata: <code>destring</code> · <code>tostring</code> · <code>encode</code> · <code>decode</code>)</span>
+            <button class="silky-small-btn" onclick="closeConvertModal()">닫기</button>
+        </div>
+        <div class="ost-modal-body">
+            <div class="design-grid">
+                <div class="silky-field" style="grid-column: span 2;">
+                    <label><strong>변수 (쉼표로 여러 개)</strong></label>
+                    <input type="text" id="conv-columns" placeholder="예: 소득, 연령">
+                </div>
+                <div class="silky-field" style="grid-column: span 2;">
+                    <label><strong>작업</strong></label>
+                    <select id="conv-action" onchange="toggleConvertFields()">
+                        <option value="numeric">숫자로 (destring)</option>
+                        <option value="integer">정수로</option>
+                        <option value="text">텍스트로 (tostring)</option>
+                        <option value="date">날짜로</option>
+                        <option value="encode">텍스트 범주 → 숫자 코드 + 값 라벨 (encode)</option>
+                        <option value="decode">숫자 코드 → 값 라벨 텍스트 (decode)</option>
+                        <option value="labels">값 라벨 지정 (label define · label values)</option>
+                    </select>
+                </div>
+                <div class="silky-field conv-f conv-numeric">
+                    <label><strong>제거할 문자 (ignore)</strong></label>
+                    <input type="text" id="conv-ignore" placeholder="예: ,원 (쉼표·단위 제거)">
+                </div>
+                <div class="silky-field conv-f conv-numeric conv-integer conv-date">
+                    <label><strong>바꿀 수 없는 값</strong></label>
+                    <label style="font-size:12.5px;"><input type="checkbox" id="conv-force"> 결측 처리 (force; 정수는 반올림)</label>
+                </div>
+                <div class="silky-field conv-f conv-numeric">
+                    <label><strong>퍼센트</strong></label>
+                    <label style="font-size:12.5px;"><input type="checkbox" id="conv-percent"> "12%"를 0.12로</label>
+                </div>
+                <div class="silky-field conv-f conv-date">
+                    <label><strong>날짜 형식</strong></label>
+                    <input type="text" id="conv-datefmt" placeholder="예: %Y-%m-%d (비우면 자동)">
+                </div>
+                <div class="silky-field conv-f conv-encode">
+                    <label><strong>코드 순서 (비우면 가나다순)</strong></label>
+                    <input type="text" id="conv-order" placeholder="예: 낮음, 보통, 높음">
+                </div>
+                <div class="silky-field conv-f conv-labels" style="grid-column: span 2;">
+                    <label><strong>값 라벨 (비우면 삭제)</strong></label>
+                    <input type="text" id="conv-labels" placeholder="예: 1=남; 2=여">
+                </div>
+                <div class="silky-field conv-f conv-numeric conv-integer conv-text conv-date conv-encode conv-decode" style="grid-column: span 2;">
+                    <label><strong>새 변수명 (비우면 기존 변수 대체 · encode/decode는 _code/_label 접미)</strong></label>
+                    <input type="text" id="conv-generate" placeholder="예: 소득_num">
+                </div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid #E2E8F0;">
+                <button class="silky-small-btn" onclick="closeConvertModal()">취소</button>
+                <button class="py-btn run" onclick="submitConvertModal()">▶ 실행</button>
             </div>
         </div>
     </div>
@@ -2425,47 +2545,51 @@ table.jmv-apa-table tbody tr:last-child {
 
 <!-- Reshape Dataset Modal (Stata: reshape long / wide) -->
 <div class="ost-modal-backdrop" id="reshape-modal" onclick="if(event.target===this) closeReshapeModal()">
-    <div class="ost-modal-box" style="width:640px;">
+    <div class="ost-modal-box" style="width:660px;">
         <div class="ost-modal-hdr">
-            <span>📐 Reshape Dataset (Stata: <code>reshape long / wide</code>)</span>
-            <button class="silky-small-btn" onclick="closeReshapeModal()">Close</button>
+            <span>📐 자료 구조 변환 (Stata: <code>reshape long / wide</code>)</span>
+            <button class="silky-small-btn" onclick="closeReshapeModal()">닫기</button>
         </div>
         <div class="ost-modal-body">
-            <div style="font-size:12px;color:#475569;margin-bottom:12px;">
-                Convert repeated measures data between <strong>Wide</strong> (e.g. <code>bp_w1, bp_w2, bp_w3</code>) and <strong>Long</strong> (panel format: <code>wave, bp</code>).
+            <div style="font-size:12px;color:#475569;margin-bottom:12px;line-height:1.55;">
+                반복측정 자료를 Wide(예: <code>bp1 bp2 bp3</code>)와 Long(<code>id, wave, bp</code>) 사이에서 변환. 새 변수명은 stub + 구분자 + 시점값(Stata 기본 구분자 없음).
             </div>
             <div class="design-grid">
                 <div class="silky-field">
-                    <label><strong>Direction</strong></label>
+                    <label><strong>변환 방향</strong></label>
                     <select id="reshape-direction" onchange="toggleReshapeFields()">
-                        <option value="long">Wide ➔ Long (Panel format, default)</option>
-                        <option value="wide">Long ➔ Wide (Repeated columns)</option>
+                        <option value="long">Wide → Long (기본)</option>
+                        <option value="wide">Long → Wide</option>
                     </select>
                 </div>
                 <div class="silky-field">
-                    <label><strong>ID Variable(s) (comma-separated)</strong></label>
-                    <input type="text" id="reshape-id-vars" placeholder="e.g. subj_id, arm">
+                    <label><strong>식별 변수 i() (쉼표로 여러 개)</strong></label>
+                    <input type="text" id="reshape-id-vars" placeholder="예: subj_id">
                 </div>
                 <div class="silky-field" id="wrap-stubnames" style="grid-column: span 2;">
-                    <label><strong>Multi-Stub Prefix(es) (Stata style: e.g. <code>bp_w, qol_w</code>)</strong></label>
-                    <input type="text" id="reshape-stubnames" placeholder="e.g. bp_w, qol_w (reshapes both simultaneously!)">
+                    <label><strong id="reshape-stub-label">stub (변수명 앞부분, 여러 개 동시 변환)</strong></label>
+                    <input type="text" id="reshape-stubnames" placeholder="예: bp_w, qol_w">
                 </div>
                 <div class="silky-field" id="wrap-value-vars" style="grid-column: span 2;">
-                    <label><strong>OR Explicit Value Variables to Melt</strong></label>
-                    <input type="text" id="reshape-value-vars" placeholder="e.g. bp_w1, bp_w2, bp_w3 (optional if stubs given)">
+                    <label><strong>또는 변환할 변수 직접 지정 (단일 측정치)</strong></label>
+                    <input type="text" id="reshape-value-vars" placeholder="예: bp_w1, bp_w2, bp_w3">
                 </div>
                 <div class="silky-field">
-                    <label><strong>Time / Wave Column Name</strong></label>
+                    <label><strong>시점 변수 j()</strong></label>
                     <input type="text" id="reshape-time-col" value="wave" placeholder="wave">
                 </div>
-                <div class="silky-field">
-                    <label><strong>Value Column Name (single-measure melt)</strong></label>
+                <div class="silky-field" id="wrap-value-col">
+                    <label><strong>값 변수명 (직접 지정 시)</strong></label>
                     <input type="text" id="reshape-value-col" value="value" placeholder="value">
+                </div>
+                <div class="silky-field">
+                    <label><strong>stub와 시점값 사이 구분자</strong></label>
+                    <input type="text" id="reshape-sep" value="" placeholder="비우면 없음 (예: _ → bp_1)">
                 </div>
             </div>
             <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid #E2E8F0;">
-                <button class="silky-small-btn" onclick="closeReshapeModal()">Cancel</button>
-                <button class="py-btn run" onclick="submitReshapeModal()">▶ Execute Reshape</button>
+                <button class="silky-small-btn" onclick="closeReshapeModal()">취소</button>
+                <button class="py-btn run" onclick="submitReshapeModal()">▶ 변환 실행</button>
             </div>
         </div>
     </div>
@@ -2508,7 +2632,8 @@ const I18N = {
         data_library: "데이터 라이브러리",
         data_filter: "데이터 필터",
         data_merge: "데이터 병합",
-        data_reshape: "형태 변환",
+        data_reshape: "구조 변환",
+        data_convert: "변수 형식",
         data_transform: "표준화 (Z)",
         data_add_row: "행 추가",
         data_delete_row: "행 삭제",
@@ -2520,6 +2645,7 @@ const I18N = {
         ana_frequencies: "빈도분석",
         ana_factor: "요인분석",
         ana_sem: "SEM / CFA",
+        ana_mixture: "잠재계층",
         ana_medmod: "매개/조절",
         ana_panel: "패널 &amp; 혼합",
         ana_survival: "생존분석",
@@ -2587,6 +2713,7 @@ const I18N = {
         data_filter: "Filter",
         data_merge: "Merge Data",
         data_reshape: "Reshape",
+        data_convert: "Variable type",
         data_transform: "Transform (Z)",
         data_add_row: "Add Row",
         data_delete_row: "Delete Row",
@@ -2598,6 +2725,7 @@ const I18N = {
         ana_frequencies: "Frequencies",
         ana_factor: "Factor",
         ana_sem: "SEM / CFA",
+        ana_mixture: "Mixture",
         ana_medmod: "MedMod",
         ana_panel: "Panel &amp; Mixed",
         ana_survival: "Survival",
@@ -2712,6 +2840,13 @@ const RIBBON_MENUS_I18N = {
         survival: [
             { id: "survival", label: "생존분석 (Kaplan-Meier & Cox 비례위험)" }
         ],
+        mixture: [
+            { section: "횡단 자료" },
+            { id: "lca", label: "잠재계층·잠재프로파일 분석 (LCA·LPA)" },
+            { section: "종단 자료" },
+            { id: "lta", label: "잠재전이분석 (LTA)" },
+            { id: "lcga", label: "잠재계층 성장분석 (LCGA)" }
+        ],
         spatial: [
             { section: "지도 경계·공간가중행렬" },
             { action: "openBoundaryModal()", label: "지도 경계 연결 (.shp·.zip·.geojson)", badge: "경계" },
@@ -2825,6 +2960,13 @@ const RIBBON_MENUS_I18N = {
         ],
         survival: [
             { id: "survival", label: "Survival Analysis (Kaplan-Meier & Cox)" }
+        ],
+        mixture: [
+            { section: "Cross-sectional data" },
+            { id: "lca", label: "Latent class / profile analysis (LCA · LPA)" },
+            { section: "Longitudinal data" },
+            { id: "lta", label: "Latent transition analysis (LTA)" },
+            { id: "lcga", label: "Latent class growth analysis (LCGA)" }
         ],
         spatial: [
             { section: "Boundaries & spatial weights" },
@@ -3324,6 +3466,94 @@ function spatialInferenceItems(withSe) {
     return items;
 }
 
+/* --- Mixture models (LCA · LPA · LTA · LCGA), defaults follow Mplus --- */
+function mixtureEstimationSection(withEnum) {
+    const items = [
+        { type: "select", key: "estimator", label: "표준오차", def: "mlr", options: [["mlr", "MLR 강건 표준오차 (Mplus 기본)"], ["ml", "ML 정보행렬"]] },
+        { type: "number", key: "starts", label: "초기 무작위 시작값 수", def: 20, min: 1, max: 500, step: 1, help: "Mplus STARTS = 20 4" },
+        { type: "number", key: "finalStarts", label: "최종 단계 시작값 수", def: 4, min: 1, max: 100, step: 1 },
+        { type: "number", key: "stIterations", label: "초기 단계 반복 수", def: 10, min: 1, max: 200, step: 1, help: "Mplus STITERATIONS" },
+        { type: "number", key: "seed", label: "난수 seed", def: 0, min: 0, max: 999999, step: 1 }
+    ];
+    if (withEnum) {
+        items.push({ type: "check", key: "tech11", label: "VLMR·LMR 검정 (TECH11)", def: false });
+        items.push({ type: "check", key: "tech14", label: "부트스트랩 LRT (TECH14)", def: false });
+        items.push({ type: "number", key: "blrtDraws", label: "BLRT 반복 수", def: 100, min: 20, max: 1000, step: 10, showIf: { tech14: [true, "true"] } });
+    }
+    return { title: "추정 (Mplus 기본 설정)", collapsed: true, items };
+}
+const MIX_CLASS_ITEMS = [
+    { type: "number", key: "classes", label: "잠재계층 수 (최종 모형)", def: 3, min: 1, max: 12, step: 1 },
+    { type: "text", key: "classRange", label: "계층 수 비교 범위", def: "1-5", placeholder: "예: 1-5 (비우면 비교 생략)",
+      help: "범위 안의 계층 수마다 모형을 추정해 LL·AIC·BIC·SABIC·엔트로피를 비교" }
+];
+const MIXTURE_SCHEMAS = {
+    lca: {
+        title: "잠재계층·잠재프로파일 분석 (LCA·LPA)",
+        intro: "응답 유형이 비슷한 사람들의 숨은 집단(잠재계층)을 찾습니다. 범주형 지표는 잠재계층분석(LCA), 연속형 지표는 잠재프로파일분석(LPA)이며 함께 쓸 수 있습니다. 기본 설정은 Mplus를 따릅니다(MLR, STARTS 20 4, 결측 FIML, 연속 지표 분산 계층 간 동일·공분산 0).",
+        manualRun: true,
+        slots: [
+            { key: "categorical", label: "범주형 지표 (LCA · Mplus CATEGORICAL)", multi: true, req: false, prefer: "cat" },
+            { key: "continuous", label: "연속형 지표 (LPA)", multi: true, req: false, prefer: "num" },
+            { key: "covariates", label: "계층 예측 공변량 (R3STEP, 선택)", multi: true, req: false, prefer: "num" },
+            { key: "distalContinuous", label: "연속형 원격 결과 (BCH, 선택)", multi: true, req: false, prefer: "num" },
+            { key: "distalCategorical", label: "범주형 원격 결과 (DCAT, 선택)", multi: true, req: false, prefer: "cat" }
+        ],
+        sections: [
+            { title: "모형", items: [
+                ...MIX_CLASS_ITEMS,
+                { type: "select", key: "variances", label: "연속 지표 분산", def: "equal",
+                  options: [["equal", "계층 간 동일 (Mplus 기본)"], ["free", "계층별 추정"]] },
+                { type: "select", key: "covariances", label: "연속 지표 공분산", def: "zero",
+                  options: [["zero", "0 · 국지 독립 (Mplus 기본)"], ["equal", "계층 간 동일"], ["free", "계층별 추정"]] }
+            ] },
+            mixtureEstimationSection(true)
+        ]
+    },
+    lta: {
+        title: "잠재전이분석 (LTA)",
+        intro: "여러 시점에 측정한 같은 지표로 시점별 잠재계층을 추정하고 계층 사이의 전이확률을 구합니다. 자료는 개인·시점별 1행(long) 형식이며, 측정모형은 시점 간 동일하게 둡니다(Mplus 사용자 안내서 예 8.13 설정).",
+        manualRun: true,
+        slots: [
+            { key: "categorical", label: "범주형 지표 (각 시점 공통)", multi: true, req: false, prefer: "cat" },
+            { key: "continuous", label: "연속형 지표 (각 시점 공통)", multi: true, req: false, prefer: "num" },
+            { key: "idVar", label: "개인 식별 변수", multi: false, req: true, prefer: "any" },
+            { key: "timeVar", label: "시점 변수", multi: false, req: true, prefer: "any" }
+        ],
+        sections: [
+            { title: "모형", items: [
+                { type: "number", key: "classes", label: "시점별 잠재계층 수", def: 3, min: 2, max: 8, step: 1 },
+                { type: "check", key: "invariance", label: "측정모형 시점 간 동일 (측정동일성)", def: true },
+                { type: "select", key: "variances", label: "연속 지표 분산", def: "equal",
+                  options: [["equal", "계층 간 동일 (Mplus 기본)"], ["free", "계층별 추정"]] }
+            ] },
+            mixtureEstimationSection(false)
+        ]
+    },
+    lcga: {
+        title: "잠재계층 성장분석 (LCGA)",
+        intro: "반복측정한 연속형 결과의 변화 궤적이 비슷한 사람들의 집단을 찾습니다. 계층 안의 성장요인 분산은 0으로 두고(Mplus LCGA), 결과변수의 잔차분산은 시점별로 추정하되 계층 간 동일하게 둡니다. 자료는 개인·시점별 1행(long) 형식입니다.",
+        manualRun: true,
+        slots: [
+            { key: "dep", label: "반복측정 결과변수", multi: false, req: true, prefer: "num" },
+            { key: "idVar", label: "개인 식별 변수", multi: false, req: true, prefer: "any" },
+            { key: "timeVar", label: "시점 변수", multi: false, req: true, prefer: "num" },
+            { key: "covariates", label: "계층 예측 공변량 (R3STEP, 선택)", multi: true, req: false, prefer: "num" }
+        ],
+        sections: [
+            { title: "성장모형", items: [
+                ...MIX_CLASS_ITEMS,
+                { type: "select", key: "growth", label: "성장 형태", def: "linear",
+                  options: [["linear", "선형 (절편·기울기)"], ["quadratic", "2차 (절편·기울기·2차항)"], ["cubic", "3차"]] },
+                { type: "select", key: "residualVariances", label: "잔차분산", def: "time_class_invariant",
+                  options: [["time_class_invariant", "시점별 추정·계층 간 동일 (Mplus 기본)"], ["class_specific", "시점·계층별 추정"], ["equal", "모든 시점 동일"]] },
+                { type: "text", key: "timeScores", label: "시점 점수 (선택)", def: "", placeholder: "예: 0, 1, 2, 3 (비우면 시점값 − 첫 시점값)" }
+            ] },
+            mixtureEstimationSection(true)
+        ]
+    }
+};
+
 const SPATIAL_SCHEMAS = {
     spatialMap: {
         title: "주제도 (단계구분도)",
@@ -3716,6 +3946,7 @@ async function detachBoundary() {
 const ANALYSIS_SCHEMAS = {
     ...TEXT_NETWORK_SCHEMAS,
     ...SPATIAL_SCHEMAS,
+    ...MIXTURE_SCHEMAS,
     summaryTTest: {
         title: "Summary Statistics T-Test (JASP)",
         slots: [],
@@ -4300,22 +4531,41 @@ const ANALYSIS_SCHEMAS = {
         ]
     },
     sem: {
-        title: "Structural Equation Modeling (SEMLj)",
+        title: "구조방정식 모형 (CFA·SEM · Mplus 기본 설정)",
+        intro: "모형은 Python 문자열로 작성합니다(=~ 측정, ~ 회귀, ~~ 공분산, ~ 1 절편, a*x 라벨, 1*x 고정, := 정의 모수). 기본 설정은 Mplus를 따릅니다: ML 추정, 결측 FIML, 평균구조 포함, 각 요인의 첫 적재량 1 고정, 외생 관측변수 조건부 처리.",
         slots: [
-            { key: "obsVars", label: "관측변수 후보 (더블클릭 시 모델에 추가)", multi: true, req: false, prefer: "num" }
+            { key: "obsVars", label: "관측변수 후보 (더블클릭 시 모델에 추가)", multi: true, req: false, prefer: "num" },
+            { key: "group", label: "다집단 변수 (선택, Mplus GROUPING)", multi: false, req: false, prefer: "cat" }
         ],
         sections: [
             {
-                title: "lavaan Model Syntax (=~ latent, ~ regression, ~~ covariance)",
+                title: "모형 문자열",
                 singleCol: true,
                 items: [
-                    { type: "textarea", key: "model", label: "Model Syntax", def: "" },
-                    { type: "check", key: "stdEst", label: "Standardized estimates (β)", def: true },
-                    { type: "check", key: "fitMeasures", label: "Fit indices (CFI, TLI, RMSEA)", def: true },
-                    { type: "check", key: "variances", label: "Variances & covariances table", def: false },
-                    { type: "check", key: "pathDiagram", label: "Path diagram", def: true }
+                    { type: "textarea", key: "model", label: "Model", def: "" }
                 ]
-            }
+            },
+            { title: "추정 (Mplus 기본 설정)", items: [
+                { type: "select", key: "estimator", label: "추정량", def: "ml", options: [["ml", "ML (Mplus 기본)"], ["mlr", "MLR 강건 표준오차·Yuan–Bentler 척도 χ²"]] },
+                { type: "select", key: "missing", label: "결측 처리", def: "fiml", options: [["fiml", "FIML · 가용 자료 전부 (Mplus 기본)"], ["listwise", "목록별 삭제"]] },
+                { type: "number", key: "bootstrap", label: "부트스트랩 반복 수 (0 = 사용 안 함)", def: 0, min: 0, max: 10000, step: 100 },
+                { type: "select", key: "ciType", label: "신뢰구간 (부트스트랩 사용 시)", def: "symmetric",
+                  options: [["symmetric", "대칭 (Mplus CINTERVAL)"], ["percentile", "백분위 부트스트랩"], ["bc", "편향 교정 부트스트랩 (BCBOOTSTRAP)"]] },
+                { type: "select", key: "invariance", label: "다집단 동일성 제약", def: "scalar", showIf: { group: "__filled__" },
+                  options: [["scalar", "적재량·절편 동일 (Mplus 다집단 기본)"], ["metric", "적재량만 동일"], ["configural", "제약 없음 (형태 동일성)"], ["strict", "적재량·절편·잔차분산 동일"]] },
+                { type: "check", key: "invarianceTest", label: "측정동일성 단계 비교표 (형태→적재량→절편)", def: false, showIf: { group: "__filled__" } }
+            ] },
+            { title: "출력", items: [
+                { type: "check", key: "stdEst", label: "표준화 추정치", def: true },
+                { type: "select", key: "standardized", label: "표준화 방식", def: "stdyx", showIf: { stdEst: [true, "true"] },
+                  options: [["stdyx", "STDYX (Mplus)"], ["stdy", "STDY"], ["std", "STD (잠재변수만)"]] },
+                { type: "check", key: "fitMeasures", label: "모형 적합도", def: true },
+                { type: "text", key: "indirect", label: "간접효과 (Mplus MODEL INDIRECT)", def: "", span2: true, placeholder: "예: GPA <- Visual  (여러 개는 ; 로 구분)" },
+                { type: "check", key: "modIndices", label: "수정지수 (MODINDICES)", def: false },
+                { type: "number", key: "miMin", label: "수정지수 표시 기준", def: 10, min: 0, max: 100, step: 1, showIf: { modIndices: [true, "true"] } },
+                { type: "check", key: "variances", label: "분산·공분산 표", def: false },
+                { type: "check", key: "pathDiagram", label: "경로 그림", def: true }
+            ] }
         ]
     },
     mediation: {
@@ -4702,6 +4952,7 @@ function renderVariablesView() {
             <div style="color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(summaryText)}">${escapeHtml(summaryText)}</div>
             <div style="display:flex;align-items:center;gap:4px;justify-content:center;">
                 <button class="silky-small-btn" onclick="openRecodeModal('${col.name.replace(/'/g, "\\'")}')" title="Recode this variable">Recode</button>
+                <button class="silky-small-btn" onclick="openConvertModal('${col.name.replace(/'/g, "\\'")}')" title="형태 변환 (destring·tostring·encode·decode·값 라벨)">형태</button>
                 <button class="slot-pill-rm" title="Delete Variable" onclick="deleteSpecificCol('${col.name.replace(/'/g, "\\'")}')">×</button>
             </div>
         </div>`;
@@ -4906,36 +5157,136 @@ function closeMergeModal() {
 
 function autoFillMergeKeys() {
     const keyInp = document.getElementById("merge-key");
-    const idCand = APP.columns.find(c => c.measureType === "ID" || /id|subj|firm|patient/i.test(c.name));
+    const idCand = APP.columns.find(c => c.measureType === "ID" || /id|subj|firm|patient|코드/i.test(c.name));
     if (idCand && !keyInp.value) {
         keyInp.value = idCand.name;
     }
+    toggleMergeFields();
 }
+
+function toggleMergeFields() {
+    const kind = document.getElementById("merge-kind").value;
+    const isAppend = kind === "append", isJoin = kind === "joinby";
+    const show = (id, on) => { const el = document.getElementById(id); if (el) el.style.display = on ? "" : "none"; };
+    show("merge-wrap-key", !isAppend);
+    show("merge-wrap-keep", !isAppend && !isJoin);
+    show("merge-wrap-keepusing", !isAppend && !isJoin);
+    show("merge-wrap-overlap", !isAppend);
+    show("merge-wrap-indicator", !isAppend && !isJoin);
+    show("merge-wrap-unmatched", isJoin);
+    show("merge-wrap-generate", isAppend);
+    show("merge-wrap-force", isAppend);
+}
+
+function _splitNames(v) { return (v || "").split(",").map(x => x.trim()).filter(Boolean); }
 
 async function submitMergeModal() {
     const other = document.getElementById("merge-other-source").value;
+    const kind = document.getElementById("merge-kind").value;
     const key = document.getElementById("merge-key").value.trim();
-    const how = document.getElementById("merge-how").value;
     if (!other) {
-        showToast("Select a dataset to merge");
+        showToast("결합할 자료 선택");
         return;
+    }
+    if (kind !== "append" && !key) {
+        showToast("키 변수 지정 필요");
+        return;
+    }
+    const overlap = document.getElementById("merge-overlap").value;
+    const body = { other_source: other, on: _splitNames(key), kind: kind || null,
+                   update: overlap !== "master", replace: overlap === "replace" };
+    if (kind === "append") {
+        body.generate = document.getElementById("merge-generate").value.trim() || null;
+        body.force = document.getElementById("merge-force").checked;
+    } else if (kind === "joinby") {
+        body.unmatched = document.getElementById("merge-unmatched").value;
+    } else {
+        const keep = [];
+        if (document.getElementById("merge-keep-master").checked) keep.push("master");
+        if (document.getElementById("merge-keep-using").checked) keep.push("using");
+        if (document.getElementById("merge-keep-match").checked) keep.push("match");
+        if (!keep.length) { showToast("남길 행을 1개 이상 선택"); return; }
+        body.keep = keep.length === 3 ? null : keep;
+        const ku = _splitNames(document.getElementById("merge-keepusing").value);
+        body.keepusing = ku.length ? ku : null;
+        body.indicator = document.getElementById("merge-noind").checked ? false : (document.getElementById("merge-indicator").value.trim() || "_merge");
     }
     try {
         const res = await fetch("/api/data/merge", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ other_source: other, on: key || null, how: how })
+            body: JSON.stringify(body)
         });
         if (res.ok) {
-            applyDatasetPayload(await res.json());
+            const data = await res.json();
+            applyDatasetPayload(data);
             closeMergeModal();
-            showToast(`Merged '${other}' (${how}) & logged to pipeline`);
+            showToast(data.message || "결합 완료");
         } else {
             const err = await res.json();
-            showToast(err.detail || "Merge error");
+            showToast(err.detail || "결합 오류");
         }
     } catch (e) {
-        showToast("Merge failed: " + e.message);
+        showToast("결합 실패: " + e.message);
+    }
+}
+
+/* --- Variable type conversion modal --- */
+function openConvertModal(colName) {
+    if (colName) document.getElementById("conv-columns").value = colName;
+    toggleConvertFields();
+    document.getElementById("convert-modal").classList.add("open");
+}
+
+function closeConvertModal() {
+    document.getElementById("convert-modal").classList.remove("open");
+}
+
+function toggleConvertFields() {
+    const act = document.getElementById("conv-action").value;
+    document.querySelectorAll("#convert-modal .conv-f").forEach(el => {
+        el.style.display = el.classList.contains("conv-" + act) ? "" : "none";
+    });
+}
+
+async function submitConvertModal() {
+    const cols = _splitNames(document.getElementById("conv-columns").value);
+    const act = document.getElementById("conv-action").value;
+    if (!cols.length) { showToast("변수 지정 필요"); return; }
+    const gen = _splitNames(document.getElementById("conv-generate").value);
+    const body = { columns: cols, generate: gen.length ? gen : null };
+    if (["numeric", "integer", "text", "date"].includes(act)) {
+        Object.assign(body, { action: "convert", to: act, ignore: document.getElementById("conv-ignore").value,
+            force: document.getElementById("conv-force").checked, percent: document.getElementById("conv-percent").checked,
+            date_format: document.getElementById("conv-datefmt").value.trim() || null });
+    } else if (act === "encode") {
+        const order = _splitNames(document.getElementById("conv-order").value);
+        Object.assign(body, { action: "encode", order: order.length ? order : null });
+    } else if (act === "decode") {
+        body.action = "decode";
+    } else {
+        const labels = {};
+        (document.getElementById("conv-labels").value || "").split(/[;\n]/).forEach(p => {
+            const m = p.split("=");
+            if (m.length >= 2 && m[0].trim()) labels[m[0].trim()] = m.slice(1).join("=").trim();
+        });
+        Object.assign(body, { action: "labels", labels: Object.keys(labels).length ? labels : null });
+    }
+    try {
+        const res = await fetch("/api/variable/convert", {
+            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
+        });
+        if (res.ok) {
+            const data = await res.json();
+            applyDatasetPayload(data);
+            closeConvertModal();
+            showToast(data.message || "변환 완료");
+        } else {
+            const err = await res.json();
+            showToast(err.detail || "변환 오류");
+        }
+    } catch (e) {
+        showToast("변환 실패: " + e.message);
     }
 }
 
@@ -4957,8 +5308,10 @@ function closeReshapeModal() {
 function toggleReshapeFields() {
     const dir = document.getElementById("reshape-direction").value;
     const isLong = dir === "long";
-    document.getElementById("wrap-stubnames").style.display = isLong ? "block" : "none";
-    document.getElementById("wrap-value-vars").style.display = isLong ? "block" : "none";
+    document.getElementById("reshape-stub-label").textContent = isLong
+        ? "stub (변수명 앞부분, 여러 개 동시 변환)" : "펼칠 변수 (Long 자료의 측정 변수, 여러 개 가능)";
+    document.getElementById("wrap-value-vars").style.display = isLong ? "" : "none";
+    document.getElementById("wrap-value-col").style.display = isLong ? "" : "none";
 }
 
 async function submitReshapeModal() {
@@ -4968,6 +5321,7 @@ async function submitReshapeModal() {
     const vVars = document.getElementById("reshape-value-vars").value.split(",").map(s => s.trim()).filter(Boolean);
     const timeCol = document.getElementById("reshape-time-col").value.trim() || "wave";
     const valCol = document.getElementById("reshape-value-col").value.trim() || "value";
+    const sep = document.getElementById("reshape-sep").value;
 
     try {
         const res = await fetch("/api/data/reshape", {
@@ -4976,16 +5330,17 @@ async function submitReshapeModal() {
             body: JSON.stringify({
                 direction: dir,
                 id_vars: ids.length ? ids : null,
-                stubnames: stubs.length ? stubs : null,
-                value_vars: vVars.length ? vVars : null,
+                stubnames: dir === "long" && stubs.length ? stubs : null,
+                value_vars: dir === "wide" ? (stubs.length ? stubs : null) : (vVars.length ? vVars : null),
                 time_col: timeCol,
-                value_col: valCol
+                value_col: valCol,
+                sep: sep
             })
         });
         if (res.ok) {
             applyDatasetPayload(await res.json());
             closeReshapeModal();
-            showToast(`Reshaped dataset (${dir}) & recorded in pipeline`);
+            showToast(`구조 변환 완료 (${dir === "long" ? "Wide → Long" : "Long → Wide"})`);
         } else {
             const err = await res.json();
             showToast(err.detail || "Reshape error");
@@ -5152,6 +5507,33 @@ function autoAssignVariablesIntoParams(type, params) {
         const rest = allNames.filter(n => n !== params.source);
         params.target = pick(/target|^to$|도착|수신|받은|alter/i, rest) || catLike.find(n => n !== params.source) || rest[0] || "";
         params.weight = pick(/weight|가중|횟수|빈도|count|freq|strength/i, numCols.filter(n => n !== params.source && n !== params.target)) || "";
+        return;
+    }
+
+    if (type === "lca" || type === "lta" || type === "lcga") {
+        const isId = n => /^(id|subj|pid|hhid)$|(^|_)id$|식별|번호/i.test(n);
+        const isTime = n => /^(year|time|wave|t)$|연도|년도|시점|차수|wave/i.test(n);
+        const meta = n => cols.find(c => c.name === n) || {};
+        const items = allNames.filter(n => !isId(n) && !isTime(n) && /^(성별|sex|gender)$/i.test(n) === false);
+        const catItems = items.filter(n => { const m = meta(n); return m.unique >= 2 && m.unique <= 6 && m.dataType !== "Text"; });
+        if (type === "lca") {
+            if (allNames.includes("외출지원필요")) {
+                params.categorical = ["외출지원필요", "식사지원필요", "가사지원필요", "목욕지원필요", "투약관리필요", "정서지원필요", "인지기능저하"].filter(n => allNames.includes(n));
+                params.covariates = ["연령", "독거"].filter(n => allNames.includes(n));
+                params.distalContinuous = ["월의료비"].filter(n => allNames.includes(n));
+                params.distalCategorical = ["시설입소의향"].filter(n => allNames.includes(n));
+            } else {
+                params.categorical = catItems.slice(0, 8);
+            }
+        } else {
+            params.idVar = allNames.find(isId) || "";
+            params.timeVar = allNames.find(isTime) || "";
+            if (type === "lta") {
+                params.categorical = catItems.filter(n => n !== params.idVar && n !== params.timeVar).slice(0, 8);
+            } else {
+                params.dep = numCols.find(n => n !== params.idVar && n !== params.timeVar && (meta(n).unique || 0) > 6) || "";
+            }
+        }
         return;
     }
 
@@ -5765,7 +6147,20 @@ function renderAllResults() {
         for (const tbl of (a.tables || [])) {
             html += `<div class="jmv-table-wrap">
                 <div class="jmv-table-title">${escapeHtml(tbl.title)}</div>
-                <table class="jmv-apa-table"><thead><tr>`;
+                <table class="jmv-apa-table"><thead>`;
+            if (tbl.columns.some(c => c.superTitle)) {
+                // grouped header row (column super titles, e.g. class or time point)
+                html += `<tr>`;
+                for (let i = 0; i < tbl.columns.length;) {
+                    const st = tbl.columns[i].superTitle || "";
+                    let j = i + 1;
+                    while (st && j < tbl.columns.length && (tbl.columns[j].superTitle || "") === st) j++;
+                    html += `<th colspan="${j - i}" style="text-align:center;${st ? "border-bottom:1px solid #94A3B8;" : ""}">${escapeHtml(st)}</th>`;
+                    i = j;
+                }
+                html += `</tr>`;
+            }
+            html += `<tr>`;
             for (const c of tbl.columns) {
                 const nCls = (c.type === "number" || c.type === "integer") ? " class=\"num\"" : "";
                 html += `<th${nCls}>${escapeHtml(c.title)}</th>`;

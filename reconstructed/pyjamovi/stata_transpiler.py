@@ -44,6 +44,382 @@ def _stata_recode_rules(rule_text: str) -> Tuple[str, Optional[str]]:
     return "; ".join(clauses), else_value
 
 
+# ---------------------------------------------------------------------------
+# Helpers for option parsing (Stata allows abbreviations and nested parentheses)
+# ---------------------------------------------------------------------------
+_OPT_ABBREV = {
+    # full name: minimum abbreviation
+    "generate": "gen", "nogenerate": "nogen", "keepusing": "keepus", "keep": "keep", "update": "update",
+    "replace": "replace", "assert": "assert", "unmatched": "unm", "force": "force", "ignore": "ignore",
+    "percent": "percent", "format": "format", "label": "label", "string": "string", "method": "method",
+    "vce": "vce", "group": "group", "ginvariant": "ginv", "standardized": "stand", "latent": "latent",
+    "nocapslatent": "nocaps", "cov": "cov", "covariance": "cov", "var": "var", "variance": "var", "means": "means",
+    "lclass": "lclass", "nolabel": "nol", "noreport": "norep", "sorted": "sorted", "_merge": "_merge", "by": "by",
+    "reps": "reps",
+}
+
+
+def _canon_opt(name: str) -> str:
+    low = name.lower()
+    for full, ab in _OPT_ABBREV.items():
+        if low == full or (len(low) >= len(ab) and full.startswith(low)):
+            return full
+    return low
+
+
+def _parse_options(opt_str: str) -> dict:
+    """'keep(match master) nogen update' -> {'keep': 'match master', 'nogenerate': '', 'update': ''}."""
+    out: dict = {}
+    i, n = 0, len(opt_str or "")
+    txt = opt_str or ""
+    while i < n:
+        while i < n and txt[i] in " \t,":
+            i += 1
+        j = i
+        while j < n and txt[j] not in " \t,(":
+            j += 1
+        name = txt[i:j]
+        if not name:
+            break
+        val = ""
+        if j < n and txt[j] == "(":
+            depth, k = 0, j
+            while k < n:
+                if txt[k] == "(":
+                    depth += 1
+                elif txt[k] == ")":
+                    depth -= 1
+                    if depth == 0:
+                        break
+                k += 1
+            val = txt[j + 1:k]
+            j = k + 1
+        key = _canon_opt(name)
+        out[key] = (out[key] + " " + val).strip() if key in out and key in ("cov", "var", "means") else val
+        i = j
+    return out
+
+
+def _split_top(s: str):
+    """Split 'sem (a -> b) (c <- d), opts' into (['a -> b', 'c <- d'], 'opts')."""
+    groups, depth, start, i = [], 0, None, 0
+    rest_at = len(s)
+    while i < len(s):
+        ch = s[i]
+        if ch == "(":
+            if depth == 0:
+                start = i + 1
+            depth += 1
+        elif ch == ")":
+            depth -= 1
+            if depth == 0 and start is not None:
+                groups.append(s[start:i])
+                start = None
+        elif ch == "," and depth == 0:
+            rest_at = i
+            break
+        i += 1
+    return groups, s[rest_at + 1:].strip() if rest_at < len(s) else ""
+
+
+def _names(txt: str):
+    return [t for t in re.split(r"\s+", (txt or "").strip()) if t]
+
+
+def _using_file(name: str) -> str:
+    name = name.strip().strip('"').strip("'")
+    if not re.search(r"\.[A-Za-z0-9]{2,8}$", name):
+        name += ".dta"  # Stata default extension
+    return name
+
+
+def _stata_fmt_to_py(fmt: str):
+    m = re.fullmatch(r"%-?0?\d*\.(\d+)f", (fmt or "").strip())
+    return "{:.%sf}" % m.group(1) if m else None
+
+
+def _translate_sem(body: str, cmd: str) -> str:
+    groups, opt_str = _split_top(body)
+    opts = _parse_options(opt_str)
+    if not groups:
+        raise ValueError("sem: 경로 지정 (A -> b) 없음")
+    explicit_latent = set(_names(opts.get("latent", "")))
+    caps = "nocapslatent" not in opts
+
+    def is_latent(v: str) -> bool:
+        return v in explicit_latent or (caps and bool(re.match(r"[A-Z]", v)))
+
+    edges = []   # (source, target, constraint)
+    for g in groups:
+        g = g.split(",")[0]
+        parts = re.split(r"(->|<-)", g)
+        if len(parts) < 3:
+            raise ValueError(f"sem: 경로 해석 불가 ({g.strip()})")
+        segs = [_names(p) for p in parts[0::2]]
+        arrows = parts[1::2]
+        for k, arrow in enumerate(arrows):
+            left, right = segs[k], segs[k + 1]
+            srcs, tgts = (left, right) if arrow == "->" else (right, left)
+            for t in tgts:
+                t_name, t_c = (t.split("@", 1) + [None])[:2]
+                for sname in srcs:
+                    s_name, s_c = (sname.split("@", 1) + [None])[:2]
+                    if s_name == "_cons":
+                        continue
+                    c = (t_c or s_c) if arrow == "->" else (s_c or t_c)
+                    edges.append((s_name, t_name, c))
+    # an observed outcome is a measurement indicator only when all of its predictors are latent
+    obs_pred = {t for s_, t, _ in edges if not is_latent(s_) and not is_latent(t)}
+    meas: dict = {}
+    reg: dict = {}
+    order_meas: list = []
+    for s_name, t_name, c in edges:
+        pre = f"{c}*" if c else ""
+        if is_latent(s_name) and not is_latent(t_name) and t_name not in obs_pred:
+            if s_name not in meas:
+                meas[s_name] = []
+                order_meas.append(s_name)
+            meas[s_name].append(pre + t_name)
+        else:
+            reg.setdefault(t_name, []).append(pre + s_name)
+    fixed_var = set()
+    cov_lines = []
+    for spec in _names(opts.get("cov", "")) + _names(opts.get("var", "")):
+        spec = spec.replace("e.", "")
+        val = None
+        if "@" in spec:
+            spec, val = spec.split("@", 1)
+        if "*" in spec:
+            a, b = spec.split("*", 1)
+        else:
+            a = b = spec
+        if a == b and val is not None and is_latent(a):
+            fixed_var.add(a)
+        cov_lines.append(f"{a} ~~ {(val + '*') if val is not None else ''}{b}")
+    lines = []
+    for lv in order_meas:
+        terms = meas[lv]
+        if lv in fixed_var and terms and "*" not in terms[0]:
+            terms = ["NA*" + terms[0]] + terms[1:]
+        lines.append(f"{lv} =~ " + " + ".join(terms))
+    for dv, terms in reg.items():
+        lines.append(f"{dv} ~ " + " + ".join(terms))
+    lines.extend(cov_lines)
+    kw = []
+    meth = opts.get("method", "").lower()
+    if meth:
+        if meth.startswith("mlmv"):
+            kw.append("missing='fiml'")
+        elif meth.startswith("ml"):
+            kw.append("missing='listwise'")
+        else:
+            raise ValueError(f"sem method({meth}) 미지원 (ml, mlmv만 변환)")
+    vce = opts.get("vce", "").lower()
+    if vce:
+        if vce.startswith(("robust", "sbentler", "r")) and not vce.startswith("boot"):
+            kw.append("estimator='mlr'")
+        elif vce.startswith("boot"):
+            rm = re.search(r"reps\((\d+)\)", vce)
+            kw.append(f"bootstrap={int(rm.group(1)) if rm else 1000}")
+    if "group" in opts:
+        kw.append(f"group={opts['group'].strip()!r}")
+        gi = set(_names(opts.get("ginvariant", "mcoef mcons").lower()))
+        inv = ("configural" if "none" in gi else "strict" if ("all" in gi or {"mcoef", "mcons", "merrvar"} <= gi)
+               else "scalar" if {"mcoef", "mcons"} <= gi else "metric" if "mcoef" in gi else "configural")
+        kw.append(f"invariance={inv!r}")
+    if "standardized" in opts:
+        kw.append("standardized='stdyx'")
+    model = "\n".join(lines)
+    return f"sess.sem(model={model!r}" + (", " + ", ".join(kw) if kw else "") + ")"
+
+
+def _translate_gsem(body: str) -> str:
+    groups, opt_str = _split_top(body)
+    opts = _parse_options(opt_str)
+    lc = _names(opts.get("lclass", ""))
+    if len(lc) < 2:
+        raise ValueError("gsem: 잠재계층 lclass(C k) 지정 시에만 변환 (그 밖의 gsem 모형 미지원)")
+    k = int(lc[1])
+    default_fam = "logit" if any(f in opts for f in ("logit", "ologit", "mlogit", "probit", "oprobit")) else "gaussian"
+    cat, cont = [], []
+    for g in groups:
+        fam = default_fam
+        if "," in g:
+            g, gopt = g.split(",", 1)
+            go = gopt.lower()
+            if any(w in go for w in ("logit", "probit", "mlogit", "ologit", "bernoulli")):
+                fam = "logit"
+            elif any(w in go for w in ("gaussian", "regress")):
+                fam = "gaussian"
+        lhs = re.split(r"<-|->", g)[0] if "<-" in g else (re.split(r"->", g)[1] if "->" in g else g)
+        vars_ = [v for v in _names(lhs) if v not in ("_cons",) and not re.match(r"^[A-Z]$", v)]
+        (cat if fam == "logit" else cont).extend(vars_)
+    parts = []
+    if cat:
+        parts.append(f"categorical={cat!r}")
+    if cont:
+        parts.append(f"continuous={cont!r}")
+    return f"sess.lca({', '.join(parts)}, classes={k})"
+
+
+def _transpile_extended(s: str):
+    """Data management, SEM and latent class commands. Returns None when no rule applies."""
+    low = s.lower()
+    # harmless session commands
+    if re.match(r"^(set\s|clear\b|version\b|log\s|capture\s+log|cd\s|cls\b|macro\s+drop|graph\s+close|more\b|discard\b)", low):
+        return f"# [Stata] {s}  → 건너뜀(세션 설정 명령)"
+    m = re.match(r"^use\s+(.+?)(?:\s*,\s*clear)?\s*$", s, re.IGNORECASE)
+    if m and " using " not in f" {m.group(1)} ":
+        return f"sess.load({_using_file(m.group(1))!r})"
+    m = re.match(r"^save\s+(\S+)(?:\s*,.*)?$", s, re.IGNORECASE)
+    if m:
+        return f"sess.save_data({_using_file(m.group(1))!r})"
+
+    # merge 1:1 k1 k2 using f [, opts]
+    m = re.match(r"^merge\s+(?:(1:1|m:1|1:m|m:m)\s+)?(.+?)\s+using\s+(\"[^\"]+\"|\S+)\s*(?:,\s*(.*))?$", s, re.IGNORECASE)
+    if m:
+        kind, keys, fname, opt = m.group(1), _names(m.group(2)), _using_file(m.group(3)), _parse_options(m.group(4) or "")
+        kw = [f"on={keys!r}"] + ([f"kind={kind.lower()!r}"] if kind else [])
+        if "keep" in opt:
+            kw.append(f"keep={_names(opt['keep'])!r}")
+        if "keepusing" in opt:
+            kw.append(f"keepusing={_names(opt['keepusing'])!r}")
+        if "nogenerate" in opt:
+            kw.append("indicator=False")
+        elif opt.get("generate"):
+            kw.append(f"indicator={opt['generate'].strip()!r}")
+        if "update" in opt:
+            kw.append("update=True")
+        if "replace" in opt:
+            kw.append("replace=True")
+        if "assert" in opt:
+            kw.append(f"assert_results={_names(opt['assert'])!r}")
+        return f"sess.merge({fname!r}, {', '.join(kw)})"
+    m = re.match(r"^append\s+using\s+(.+?)\s*(?:,\s*(.*))?$", s, re.IGNORECASE)
+    if m:
+        files = [_using_file(x) for x in re.findall(r"\"[^\"]+\"|\S+", m.group(1))]
+        opt = _parse_options(m.group(2) or "")
+        kw = []
+        if opt.get("generate"):
+            kw.append(f"generate={opt['generate'].strip()!r}")
+        if "force" in opt:
+            kw.append("force=True")
+        src = files[0] if len(files) == 1 else files
+        return f"sess.append({src!r}" + (", " + ", ".join(kw) if kw else "") + ")"
+    m = re.match(r"^joinby\s+(?:(.+?)\s+)?using\s+(\"[^\"]+\"|\S+)\s*(?:,\s*(.*))?$", s, re.IGNORECASE)
+    if m:
+        keys = _names(m.group(1) or "")
+        opt = _parse_options(m.group(3) or "")
+        kw = [f"on={keys!r}" if keys else "on=None"]
+        if opt.get("unmatched"):
+            kw.append(f"unmatched={opt['unmatched'].strip().lower()!r}")
+        if opt.get("_merge"):
+            kw.append(f"indicator={opt['_merge'].strip()!r}")
+        if "update" in opt:
+            kw.append("update=True")
+        if "replace" in opt:
+            kw.append("replace=True")
+        return f"sess.joinby({_using_file(m.group(2))!r}, {', '.join(kw)})"
+    m = re.match(r"^reshape\s+(long|wide)\s+(.+?)\s*,\s*(.*)$", s, re.IGNORECASE)
+    if m:
+        direction, stubs, opt = m.group(1).lower(), _names(m.group(2)), _parse_options(m.group(3))
+        if any("@" in x for x in stubs):
+            return f"raise ValueError({('reshape의 @ 위치 지정 stub 미지원: ' + s)!r})"
+        ids = _names(opt.get("i", ""))
+        j = _names(opt.get("j", ""))
+        if not ids or not j:
+            return f"raise ValueError({('reshape: i()와 j() 지정 필요: ' + s)!r})"
+        if direction == "long":
+            return f"sess.reshape('long', id_vars={ids!r}, stubnames={stubs!r}, time_col={j[0]!r})"
+        return f"sess.reshape('wide', id_vars={ids!r}, value_vars={stubs!r}, time_col={j[0]!r})"
+    m = re.match(r"^collapse\s+(.+?)\s*(?:,\s*(.*))?$", s, re.IGNORECASE)
+    if m:
+        spec, opt = m.group(1), _parse_options(m.group(2) or "")
+        stats, stat = {}, "mean"
+        for tok in re.findall(r"\([^)]*\)|\S+=\S+|\S+", spec):
+            if tok.startswith("("):
+                stat = tok.strip("()").strip().lower()
+            elif "=" in tok:
+                new, old = tok.split("=", 1)
+                stats[new] = (old, stat)
+            else:
+                stats[tok] = stat
+        by = _names(opt.get("by", ""))
+        return f"sess.collapse({stats!r}" + (f", by={by!r}" if by else "") + ")"
+    m = re.match(r"^(?:(?:bysort|bys|by)\s+([^:]+):\s*)?egen\s+(?:\w+\s+)?(\S+)\s*=\s*(\w+)\(([^)]*)\)\s*(?:,\s*(.*))?$", s, re.IGNORECASE)
+    if m:
+        by = [x for x in _names((m.group(1) or "").replace("(", " ").replace(")", " "))]
+        opt = _parse_options(m.group(5) or "")
+        by = by or _names(opt.get("by", ""))
+        src = _names(m.group(4))
+        src_arg = src[0] if len(src) == 1 else src
+        return (f"sess.egen({m.group(2)!r}, {m.group(3).lower()!r}, {src_arg!r}"
+                + (f", by={by!r}" if by else "") + ")")
+    m = re.match(r"^(destring|tostring)\s+(.+?)\s*,\s*(.*)$", s, re.IGNORECASE)
+    if m:
+        cmd, cols, opt = m.group(1).lower(), _names(m.group(2)), _parse_options(m.group(3))
+        kw = [f"{cols[0] if len(cols) == 1 else cols!r}"]
+        if opt.get("generate"):
+            g = _names(opt["generate"])
+            kw.append(f"generate={g[0] if len(g) == 1 else g!r}")
+        elif "replace" not in opt:
+            return f"raise ValueError({(cmd + ': generate() 또는 replace 지정 필요: ' + s)!r})"
+        if cmd == "destring":
+            if opt.get("ignore"):
+                kw.append(f"ignore={opt['ignore'].strip().strip(chr(34))!r}")
+            if "force" in opt:
+                kw.append("force=True")
+            if "percent" in opt:
+                kw.append("percent=True")
+        else:
+            pf = _stata_fmt_to_py(opt.get("format", ""))
+            if pf:
+                kw.append(f"text_format={pf!r}")
+        return f"sess.{cmd}({', '.join(kw)})"
+    m = re.match(r"^(encode|decode)\s+(\S+)\s*,\s*(.*)$", s, re.IGNORECASE)
+    if m:
+        opt = _parse_options(m.group(3))
+        if not opt.get("generate"):
+            return f"raise ValueError({(m.group(1) + ': generate() 지정 필요: ' + s)!r})"
+        return f"sess.{m.group(1).lower()}({m.group(2)!r}, {opt['generate'].strip()!r})"
+    m = re.match(r"^la(?:bel|b)?\s+de(?:fine|f)?\s+(\w+)\s+(.+?)(?:\s*,\s*(?:add|modify|replace)\s*)*$", s, re.IGNORECASE)
+    if m:
+        pairs = re.findall(r"(-?\d+(?:\.\d+)?)\s+\"([^\"]*)\"", m.group(2))
+        if not pairs:
+            return f"raise ValueError({('label define 해석 불가: ' + s)!r})"
+        lab = {int(float(k)) if float(k).is_integer() else float(k): v for k, v in pairs}
+        return f"_lbl_{m.group(1)} = {lab!r}"
+    m = re.match(r"^la(?:bel|b)?\s+val(?:ues)?\s+(.+?)\s+(\w+)\s*$", s, re.IGNORECASE)
+    if m:
+        cols = _names(m.group(1))
+        return "; ".join(f"sess.set_value_labels({c!r}, _lbl_{m.group(2)})" for c in cols)
+    m = re.match(r"^la(?:bel|b)?\s+var(?:iable)?\s+", s, re.IGNORECASE)
+    if m:
+        return f"# [Stata] {s}  → 건너뜀(변수 설명 라벨)"
+    m = re.match(r"^sem\s+(.+)$", s, re.IGNORECASE)
+    if m:
+        try:
+            return _translate_sem(m.group(1), "sem")
+        except ValueError as e:
+            return f"raise ValueError({str(e) + ': ' + s!r})"
+    m = re.match(r"^gsem\s+(.+)$", s, re.IGNORECASE)
+    if m:
+        try:
+            return _translate_gsem(m.group(1))
+        except ValueError as e:
+            return f"raise ValueError({str(e) + ': ' + s!r})"
+    m = re.match(r"^estat\s+(\w+)", s, re.IGNORECASE)
+    if m:
+        hint = {"gof": "적합도는 sem 결과에 기본 포함", "eqgof": "R²는 sem 결과에 기본 포함",
+                "mindices": "수정지수는 sess.sem(..., modIndices=True)", "teffects": "간접·총효과는 sess.sem(..., indirect=[...])",
+                "ginvariant": "측정동일성 비교는 sess.sem(..., group=..., invarianceTest=True)",
+                "lcprob": "계층 비율은 sess.lca 결과에 기본 포함", "lcmean": "계층별 응답확률·평균은 sess.lca 결과에 기본 포함",
+                "lcgof": "정보기준은 sess.lca 결과에 기본 포함"}.get(m.group(1).lower())
+        if hint:
+            return f"# [Stata] {s}  → 건너뜀: {hint}"
+    return None
+
+
 def transpile_stata_line(line: str) -> Optional[str]:
     """
     Translates a single Stata command line into an OpenStat Python session expression.
@@ -56,6 +432,10 @@ def transpile_stata_line(line: str) -> Optional[str]:
     # Already Python?
     if s.startswith("sess.") or s.startswith("ost.") or s.startswith("jmv.") or s.startswith("df[") or s.startswith("import "):
         return s
+
+    ext = _transpile_extended(s)
+    if ext is not None:
+        return ext
 
     # 1. ttest dep, by(group)
     m = re.match(r"^ttest\s+([A-Za-z0-9_]+)\s*,\s*by\s*\(\s*([A-Za-z0-9_]+)\s*\)", s, re.IGNORECASE)
@@ -168,12 +548,6 @@ def transpile_stata_line(line: str) -> Optional[str]:
         model_type = m.group(3).lower() if m.group(3) else "fe"
         return f"sess.panel(dep={dep!r}, indeps={indeps!r}, model={model_type!r})"
 
-    # 12. sem (path specification)
-    m = re.match(r"^sem\s*\((.+)\)", s, re.IGNORECASE)
-    if m:
-        spec = m.group(1)
-        return f"sess.sem(formula={spec!r})"
-
     # 12a. Sp setup commands: weights and effects are handled by the spatial analysis options
     m = re.match(r"^(spmatrix|spset|spshape2dta|spcompare|spdistance|estat\s+impact|estat\s+moran)\b(.*)$", s, re.IGNORECASE)
     if m:
@@ -224,14 +598,22 @@ def transpile_stata_line(line: str) -> Optional[str]:
     if m:
         return f"sess.spatial_regression(dep={m.group(1)!r}, model_type='moran_only')"
 
-    # Return as-is if no rule matched
-    return s
+    # No rule matched: keep valid Python, stop with an explicit error for unsupported Stata commands
+    import ast
+    try:
+        ast.parse(s)
+        return s
+    except SyntaxError:
+        return f"raise NotImplementedError({('Stata 명령 변환 미지원: ' + s)!r})"
 
 
 def transpile_stata_script(script_text: str) -> str:
     """Translates a full multi-line Stata .do script into Python syntax."""
     py_lines = []
-    for line in script_text.splitlines():
+    text = re.sub(r"/\*.*?\*/", " ", script_text, flags=re.S)          # /* block comments */
+    text = re.sub(r"[ \t]*///[^\n]*\n[ \t]*", " ", text)                 # /// line continuation
+    for line in text.splitlines():
+        line = re.sub(r"\s+//\s.*$", "", line)                           # trailing // comments
         transpiled = transpile_stata_line(line)
         if transpiled is not None:
             py_lines.append(transpiled)

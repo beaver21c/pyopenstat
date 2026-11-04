@@ -48,7 +48,7 @@ DEPENDENCY_SPECS: List[Tuple[str, str, str, str]] = [
     ("pingouin", "pingouin", "0.5.5", "RM-ANOVA sphericity, Games-Howell, Partial Corr & Cronbach alpha"),
     ("scikit-learn", "sklearn", "1.5.0", "ROC/AUC metrics & factor matrix validation"),
     ("factor-analyzer", "factor_analyzer", "0.5.1", "PCA, EFA (Varimax/Oblimin/Promax), KMO & Bartlett"),
-    ("semopy", "semopy", "2.3.11", "Confirmatory Factor Analysis (CFA) & Structural Equation Modeling (SEM)"),
+    ("semopy", "semopy", "2.3.11", "SEM reference implementation used by the test suite (analyses use the OpenStat SEM engine)"),
     ("linearmodels", "linearmodels", "6.1", "Panel Econometrics (Entity/Two-Way FE, Random Effects, Hausman)"),
     ("lifelines", "lifelines", "0.30.0", "Kaplan-Meier, Log-Rank & Cox Proportional Hazards Survival"),
     ("matplotlib", "matplotlib", "3.9.0", "Publication raster/vector graph rendering (.png, .svg, .pdf)"),
@@ -248,14 +248,14 @@ def run_api_compat_self_check(quick: bool = False) -> Dict[str, Any]:
     _probe("Psychometrics (`sklearn` + `factor_analyzer`)", _check_psychometrics)
 
     if not quick:
-        # 3. Structural Equation Modeling (`semopy`)
+        # 3. Structural Equation Modeling (OpenStat ML engine, Mplus defaults)
         def _check_sem():
             import pyjamovi as ost
             sem_r = ost.sem(df_syn, model_syntax="F1 =~ x1 + x2 + x3", path_diagram=False)
             assert sem_r.get_table("fit") is not None
-            return "semopy CFA solver & fit indices table verified"
+            return "OpenStat SEM engine (ML/FIML, Mplus defaults) CFA & fit indices table verified"
 
-        _probe("Structural Equation Modeling (`semopy`)", _check_sem)
+        _probe("Structural Equation Modeling (OpenStat engine)", _check_sem)
 
         # 4. Panel Econometrics (`linearmodels`)
         def _check_panel():

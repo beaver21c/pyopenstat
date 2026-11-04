@@ -24,9 +24,12 @@ from .registry import dispatch_analysis
 from .renderers.html_renderer import render_jamovi_html_report
 
 DATA_OP_METHODS = (
-    "compute", "recode", "filter_rows", "merge", "reshape", "rename_var",
-    "drop_vars", "set_value", "add_rows", "drop_rows",
+    "compute", "recode", "filter_rows", "merge", "joinby", "append", "reshape", "collapse", "egen",
+    "convert_type", "encode", "decode", "set_value_labels", "set_measure", "standardize",
+    "rename_var", "drop_vars", "set_value", "add_rows", "drop_rows",
 )
+MEASURE_LEVELS = ("Continuous", "Ordinal", "Nominal", "ID")
+MERGE_RESULT_LABELS_REF = {1: "master only (1)", 2: "using only (2)", 3: "matched (3)", 4: "missing updated (4)", 5: "nonmissing conflict (5)"}
 
 
 class JamoviSession:
@@ -50,6 +53,12 @@ class JamoviSession:
         self.export_ops: List[Dict[str, Any]] = []
         self._raw_df: Optional[pd.DataFrame] = None
         self.auto_sync_workspace: bool = auto_sync_workspace
+        # Variable metadata (Stata value labels / variable labels, jamovi measure levels)
+        self.value_labels: Dict[str, Dict[Any, str]] = {}
+        self.variable_labels: Dict[str, str] = {}
+        self.measure_levels: Dict[str, str] = {}
+        self._raw_meta: Dict[str, Any] = {"value_labels": {}, "variable_labels": {}}
+        self.last_merge_report: Optional[Dict[str, Any]] = None
 
         # Automatic startup self-check guard (cached per Python + package version fingerprint)
         from .diagnostics import startup_self_check_guard
@@ -64,34 +73,34 @@ class JamoviSession:
             self.dataset = JamoviDataset(self.df)
             self.source_path = None
         elif isinstance(data_source, str):
-            resolved = data_source
-            if not os.path.exists(resolved):
-                pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-                cand1 = os.path.join(pkg_root, data_source)
-                cand2 = os.path.join(pkg_root, "sample_data", os.path.basename(data_source))
-                if os.path.exists(cand1):
-                    resolved = cand1
-                elif os.path.exists(cand2):
-                    resolved = cand2
+            from .data_ops import _resolve_data_path, read_dataset
+            resolved = _resolve_data_path(data_source)
             self.source_path = resolved
-            ext = os.path.splitext(resolved)[1].lower()
-            if ext == ".omv":
-                self.df, self.dataset = read_omv(resolved)
-            elif ext in (".csv", ".tsv"):
-                from .data_ops import read_csv_robust
-                self.df = read_csv_robust(resolved)
-                self.dataset = JamoviDataset(self.df)
-            elif ext in (".xlsx", ".xls"):
-                self.df = pd.read_excel(resolved)
-                self.dataset = JamoviDataset(self.df)
-            else:
-                raise ValueError(f"Unsupported file format: {ext}. Use .omv, .csv, .tsv, or .xlsx")
+            self.df, meta = read_dataset(resolved)
+            self.dataset = JamoviDataset(self.df)
+            self._raw_meta = {"value_labels": {k: dict(v) for k, v in meta.get("value_labels", {}).items()},
+                              "variable_labels": dict(meta.get("variable_labels", {}))}
         else:
             raise TypeError("data_source must be a file path string or pandas DataFrame")
+        if isinstance(data_source, pd.DataFrame):
+            self._raw_meta = {"value_labels": {}, "variable_labels": {}}
         self._raw_df = self.df.copy() if self.df is not None else None
         self.data_ops = []
         self.export_ops = []
+        self._reset_meta()
         return self
+
+    def _reset_meta(self):
+        self.value_labels = {k: dict(v) for k, v in self._raw_meta.get("value_labels", {}).items()}
+        self.variable_labels = dict(self._raw_meta.get("variable_labels", {}))
+        self.measure_levels = {}
+        self.last_merge_report = None
+
+    def _prune_meta(self):
+        cols = set(self.df.columns) if self.df is not None else set()
+        for d in (self.value_labels, self.variable_labels, self.measure_levels):
+            for k in [k for k in d if k not in cols]:
+                d.pop(k, None)
 
     # ------------------------------------------------------------------
     # Data management (Stata `generate` / `recode` / `keep if` / `merge` / `reshape` / `rename`)
@@ -101,6 +110,7 @@ class JamoviSession:
         self.df = new_df.reset_index(drop=True)
         self.dataset = JamoviDataset(self.df)
         self.data_ops.append(op)
+        self._prune_meta()
         self._sync_workspace_if_enabled()
         return self
 
@@ -162,21 +172,92 @@ class JamoviSession:
         op = {"op": "standardize", "columns": cols, "method": method}
         return self._apply_data_op(new_df, op)
 
+    @staticmethod
+    def _op(name: str, **kw) -> Dict[str, Any]:
+        """Data-op record without arguments left at their defaults (keeps the replay script short)."""
+        op: Dict[str, Any] = {"op": name}
+        for k, v in kw.items():
+            if v is None or v is False or v == "" or v == [] or v == {}:
+                continue
+            op[k] = list(v) if isinstance(v, tuple) else v
+        return op
+
+    def _other_frames(self, other_source):
+        from .data_ops import load_tabular_source
+        if isinstance(other_source, (list, tuple)):
+            frames, paths = [], []
+            for src in other_source:
+                d, p = load_tabular_source(src)
+                frames.append(d)
+                paths.append(p or "<in-memory DataFrame>")
+            return frames, paths
+        d, p = load_tabular_source(other_source)
+        return d, (p or "<in-memory DataFrame>")
+
     def merge(
         self,
         other_source: Union[str, pd.DataFrame],
         on: Optional[Union[str, List[str]]] = None,
-        how: str = "left",
+        kind: Optional[str] = None,
+        keep: Optional[Union[str, List[str]]] = None,
+        keepusing: Optional[Union[str, List[str]]] = None,
+        indicator: Optional[Union[str, bool]] = None,
+        update: bool = False,
+        replace: bool = False,
+        assert_results: Optional[Union[str, List[str]]] = None,
+        how: Optional[str] = None,
         suffixes: Tuple[str, str] = ("", "_merged"),
     ) -> "JamoviSession":
-        """Merge another dataset (Stata `merge 1:1 / m:1`, or `how='append'` for `append using`)."""
-        from .data_ops import load_tabular_source, merge_datasets
+        """Merge another dataset by key variables (Stata `merge 1:1 / m:1 / 1:m / m:m`).
+
+        `kind` is inferred from key uniqueness when omitted; duplicated keys on both sides raise an error.
+        Default keeps master, using and matched rows and adds `_merge` (1 master only, 2 using only, 3 matched,
+        4 missing updated, 5 nonmissing conflict). Variables in both files keep master values unless `update`
+        (fill missing) / `replace` (overwrite). `keep=["match", "master"]`, `keepusing=[...]`, `indicator=False`
+        (Stata nogenerate), `assert_results=["match"]`. Legacy `how="left"|"inner"|"right"|"outer"` keeps the
+        pandas-style suffix behaviour; `how="append"` stacks rows.
+        """
+        from .data_ops import merge_datasets
         self._require_df()
-        right_df, right_path = load_tabular_source(other_source)
-        op: Dict[str, Any] = {"op": "merge", "other_source": right_path or "<in-memory DataFrame>", "on": on, "how": how}
+        right_df, right_path = self._other_frames(other_source)
+        new_df, report = merge_datasets(self.df, right_df, on=on, how=how, suffixes=tuple(suffixes), kind=kind, keep=keep,
+                                        keepusing=keepusing, indicator=indicator, update=update, replace=replace,
+                                        assert_results=assert_results, return_report=True)
+        op = self._op("merge", other_source=right_path, on=on, kind=kind, keep=keep, keepusing=keepusing,
+                      indicator=indicator if indicator is not None else None, update=update, replace=replace,
+                      assert_results=assert_results, how=how)
+        if indicator is False:
+            op["indicator"] = False
         if tuple(suffixes) != ("", "_merged"):
             op["suffixes"] = list(suffixes)
-        return self._apply_data_op(merge_datasets(self.df, right_df, on=on, how=how, suffixes=tuple(suffixes)), op)
+        self._apply_data_op(new_df, op)
+        if report.get("indicator"):
+            self.value_labels[report["indicator"]] = dict(MERGE_RESULT_LABELS_REF)
+        self.last_merge_report = report
+        return self
+
+    def joinby(self, other_source: Union[str, pd.DataFrame], on: Optional[Union[str, List[str]]] = None,
+               unmatched: str = "none", indicator: str = "_merge", update: bool = False, replace: bool = False) -> "JamoviSession":
+        """All pairwise combinations within key groups (Stata `joinby`); `unmatched`: none | both | master | using."""
+        from .data_ops import joinby_datasets
+        self._require_df()
+        right_df, right_path = self._other_frames(other_source)
+        new_df, report = joinby_datasets(self.df, right_df, on=on, unmatched=unmatched, indicator=indicator,
+                                         update=update, replace=replace, return_report=True)
+        op = self._op("joinby", other_source=right_path, on=on, unmatched=None if unmatched == "none" else unmatched,
+                      indicator=None if indicator == "_merge" else indicator, update=update, replace=replace)
+        self._apply_data_op(new_df, op)
+        self.last_merge_report = report
+        return self
+
+    def append(self, other_source: Union[str, pd.DataFrame, List[Union[str, pd.DataFrame]]], generate: Optional[str] = None,
+               force: bool = False) -> "JamoviSession":
+        """Stack the rows of one or more datasets (Stata `append using`); `generate` marks the source (0 = current)."""
+        from .data_ops import append_datasets
+        self._require_df()
+        frames, paths = self._other_frames(other_source)
+        new_df = append_datasets(self.df, frames, generate=generate, force=force)
+        return self._apply_data_op(new_df, self._op("append", other_source=paths, generate=generate, force=force))
 
     def reshape(
         self,
@@ -189,7 +270,7 @@ class JamoviSession:
         sep: str = "",
         strip_prefix: bool = True,
     ) -> "JamoviSession":
-        """Reshape Wide <-> Long (Stata `reshape long` / `reshape wide`)."""
+        """Reshape Wide <-> Long (Stata `reshape long stubs, i() j()` / `reshape wide stubs, i() j()`)."""
         from .data_ops import reshape_dataset
         self._require_df()
         new_df = reshape_dataset(
@@ -206,12 +287,115 @@ class JamoviSession:
             op["strip_prefix"] = False
         return self._apply_data_op(new_df, op)
 
+    def collapse(self, stats: Dict[str, Any], by: Optional[Union[str, List[str]]] = None) -> "JamoviSession":
+        """Aggregate to one row per group (Stata `collapse (mean) y (sum) z, by(id)`).
+        stats: {"mean": ["y"], "sum": ["z"]}, {"y": "mean"} or {"new": ("y", "max")}."""
+        from .data_ops import collapse_dataset
+        self._require_df()
+        clean = {k: (list(v) if isinstance(v, tuple) else v) for k, v in stats.items()}
+        return self._apply_data_op(collapse_dataset(self.df, stats, by), self._op("collapse", stats=clean, by=by))
+
+    def egen(self, target: str, func: str, source: Optional[Union[str, List[str]]] = None,
+             by: Optional[Union[str, List[str]]] = None) -> "JamoviSession":
+        """Group / row statistics as a new variable (Stata `egen target = func(source), by()`)."""
+        from .data_ops import egen_variable
+        self._require_df()
+        return self._apply_data_op(egen_variable(self.df, target, func, source, by),
+                                   self._op("egen", target=target, func=func, source=source, by=by))
+
+    # ---- variable types, labels and measure levels ------------------------------------------
+    def convert_type(self, columns: Union[str, List[str]], to: str, ignore: str = "", force: bool = False,
+                     percent: bool = False, generate: Optional[Union[str, List[str]]] = None,
+                     date_format: Optional[str] = None, text_format: Optional[str] = None) -> "JamoviSession":
+        """Change the storage type: to = "numeric" | "integer" | "text" | "date" (Stata destring / tostring).
+        Values that cannot be converted raise an error unless `force=True` (then they become missing)."""
+        from .data_ops import convert_variables
+        self._require_df()
+        new_df, report = convert_variables(self.df, columns, to, ignore=ignore, force=force, percent=percent,
+                                           generate=generate, date_format=date_format, text_format=text_format)
+        self.last_convert_report = report
+        return self._apply_data_op(new_df, self._op("convert_type", columns=columns, to=to, ignore=ignore, force=force,
+                                                    percent=percent, generate=generate, date_format=date_format,
+                                                    text_format=text_format))
+
+    def destring(self, columns: Union[str, List[str]], ignore: str = "", force: bool = False, percent: bool = False,
+                 generate: Optional[Union[str, List[str]]] = None) -> "JamoviSession":
+        """Text -> numeric (Stata `destring`); recorded as convert_type(to="numeric")."""
+        return self.convert_type(columns, "numeric", ignore=ignore, force=force, percent=percent, generate=generate)
+
+    def tostring(self, columns: Union[str, List[str]], generate: Optional[Union[str, List[str]]] = None,
+                 text_format: Optional[str] = None) -> "JamoviSession":
+        """Numeric -> text (Stata `tostring`); recorded as convert_type(to="text")."""
+        return self.convert_type(columns, "text", generate=generate, text_format=text_format)
+
+    def encode(self, source: str, target: str, order: Optional[List[Any]] = None) -> "JamoviSession":
+        """Text categories -> integer codes with value labels (Stata `encode source, generate(target)`);
+        codes follow alphabetical order unless `order` lists the categories."""
+        from .data_ops import encode_variable
+        self._require_df()
+        new_df, labels = encode_variable(self.df, source, target, order=order)
+        self._apply_data_op(new_df, self._op("encode", source=source, target=target, order=order))
+        self.value_labels[target] = labels
+        self.measure_levels.setdefault(target, "Ordinal" if order else "Nominal")
+        return self
+
+    def decode(self, source: str, target: str) -> "JamoviSession":
+        """Integer codes -> label text using the variable's value labels (Stata `decode source, generate(target)`)."""
+        from .data_ops import decode_variable
+        self._require_df()
+        return self._apply_data_op(decode_variable(self.df, source, target, self.value_labels.get(source)),
+                                   self._op("decode", source=source, target=target))
+
+    def set_value_labels(self, column: str, labels: Optional[Dict[Any, str]]) -> "JamoviSession":
+        """Attach value labels {code: text} to a variable (Stata `label define` + `label values`); None removes them."""
+        self._require_df()
+        if column not in self.df.columns:
+            raise ValueError(f"Variable '{column}' not found")
+        clean: Dict[Any, str] = {}
+        for k, v in (labels or {}).items():
+            try:
+                fk = float(k)
+                clean[int(fk) if fk.is_integer() else fk] = str(v)
+            except (TypeError, ValueError):
+                clean[k] = str(v)
+        op = self._op("set_value_labels", column=column, labels=clean if labels else None)
+        if not clean:
+            op["labels"] = None
+        self._apply_data_op(self.df, op)
+        if clean:
+            self.value_labels[column] = clean
+        else:
+            self.value_labels.pop(column, None)
+        return self
+
+    def set_measure(self, columns: Union[str, List[str]], level: str) -> "JamoviSession":
+        """Set the measure level used by the GUI and analyses: Continuous | Ordinal | Nominal | ID."""
+        from .analyses.base import resolve_choice
+        self._require_df()
+        lvl = resolve_choice("측정 수준", level, list(MEASURE_LEVELS),
+                             {"scale": "Continuous", "continuous": "Continuous", "interval": "Continuous", "ratio": "Continuous",
+                              "ordinal": "Ordinal", "nominal": "Nominal", "categorical": "Nominal", "id": "ID"})
+        cols = [columns] if isinstance(columns, str) else list(columns)
+        miss = [c for c in cols if c not in self.df.columns]
+        if miss:
+            raise ValueError(f"Variable not found: {miss}")
+        self._apply_data_op(self.df, self._op("set_measure", columns=columns, level=lvl))
+        for c in cols:
+            self.measure_levels[c] = lvl
+        return self
+
     def rename_var(self, old_name: str, new_name: str) -> "JamoviSession":
         """Rename a variable (Stata `rename`)."""
         self._require_df()
         if old_name not in self.df.columns:
             raise ValueError(f"Variable '{old_name}' not found")
-        return self._apply_data_op(self.df.rename(columns={old_name: new_name}), {"op": "rename_var", "old_name": old_name, "new_name": new_name})
+        if new_name in self.df.columns and new_name != old_name:
+            raise ValueError(f"Variable '{new_name}' already exists")
+        carried = [(d, d.pop(old_name)) for d in (self.value_labels, self.variable_labels, self.measure_levels) if old_name in d]
+        self._apply_data_op(self.df.rename(columns={old_name: new_name}), {"op": "rename_var", "old_name": old_name, "new_name": new_name})
+        for d, v in carried:
+            d[new_name] = v
+        return self
 
     def drop_vars(self, cols: Union[str, List[str]]) -> "JamoviSession":
         """Drop variables (Stata `drop varlist`)."""
@@ -274,6 +458,7 @@ class JamoviSession:
         auto = self.auto_sync_workspace
         self.auto_sync_workspace = False
         self.df, self.dataset, self.data_ops = raw, JamoviDataset(raw), []
+        self._reset_meta()
         for op in remaining:
             self.apply_data_op(op)
         self.source_path, self.export_ops = keep_path, keep_exports
@@ -282,7 +467,7 @@ class JamoviSession:
         return self
 
     def save_data(self, output_path: str) -> str:
-        """Save the current (transformed) dataset to .csv / .xlsx / .omv (Stata `save`)."""
+        """Save the current (transformed) dataset to .csv / .xlsx / .omv / .dta / .sav / .parquet (Stata `save`)."""
         self._require_df()
         os.makedirs(os.path.dirname(os.path.abspath(output_path)) or ".", exist_ok=True)
         ext = os.path.splitext(output_path)[1].lower()
@@ -290,6 +475,14 @@ class JamoviSession:
             write_omv(self.df, output_path)
         elif ext in (".xlsx", ".xls"):
             self.df.to_excel(output_path, index=False)
+        elif ext == ".dta":
+            from .data_ops import write_stata
+            write_stata(self.df, output_path, self.value_labels, self.variable_labels)
+        elif ext in (".sav", ".zsav"):
+            from .data_ops import write_spss
+            write_spss(self.df, output_path, self.value_labels, self.variable_labels)
+        elif ext == ".parquet":
+            self.df.to_parquet(output_path, index=False)
         else:
             self.df.to_csv(output_path, index=False, encoding="utf-8-sig")
         self._record_export({"op": "save_data", "output_path": output_path})
@@ -559,6 +752,23 @@ class JamoviSession:
     def sem(self, model_syntax: Optional[str] = None, model: Optional[str] = None, **kwargs):
         ms = model_syntax or model or kwargs.pop("model", "")
         return self.run("sem", model=ms, **kwargs)
+
+    def lca(self, categorical: Optional[List[str]] = None, continuous: Optional[List[str]] = None, classes: int = 2, **kwargs):
+        """Latent class / latent profile analysis with Mplus defaults (MLR, STARTS 20 4, FIML).
+        categorical = Mplus CATEGORICAL indicators, continuous = LPA indicators; classRange=[1, 5] compares K."""
+        return self.run("lca", categorical=categorical, continuous=continuous, classes=classes, **kwargs)
+
+    def lpa(self, continuous: Optional[List[str]] = None, classes: int = 2, **kwargs):
+        """Latent profile analysis (continuous indicators; Mplus default: class-invariant variances, zero covariances)."""
+        return self.run("lca", continuous=continuous, classes=classes, **kwargs)
+
+    def lta(self, categorical: Optional[List[str]] = None, continuous: Optional[List[str]] = None, classes: int = 2, **kwargs):
+        """Latent transition analysis (long data: idVar + timeVar, or wide waves=[[...], [...]])."""
+        return self.run("lta", categorical=categorical, continuous=continuous, classes=classes, **kwargs)
+
+    def lcga(self, dep: Optional[str] = None, classes: int = 2, **kwargs):
+        """Latent class growth analysis (long data: dep + idVar + timeVar, or wide vars=[...])."""
+        return self.run("lcga", dep=dep, classes=classes, **kwargs)
 
     def mediation(self, dep: str, pred: str, med: str, **kwargs):
         return self.run("mediation", dep=dep, pred=pred, med=med, **kwargs)

@@ -88,6 +88,9 @@ DATASET_DESCRIPTIONS: Dict[str, str] = {
     "Network_Collaboration.csv": "합성 기관 협력 연결 목록 (기관 30개, 연결 86개) — 관계망 분석, 중심성, 커뮤니티",
     "Spatial_Panel_Welfare.csv": "합성 지역 패널 (73개 지역 × 2016–2023, 가상 경계 자동 연결) — 공간패널회귀(SDM·고정효과), 공간가중행렬",
     "Spatial_CrossSection_Welfare.csv": "합성 지역 횡단면 (73개 지역, 가상 경계 자동 연결) — Moran's I·LISA, 공간회귀, 지리가중회귀, 주제도",
+    "Mixture_LCA_Care.csv": "합성 돌봄 욕구 자료 (N=1,200, 3개 잠재계층으로 생성) — 잠재계층·잠재프로파일 분석, R3STEP·BCH·DCAT",
+    "Mixture_LTA_Long.csv": "합성 정서 문항 종단 자료 (800명 × 3개 차수, long) — 잠재전이분석",
+    "Mixture_LCGA_Long.csv": "합성 삶의 만족도 종단 자료 (600명 × 2019–2023, long, 탈락 포함) — 잠재계층 성장분석",
 }
 
 MIME_MAP: Dict[str, str] = {
@@ -277,7 +280,9 @@ class GlobalState:
         for c in df.columns:
             s = df[c]
             low = str(c).lower()
-            if c in self.measure_overrides:
+            if c in self.session.measure_levels:
+                m_type = self.session.measure_levels[c]
+            elif c in self.measure_overrides:
                 m_type = self.measure_overrides[c]
             elif low in ("id", "subject", "subj", "patient_id"):
                 m_type = "ID"
@@ -290,7 +295,9 @@ class GlobalState:
             else:
                 m_type = "Continuous"
 
-            if pd.api.types.is_float_dtype(s):
+            if pd.api.types.is_datetime64_any_dtype(s):
+                d_type = "Date"
+            elif pd.api.types.is_float_dtype(s):
                 d_type = "Decimal"
             elif pd.api.types.is_integer_dtype(s):
                 d_type = "Integer"
@@ -315,6 +322,12 @@ class GlobalState:
             }
             if avg_len is not None:
                 info["avgLen"] = avg_len
+            vlab = self.session.value_labels.get(c)
+            if vlab:
+                info["valueLabels"] = {str(k): str(v) for k, v in vlab.items()}
+                info["levels"] = [f"{k}={v}" for k, v in list(vlab.items())[:12]]
+            if self.session.variable_labels.get(c):
+                info["label"] = str(self.session.variable_labels[c])
             if pd.api.types.is_numeric_dtype(s) and s.notna().any():
                 num = pd.to_numeric(s, errors="coerce")
                 sd = num.std(ddof=1)
@@ -422,10 +435,33 @@ class FilterRequest(BaseModel):
 
 
 class MergeRequest(BaseModel):
-    other_source: str
+    other_source: Union[str, List[str]]
     on: Optional[Union[str, List[str]]] = None
-    how: str = "left"
+    how: Optional[str] = None
     suffixes: Tuple[str, str] = ("", "_merged")
+    kind: Optional[str] = None            # 1:1 | m:1 | 1:m | m:m | joinby | append (None = infer from keys)
+    keep: Optional[List[str]] = None      # master | using | match | match_update | match_conflict
+    keepusing: Optional[List[str]] = None
+    indicator: Optional[Union[str, bool]] = None
+    update: bool = False
+    replace: bool = False
+    unmatched: str = "none"               # joinby
+    generate: Optional[str] = None        # append
+    force: bool = False                   # append
+
+
+class ConvertVariableRequest(BaseModel):
+    columns: List[str]
+    action: str = "convert"               # convert | encode | decode | labels | measure
+    to: Optional[str] = None              # numeric | integer | text | date
+    ignore: str = ""
+    force: bool = False
+    percent: bool = False
+    generate: Optional[List[str]] = None
+    date_format: Optional[str] = None
+    order: Optional[List[str]] = None
+    labels: Optional[Dict[str, str]] = None
+    level: Optional[str] = None
 
 
 class ReshapeRequest(BaseModel):
@@ -545,7 +581,7 @@ def post_rebuild_package(run_tests: bool = Query(False)):
 
 @app.get("/api/datasets")
 def list_datasets():
-    files = sorted([f for f in os.listdir(SAMPLE_DIR) if f.endswith((".csv", ".omv", ".xlsx"))])
+    files = sorted([f for f in os.listdir(SAMPLE_DIR) if f.lower().endswith((".csv", ".omv", ".xlsx", ".xls", ".tsv", ".dta", ".sav", ".zsav", ".por", ".parquet"))])
     items = [
         {"name": f, "description": DATASET_DESCRIPTIONS.get(f, "User / Workspace Dataset")}
         for f in files
@@ -807,9 +843,50 @@ def update_variable(req: VariableUpdateRequest):
         target_name = new_n
 
     if req.measure_type in ("Continuous", "Ordinal", "Nominal", "ID"):
-        STATE.measure_overrides[target_name] = req.measure_type
+        STATE.session.set_measure(target_name, req.measure_type)
+        STATE.measure_overrides.pop(target_name, None)
 
     return STATE.after_data_change()
+
+
+@app.post("/api/variable/convert")
+def convert_variable_endpoint(req: ConvertVariableRequest):
+    """Variable type / label changes recorded in the session pipeline (Stata destring, tostring, encode, decode,
+    label values) and measure levels."""
+    sess = STATE.session
+    try:
+        act = (req.action or "convert").strip().lower()
+        if act == "convert":
+            if not req.to:
+                raise ValueError("변환할 형식(to) 지정 필요")
+            sess.convert_type(req.columns, req.to, ignore=req.ignore, force=req.force, percent=req.percent,
+                              generate=req.generate or None, date_format=req.date_format or None)
+        elif act in ("encode", "decode"):
+            if len(req.columns) != 1:
+                raise ValueError(f"{act}: 변수 1개 지정")
+            src = req.columns[0]
+            tgt = (req.generate or [None])[0] or (src + ("_code" if act == "encode" else "_label"))
+            if act == "encode":
+                sess.encode(src, tgt, order=req.order or None)
+            else:
+                sess.decode(src, tgt)
+        elif act == "labels":
+            for c in req.columns:
+                sess.set_value_labels(c, req.labels or None)
+        elif act == "measure":
+            sess.set_measure(req.columns, req.level or "")
+            for c in req.columns:
+                STATE.measure_overrides.pop(c, None)
+        else:
+            raise ValueError(f"action '{req.action}' 인식 불가 (convert, encode, decode, labels, measure)")
+        payload = STATE.after_data_change()
+        rep = getattr(sess, "last_convert_report", None) if act == "convert" else None
+        if rep:
+            forced = {k: v for k, v in rep.get("forced_missing", {}).items() if v}
+            payload["message"] = ("결측 처리된 값: " + ", ".join(f"{k} {v}건" for k, v in forced.items())) if forced else "변환 완료"
+        return payload
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.post("/api/data/compute")
@@ -844,10 +921,27 @@ def filter_data_endpoint(req: FilterRequest):
 
 @app.post("/api/data/merge")
 def merge_data_endpoint(req: MergeRequest):
-    """Relational merge endpoint (Stata `merge 1:1 / m:1` or `append using`)."""
+    """Merge endpoint (Stata `merge 1:1 / m:1 / 1:m / m:m`, `joinby`, `append using`)."""
+    sess = STATE.session
     try:
-        STATE.session.merge(req.other_source, on=req.on, how=req.how, suffixes=req.suffixes)
-        return STATE.after_data_change()
+        kind = (req.kind or "").strip().lower() or None
+        if kind == "append" or (req.how or "").lower() == "append":
+            sess.append(req.other_source, generate=req.generate or None, force=req.force)
+            msg = f"행 추가 완료: {len(sess.df):,}행"
+        elif kind == "joinby":
+            sess.joinby(req.other_source, on=req.on, unmatched=req.unmatched, update=req.update, replace=req.replace)
+            msg = f"joinby 완료: {sess.last_merge_report['kept']:,}행"
+        else:
+            sess.merge(req.other_source, on=req.on, kind=kind, keep=req.keep or None, keepusing=req.keepusing or None,
+                       indicator=req.indicator, update=req.update, replace=req.replace, how=req.how, suffixes=req.suffixes)
+            r = sess.last_merge_report
+            c = r["counts"]
+            msg = (f"{r['kind']} 병합{'(키 고유성으로 판별)' if r['inferred'] else ''}: 현재만 {c[1]:,} · 결합 자료만 {c[2]:,} · "
+                   f"일치 {c[3] + c[4] + c[5]:,}" + (f" (결측 갱신 {c[4]:,}, 값 충돌 {c[5]:,})" if (c[4] or c[5]) else "")
+                   + f" → {r['kept']:,}행 유지")
+        payload = STATE.after_data_change()
+        payload["message"] = msg
+        return payload
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Merge error: {e}")
 

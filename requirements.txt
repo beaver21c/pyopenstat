@@ -26,6 +26,9 @@ networkx>=3.2
 umap-learn>=0.5.5
 pypdf>=4.0.0
 
+# Stata .dta / SPSS .sav import-export with value labels
+pyreadstat>=1.3.7
+
 # GIS: boundary files (.shp/.zip/.geojson/.gpkg), spatial weights, thematic maps, GWR
 geopandas>=1.0.0
 pyogrio>=0.9.0

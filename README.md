@@ -104,7 +104,8 @@ sess.save_py("reports/analysis_script.py")       # 100% 재현 가능한 파이�
 - **T-검정 & 분산분석(ANOVA)**: 독립표본 / 대응표본 / 일표본 T-검정, Welch & Fisher 일원배치 분산분석, 요인분산분석(Type I/II/III SS, $\eta^2$, $\eta^2_p$, $\omega^2$), 공분산분석(ANCOVA), 반복측정 분산분석(Mauchly 구형성 검정 + Greenhouse-Geisser/Huynh-Feldt), Kruskal-Wallis, **5종 사후검정**(Tukey HSD, Games-Howell, Scheffé, Bonferroni, Holm).
 - **회귀분석 & 범주형 데이터**: 상관행렬, 편상관, OLS 다중선형회귀(VIF 다중공선성, Durbin-Watson 잔차독립성, Cook's Distance, 2×2 진단도), 이항 로지스틱 회귀(Odds Ratio, ROC/AUC 곡선), 교차분할표($\chi^2$, Fisher 직접확률, Cramér's $V$).
 - **심리측정 & 요인분석**: 신뢰도 분석(Cronbach's $\alpha$, McDonald's $\omega$), 주성분분석(PCA), 탐색적 요인분석(EFA - MinRes / ML / Principal Axis + Varimax / Promax / Oblimin 회전 + 평행분석 스크리 도표).
-- **구조방정식 모형 (SEM / CFA)**: `lavaan` 문법 지원(`=~` 잠재요인 측정, `~` 구조 회귀, `~~` 공분산), 표준화 경로계수($\beta$), 적합도 지수($\chi^2$, CFI, TLI, RMSEA, SRMR, AIC, BIC) 및 잠재 경로 다이어그램 자동 렌더링.
+- **구조방정식 모형 (SEM / CFA, Mplus 기본 설정)**: 자체 추정 엔진. 모형 문자열(`=~`, `~`, `~~`, `~ 1`, `a*x` 라벨, `1*x` 고정, `:=` 정의 모수, `==` 제약)과 Python 옵션으로 지정. ML(기본)·MLR(샌드위치 SE, Yuan–Bentler 척도 χ²), 결측 FIML(기본), 평균구조, 외생 관측변수 조건부 처리, 다집단(기본: 적재량·절편 동일)과 측정동일성 단계 비교, 간접효과(MODEL INDIRECT, 델타법·붓스트랩 신뢰구간), 수정지수(MODINDICES), STDYX·STDY·STD 표준화, R², 적합도(χ², RMSEA 90% CI, CFI, TLI, SRMR, AIC, BIC, SABIC), 경로도.
+- **잠재계층·혼합모형 (Mplus 기본 설정)**: 잠재계층분석(LCA)·잠재프로파일분석(LPA)·잠재전이분석(LTA)·잠재계층 성장분석(LCGA). MLR, STARTS 20 4, FIML, 계층 수 비교(AIC·BIC·SABIC·엔트로피), VLMR·조정 LMR(TECH11)·부트스트랩 LRT(TECH14), 분류 정확도, 3단계 보조분석(R3STEP·BCH·DCAT), 사례별 사후확률.
 - **계량경제 패널 분석 & 다층모형**: 개체 고정효과(Fixed Effects Within), 이원 고정효과(Two-Way FE), 확률효과(Random Effects GLS), 통합 OLS(Pooled OLS), 클러스터 로버스트 표준오차, **하우스만 사양검정(Hausman Test, $\chi^2$)**, 선형 혼합모형(Multilevel Linear Mixed Models - REML, ICC).
 - **베이지안 통계 & 생존분석**: JZS 코시 베이지안 T-검정/ANOVA/상관분석 ($BF_{10}$), 부트스트랩 매개효과(직접/간접/총효과 95% 신뢰구간), 조절효과(Simple Slopes), Kaplan-Meier 생존곡선 및 Cox 비례위험 모형.
 

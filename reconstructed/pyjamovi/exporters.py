@@ -39,7 +39,7 @@ SUPPORTED_TABLE_FORMATS = ("xlsx", "docx", "hwpx", "pdf", "tex", "csv", "tsv", "
 
 
 def _formatted_matrix(tbl: ResultsTable):
-    headers = [c["title"] or c["name"] for c in tbl.columns]
+    headers = [tbl.display_title(c) for c in tbl.columns]
     rows = [[tbl._format_cell(r.get(c["name"]), c) for c in tbl.columns] for r in tbl.rows]
     col_types = [c.get("type", "text") for c in tbl.columns]
     return headers, rows, col_types

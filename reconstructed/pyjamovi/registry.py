@@ -3,6 +3,7 @@ pyjamovi Unified Analysis Registry & Dispatcher (v2.0)
 Maps all 27 jamovi core & jmv-library modules with consistent parameter schemas for Web UI, Python SDK, CLI, and MCP.
 """
 
+import re
 from typing import Dict, Any, List
 import pandas as pd
 
@@ -140,7 +141,10 @@ ANALYSIS_CATALOG: List[Dict[str, Any]] = [
     {"id": "efa", "group": "Factor", "title": "Exploratory Factor Analysis", "module": "jmv", "icon": "analysis-factor.svg"},
     {"id": "networkAnalysis", "group": "Factor", "title": "Network Analysis (JASP)", "module": "jasp", "icon": "analysis-factor.svg"},
 
-    {"id": "sem", "group": "SEM", "title": "Structural Equation Modeling (SEMLj)", "module": "semlj", "icon": "analysis-sem.svg"},
+    {"id": "sem", "group": "SEM", "title": "Structural Equation Modeling (CFA / SEM, Mplus defaults)", "module": "openstat", "icon": "analysis-sem.svg"},
+    {"id": "lca", "group": "Mixture", "title": "Latent Class / Latent Profile Analysis (LCA / LPA)", "module": "openstat", "icon": "analysis-mixture.svg"},
+    {"id": "lta", "group": "Mixture", "title": "Latent Transition Analysis (LTA)", "module": "openstat", "icon": "analysis-mixture.svg"},
+    {"id": "lcga", "group": "Mixture", "title": "Latent Class Growth Analysis (LCGA)", "module": "openstat", "icon": "analysis-mixture.svg"},
     {"id": "mediation", "group": "MedMod", "title": "Mediation", "module": "medmod", "icon": "analysis-medmod.svg"},
     {"id": "moderation", "group": "MedMod", "title": "Moderation", "module": "medmod", "icon": "analysis-medmod.svg"},
     {"id": "panel", "group": "Linear Models", "title": "Panel Econometrics (FE / RE / Hausman)", "module": "plm", "icon": "analysis-linearmodels.svg"},
@@ -243,7 +247,17 @@ def _dispatch_inner(analysis_type: str, df: pd.DataFrame, p: Dict[str, Any]) -> 
         "mgwr": "gwr",
         "spatial_map": "spatialMap",
         "choropleth": "spatialMap",
+        "latent_class": "lca",
+        "latent_profile": "lca",
+        "lpa": "lca",
+        "latent_transition": "lta",
+        "latent_class_growth": "lcga",
+        "traj": "lcga",
+        "group_based_trajectory": "lcga",
+        "cfa": "sem",
     }
+    if t == "lpa" and p.get("vars") and not p.get("continuous"):
+        p = dict(p, continuous=p.get("vars"))
     t = alias_map.get(t, t)
 
     if t == "descriptives":
@@ -575,14 +589,54 @@ def _dispatch_inner(analysis_type: str, df: pd.DataFrame, p: Dict[str, Any]) -> 
         )
 
     elif t == "sem":
+        reserved = ("plotStyle", "plot_style", "model", "model_syntax", "stdEst", "std_est", "fitMeasures", "fit_measures",
+                    "variances", "pathDiagram", "path_diagram", "obsVars")
+        extra = {k: v for k, v in p.items() if k not in reserved}
+        if isinstance(extra.get("indirect"), str):
+            ind = [x.strip() for x in re.split(r"[;\n]+", extra["indirect"]) if x.strip()]
+            if ind:
+                extra["indirect"] = ind
+            else:
+                extra.pop("indirect")
+        if extra.get("group") in ("", None):
+            extra.pop("group", None)
+            for k in ("invariance", "invarianceTest"):
+                extra.pop(k, None)
+        if not bool(p.get("stdEst", p.get("std_est", True))):
+            extra.pop("standardized", None)
+        if extra.get("bootstrap") in (0, "0", "", None):
+            extra.pop("bootstrap", None)
+            extra.pop("ciType", None)
         return SEM(
             df,
             model_syntax=str(p.get("model") or p.get("model_syntax") or ""),
-            std_est=bool(p.get("stdEst", True)),
-            fit_measures=bool(p.get("fitMeasures", True)),
+            std_est=bool(p.get("stdEst", p.get("std_est", True))),
+            fit_measures=bool(p.get("fitMeasures", p.get("fit_measures", True))),
             variances=bool(p.get("variances", False)),
-            path_diagram=bool(p.get("pathDiagram", True))
+            path_diagram=bool(p.get("pathDiagram", p.get("path_diagram", True))),
+            **extra,
         )
+
+    elif t in ("lca", "lta", "lcga"):
+        from .analyses.mixture_module import (
+            LatentClassAnalysis, LatentTransitionAnalysis, LatentClassGrowthAnalysis,
+        )
+        q = {k: v for k, v in p.items() if k not in ("plotStyle", "plot_style")}
+        for key in ("categorical", "continuous", "covariates", "distalContinuous", "distalCategorical"):
+            if key in q and q[key] is not None:
+                q[key] = _as_list(q[key])
+        if t == "lcga" and "vars" in q and q["vars"] is not None:
+            q["vars"] = _as_list(q["vars"])
+        if isinstance(q.get("timeScores"), str):
+            ts = [x for x in re.split(r"[,\s]+", q["timeScores"]) if x]
+            if ts:
+                q["timeScores"] = [float(x) for x in ts]
+            else:
+                q.pop("timeScores")
+        if q.get("classRange") in ("", None, []):
+            q.pop("classRange", None)
+        cls = {"lca": LatentClassAnalysis, "lta": LatentTransitionAnalysis, "lcga": LatentClassGrowthAnalysis}[t]
+        return cls(df, **q)
 
     elif t == "mediation":
         return Mediation(

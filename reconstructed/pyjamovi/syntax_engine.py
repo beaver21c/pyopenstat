@@ -39,6 +39,8 @@ def _clean_params_for_code(params: Dict[str, Any]) -> Dict[str, Any]:
 
 def _portable_path(p: Any) -> Any:
     """Converts absolute paths inside the project root into project-relative paths for portable scripts."""
+    if isinstance(p, (list, tuple)):
+        return [_portable_path(x) for x in p]
     if not isinstance(p, str) or not os.path.isabs(p):
         return p
     try:
@@ -70,8 +72,18 @@ _DATA_OP_ARG_ORDER = {
     "compute": ["col_name", "formula"],
     "recode": ["source_col", "target_col", "rules", "else_value"],
     "filter_rows": ["condition"],
-    "merge": ["other_source", "on", "how", "suffixes"],
+    "merge": ["other_source", "on", "kind", "keep", "keepusing", "indicator", "update", "replace", "assert_results", "how", "suffixes"],
+    "joinby": ["other_source", "on", "unmatched", "indicator", "update", "replace"],
+    "append": ["other_source", "generate", "force"],
     "reshape": ["direction", "id_vars", "value_vars", "stubnames", "time_col", "value_col", "sep", "strip_prefix"],
+    "collapse": ["stats", "by"],
+    "egen": ["target", "func", "source", "by"],
+    "convert_type": ["columns", "to", "ignore", "force", "percent", "generate", "date_format", "text_format"],
+    "encode": ["source", "target", "order"],
+    "decode": ["source", "target"],
+    "set_value_labels": ["column", "labels"],
+    "set_measure": ["columns", "level"],
+    "standardize": ["columns", "method"],
     "rename_var": ["old_name", "new_name"],
     "drop_vars": ["cols"],
     "set_value": ["row_idx", "col_name", "value"],
@@ -84,7 +96,6 @@ _DATA_OP_ARG_ORDER = {
 
 _DATA_OP_DEFAULTS = {
     "recode": {"else_value": "copy"},
-    "merge": {"how": "left"},
     "reshape": {"time_col": "time", "value_col": "value", "sep": "", "strip_prefix": True},
     "save_plots": {"fmt": "svg"},
 }
@@ -99,7 +110,7 @@ def _format_op_call(op: Dict[str, Any]) -> str:
         if k not in op:
             continue
         v = op[k]
-        if v is None or v == [] or (k in defaults and v == defaults[k]):
+        if (v is None and not (name == "set_value_labels" and k == "labels")) or v == [] or (k in defaults and v == defaults[k]):
             continue
         if k in ("other_source", "output_path", "out_dir"):
             v = _portable_path(v)

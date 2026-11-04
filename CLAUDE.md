@@ -65,7 +65,7 @@ Every `ost.Session` automatically runs `startup_self_check_guard()` (applying co
 ```python
 import openstat as ost
 
-# Load CSV, Excel (.xlsx), Parquet, or jamovi (.omv)
+# Load CSV, Excel (.xlsx), Parquet, jamovi (.omv), Stata (.dta) or SPSS (.sav)
 sess = ost.Session("sample_data/Grunfeld_Panel.csv")
 
 # 1. Stata-Equivalent Data Wrangling (Logged to live syntax & reproducible)
@@ -164,6 +164,20 @@ geo.spatial_regression(dep="돌봄이용률", covs=["고령인구비율", "재�
 geo.spatial_panel(dep="돌봄이용률", covs=["고령인구비율", "1인가구비율"], timeVar="연도",
                   model="sdm", effectsType="fe", feType="both", leeyu=True)                     # Stata: xsmle ..., model(sdm) fe type(both, leeyu)
 geo.gwr(dep="돌봄이용률", covs=["고령인구비율"], timeVar="연도", kernel="bisquare", bwType="adaptive")
+
+# 10. Latent class / mixture models (defaults follow Mplus: MLR, STARTS 20 4, FIML)
+care = ost.Session("sample_data/Mixture_LCA_Care.csv")
+lca = care.lca(categorical=["외출지원필요", "식사지원필요", "가사지원필요"], classes=3, classRange="1-5",
+               covariates=["연령"], distalContinuous=["월의료비"], tech11=True)   # lca.posteriors: P_1..P_K, MLC
+care.lpa(continuous=["우울점수", "주관적건강"], classes=3)
+ost.Session("sample_data/Mixture_LTA_Long.csv").lta(categorical=["우울감", "외로움"], idVar="ID", timeVar="조사차수", classes=3)
+ost.Session("sample_data/Mixture_LCGA_Long.csv").lcga(dep="삶의만족도", idVar="ID", timeVar="연도", classes=3)
+
+# 11. Stata-style data management (merge checks key uniqueness and adds _merge 1-5)
+sess.merge("lookup.csv", on="id", kind="m:1", keep=["match", "master"], keepusing=["region"])
+sess.reshape("wide", id_vars=["id"], value_vars=["y"], time_col="t")       # y1 y2 ... ; errors like Stata
+sess.destring("income", ignore=",", force=True); sess.encode("sex_txt", "sex")
+sess.save_data("out.dta")                                                  # also .sav, keeps value labels
 ```
 
 ---

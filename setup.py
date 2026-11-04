@@ -28,6 +28,7 @@ setup(
         "networkx>=3.2",
         "umap-learn>=0.5.5",
         "pypdf>=4.0.0",
+        "pyreadstat>=1.3.7",
         "geopandas>=1.0.0",
         "pyogrio>=0.9.0",
         "shapely>=2.0.0",

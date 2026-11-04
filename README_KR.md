@@ -75,7 +75,10 @@ OpenStat Studio는 파이썬 초보자부터 데이터 사이언티스트까지 
 | | `crosstab` | 교차분할표, $\chi^2$ 독립성 검정, Fisher 직접확률, Cramér's V |
 | **요인 & 신뢰도** | `reliability` | Cronbach's $\alpha$, McDonald's $\omega$, 항목 제거 시 신뢰도 |
 | | `pca`, `efa` | 주성분분석, 탐색적 요인분석(Varimax/Promax/Oblimin, Scree Plot) |
-| **구조방정식 (SEM)** | `sem` | `lavaan` 문법 지원(`=~`, `~`, `~~`), CFI/TLI/RMSEA 적합도, 경로도 |
+| **구조방정식 (SEM)** | `sem` | Mplus 기본 설정(ML·FIML·평균구조), MLR, 다집단·측정동일성, 간접효과, 수정지수, STDYX, 적합도(χ²·RMSEA·CFI·TLI·SRMR) |
+| **잠재계층·혼합모형** | `lca` | 잠재계층(LCA)·잠재프로파일(LPA), 계층 수 비교, TECH11·TECH14, R3STEP·BCH·DCAT (Mplus 기본 설정) |
+| | `lta` | 잠재전이분석: 시점별 계층 비율, 전이확률, 측정동일성 |
+| | `lcga` | 잠재계층 성장분석: 계층별 성장요인 평균(선형·2차·3차), FIML |
 | **패널 & 다층모형** | `panel` | 개체 고정효과(Entity FE), 이원 고정효과, 확률효과(RE), 하우스만 검정 |
 | | `mixedModel` | 선형 혼합모형(Multilevel Linear Mixed Model), REML, ICC 계산 |
 | **베이지안 & 생존분석** | `bayesTTestIS`, `bayesANOVA` | JZS 코시 사전분포 기반 베이지안 가설검정 ($BF_{10}$) |

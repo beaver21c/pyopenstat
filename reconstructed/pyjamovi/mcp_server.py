@@ -91,19 +91,20 @@ TOOLS = [
     },
     {
         "name": "openstat_wrangle_data",
-        "description": "Perform Stata-equivalent data cleaning and transformation: compute (new variable formula), recode (value mapping/intervals), filter (query rows), merge (inner/left/right/outer on keys), reshape (wide <-> long), or standardize (z-score/minmax/robust). Automatically saves changes and logs executable syntax.",
+        "description": "Perform Stata-equivalent data cleaning and transformation: compute (new variable formula), recode (value mapping/intervals), filter (query rows), merge (Stata 1:1/m:1/1:m/m:m with _merge), joinby, append, reshape (wide <-> long), collapse, egen, convert_type (destring/tostring/date), encode/decode, value labels, measure levels, or standardize (z-score/minmax/robust). Automatically saves changes and logs executable syntax.",
         "inputSchema": {
             "type": "object",
             "properties": {
-                "file_path": {"type": "string", "description": "Dataset path (.csv, .xlsx, .omv)"},
+                "file_path": {"type": "string", "description": "Dataset path (.csv, .xlsx, .omv, .dta, .sav, .parquet)"},
                 "operation": {
                     "type": "string",
-                    "enum": ["compute", "recode", "filter", "merge", "reshape", "standardize"],
+                    "enum": ["compute", "recode", "filter", "merge", "joinby", "append", "reshape", "collapse", "egen",
+                             "convert_type", "encode", "decode", "set_value_labels", "set_measure", "standardize"],
                     "description": "Data wrangling operation"
                 },
                 "params": {
                     "type": "object",
-                    "description": "Parameters for the operation: compute {'target': 'bmi', 'expr': 'weight / (height/100)**2'}; recode {'source': 'age', 'target': 'age_grp', 'rules': [{'type': 'range', 'from': 0, 'to': 19, 'value': 1, 'label': '청소년'}]}; filter {'query': 'age >= 20 and sex == 1'}; merge {'right_file': '...', 'how': 'left', 'left_on': 'id', 'right_on': 'id'}; reshape {'direction': 'long', 'id_vars': ['id'], 'value_vars': ['t1','t2'], 'var_name': 'time', 'val_name': 'score'}; standardize {'columns': ['x1', 'x2'], 'method': 'zscore'}"
+                    "description": "Parameters for the operation: compute {'target': 'bmi', 'expr': 'weight / (height/100)**2'}; recode {'source': 'age', 'target': 'age_grp', 'rules': [{'type': 'range', 'from': 0, 'to': 19, 'value': 1, 'label': '청소년'}]}; filter {'query': 'age >= 20 and sex == 1'}; merge {'right_file': '...', 'on': ['id'], 'kind': '1:1|m:1|1:m|m:m (omit = infer from key uniqueness)', 'keep': ['master','using','match'], 'keepusing': [...], 'update': false, 'replace': false} (Stata merge; adds _merge 1-5); joinby {'right_file': '...', 'on': ['id'], 'unmatched': 'none|both|master|using'}; append {'right_file': '...' or [...], 'generate': 'src', 'force': false}; reshape {'direction': 'long', 'id_vars': ['id'], 'stubnames': ['bp_w'], 'time_col': 'wave'} or {'direction': 'wide', 'id_vars': ['id'], 'value_vars': ['y'], 'time_col': 't'}; collapse {'stats': {'mean': ['y']}, 'by': ['id']}; egen {'target': 'm', 'func': 'mean', 'source': 'y', 'by': ['id']}; convert_type {'columns': ['x'], 'to': 'numeric|integer|text|date', 'ignore': ',', 'force': false}; encode/decode {'source': 's', 'target': 's_code'}; set_value_labels {'column': 'sex', 'labels': {'1': '남', '2': '여'}}; set_measure {'columns': ['x'], 'level': 'Ordinal'}; standardize {'columns': ['x1', 'x2'], 'method': 'zscore'}"
                 },
                 "save_path": {"type": "string", "description": "Optional output path to save wrangled dataset (.csv, .xlsx, .omv)"}
             },
@@ -281,11 +282,36 @@ def handle_tool_call(name: str, arguments: Dict[str, Any]) -> Any:
         elif op == "filter":
             sess.filter(params["query"])
         elif op == "merge":
-            sess.merge(params["right_file"], params.get("how", "inner"), params.get("left_on"), params.get("right_on"), params.get("on"))
+            kw = {k: params[k] for k in ("kind", "keep", "keepusing", "indicator", "update", "replace", "assert_results", "how")
+                  if k in params}
+            sess.merge(params.get("right_file") or params["other_source"], on=params.get("on") or params.get("left_on"), **kw)
+        elif op == "joinby":
+            sess.joinby(params.get("right_file") or params["other_source"], on=params.get("on"),
+                        unmatched=params.get("unmatched", "none"))
+        elif op == "append":
+            sess.append(params.get("right_file") or params["other_source"], generate=params.get("generate"),
+                        force=bool(params.get("force", False)))
         elif op == "reshape":
             direction = params.get("direction", "long")
-            clean_params = {k: v for k, v in params.items() if k != "direction"}
+            alias = {"var_name": "time_col", "val_name": "value_col", "i": "id_vars", "j": "time_col", "stubs": "stubnames"}
+            clean_params = {alias.get(k, k): v for k, v in params.items() if k != "direction"}
             sess.reshape(direction, **clean_params)
+        elif op == "collapse":
+            sess.collapse(params["stats"], by=params.get("by"))
+        elif op == "egen":
+            sess.egen(params["target"], params["func"], params.get("source"), by=params.get("by"))
+        elif op == "convert_type":
+            sess.convert_type(params["columns"], params["to"], ignore=params.get("ignore", ""), force=bool(params.get("force", False)),
+                              percent=bool(params.get("percent", False)), generate=params.get("generate"),
+                              date_format=params.get("date_format"))
+        elif op == "encode":
+            sess.encode(params["source"], params["target"], order=params.get("order"))
+        elif op == "decode":
+            sess.decode(params["source"], params["target"])
+        elif op == "set_value_labels":
+            sess.set_value_labels(params["column"], params.get("labels"))
+        elif op == "set_measure":
+            sess.set_measure(params["columns"], params["level"])
         elif op == "standardize":
             sess.standardize(params["columns"], params.get("method", "zscore"))
         else:

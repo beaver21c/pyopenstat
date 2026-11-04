@@ -71,10 +71,17 @@ class ResultsTable:
         if note not in self.notes:
             self.notes.append(note)
 
+    @staticmethod
+    def display_title(col: Dict[str, Any]) -> str:
+        """Column title for flat (single header row) outputs: super title + title when a super title is set."""
+        t = col.get("title") or col.get("name") or ""
+        st = col.get("superTitle") or ""
+        return f"{st} {t}".strip() if st else t
+
     def to_dataframe(self) -> pd.DataFrame:
         col_names = [c["name"] for c in self.columns]
         data = [[r.get(c) for c in col_names] for r in self.rows]
-        titles = [c["title"] or c["name"] for c in self.columns]
+        titles = [self.display_title(c) for c in self.columns]
         return pd.DataFrame(data, columns=titles)
 
     def _format_cell(self, val: Any, col_meta: Dict[str, Any]) -> str:
@@ -106,7 +113,7 @@ class ResultsTable:
         return str(val)
 
     def to_string(self) -> str:
-        headers = [c["title"] for c in self.columns]
+        headers = [self.display_title(c) for c in self.columns]
         table_data = [[self._format_cell(r.get(c["name"]), c) for c in self.columns] for r in self.rows]
         output = [f"\n{self.title}", tabulate(table_data, headers=headers, tablefmt="simple")]
         for n in self.notes:
@@ -114,7 +121,7 @@ class ResultsTable:
         return "\n".join(output)
 
     def to_markdown(self) -> str:
-        headers = [c["title"] or " " for c in self.columns]
+        headers = [self.display_title(c) or " " for c in self.columns]
         table_data = [[self._format_cell(r.get(c["name"]), c) for c in self.columns] for r in self.rows]
         output = [f"### {self.title}\n", tabulate(table_data, headers=headers, tablefmt="github")]
         if self.notes:
@@ -124,7 +131,7 @@ class ResultsTable:
         return "\n".join(output)
 
     def to_html(self) -> str:
-        headers = [c["title"] for c in self.columns]
+        headers = [self.display_title(c) for c in self.columns]
         html = ["<div class='jamovi-table-container'>", f"<h4>{self.title}</h4>", "<table class='apa-table'>", "<thead><tr>"]
         for h in headers:
             html.append(f"<th>{h}</th>")
