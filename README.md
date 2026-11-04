@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-0D9488.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-1E3A5F.svg)](setup.py)
-[![Claude Code MCP](https://img.shields.io/badge/Claude_Code-MCP_%26_CLI_Ready-D97706.svg)](.mcp.json)
+[![Claude Code MCP](https://img.shields.io/badge/Claude_Code-MCP_%26_CLI_Ready-D97706.svg)](scripts/setup_claude_code.py)
 [![1-Click Launcher](https://img.shields.io/badge/1--Click_Launch-Windows_%26_macOS_%26_Linux-2563EB.svg)](START_OPENSTAT.bat)
 
 [한국어 안내서 (README_KR.md)](README_KR.md) | [Claude Code 가이드 (CLAUDE.md)](CLAUDE.md) | [출처 및 라이선스 고지 (NOTICE.md)](NOTICE.md)
@@ -90,6 +90,7 @@ sess.save_py("reports/analysis_script.py")       # 100% 재현 가능한 파이�
 
 - **개념적 참조 및 호환성 설계**: 분석 모형 체계, 통계 메뉴 구성, APA 7판 결과 시트 표현 양식 및 `.omv` 파일 호환 구조는 **[The jamovi project](https://www.jamovi.org)**를 참고하여 설계되었습니다. 상세 라이선스 및 저작권 정보는 [`NOTICE.md`](NOTICE.md)에 상세히 표기되어 있습니다.
 - **100% 클린룸 코드 및 저작권 무결성**: GPL/AGPL 외부 코드가 일절 포함되지 않았으며, jamovi의 `V` 로고 및 원본 아이콘을 전혀 사용하지 않았습니다. 45개의 모든 벡터 아이콘(`reconstructed/pyjamovi/web/assets/`)과 파이썬 통계/시각화/내보내기 엔진은 상업적/비상업적 연구 및 배포에 안전한 순수 창작물입니다.
+- **GPL 의존 패키지 고지**: 일부 분석 모듈은 실행 시 GPL 라이선스 패키지(`pingouin` GPL-3.0, `factor_analyzer` GPL-2.0)를 불러옴. 저장소 소스코드에는 이들 패키지가 포함되지 않으며, 이들 패키지를 함께 묶어 재배포하는 경우 해당 GPL 조건을 따라야 함. 상세 내용은 [`NOTICE.md`](NOTICE.md) 3.2절 참조.
 
 ---
 
@@ -158,7 +159,7 @@ OpenStat-Studio/
 ├── STOP_OPENSTAT.sh         # [macOS/Linux] 서버 종료 스크립트
 ├── SETUP_CLAUDE_CODE.bat    # [Windows] Claude Code AI 연동 원클릭 스크립트
 ├── SETUP_CLAUDE_CODE.sh     # [macOS/Linux] Claude Code AI 연동 스크립트
-├── .mcp.json                # Claude Code / AI 에이전트 MCP 표준 설정
+├── .mcp.json                # Claude Code MCP 설정 (SETUP_CLAUDE_CODE 실행 시 PC별 생성, Git 추적 제외)
 ├── CLAUDE.md                # Claude Code 에이전트 지침서
 ├── README.md                # 영문 & 국문 통합 안내서
 ├── README_KR.md             # 한국어 상세 매뉴얼

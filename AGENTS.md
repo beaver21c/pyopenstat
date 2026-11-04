@@ -1,7 +1,7 @@
 # OpenStat Studio v3.0 (`openstat` / `pyjamovi`) — 워크스페이스 운영 및 아키텍처 규율
 
 ## 1. 개요 및 오픈소스 라이선스 원칙
-- 본 워크스페이스(`/mnt/share/temp/pyjamovi`, Windows 대응 `z:\temp\fun_4`)는 **독자 오픈소스(MIT License) 통계 패키지 및 Claude Code 실시간 제어 런타임인 `OpenStat Studio v3.0`**의 표준 개발·검증 환경이다.
+- 본 워크스페이스(저장소 루트)는 **독자 오픈소스(MIT License) 통계 패키지 및 Claude Code 실시간 제어 런타임인 `OpenStat Studio v3.0`**의 표준 개발·검증 환경이다.
 - **참조 표기 및 저작권 클린룸 원칙**:
   - 통계 분석 모형 구성, 메뉴 체계, APA 7판 결과 시트 구조 및 `.omv` 바이너리 컨테이너 호환성은 **[The jamovi project](https://www.jamovi.org)를 참고하여 설계**되었음을 `LICENSE`, `NOTICE.md`, `README.md`, 웹 UI 하단에 명시한다.
   - jamovi의 `V` 로고(`logo-v.svg`) 및 GPL/AGPL 원천 파일·아이콘은 **일절 사용하지 않으며**, 자체 제작 브랜드 로고(`brand-logo.svg`, `brand-logo-mark.svg`)와 `scripts/generate_clean_icons.py`로 생성한 45종의 독자 MIT/CC0 벡터 아이콘 및 100% 자체 Python 코드를 사용한다.

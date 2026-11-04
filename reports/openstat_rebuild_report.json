@@ -7,7 +7,7 @@
     {
       "step": "Regenerate Clean-Room SVG Assets",
       "passed": true,
-      "output": "Generated 45 clean-room MIT/CC0 SVG icons in /mnt/share/temp/fun_4/reconstructed/pyjamovi/web/assets"
+      "output": "Generated 45 clean-room MIT/CC0 SVG icons in reconstructed/pyjamovi/web/assets"
     },
     {
       "step": "Editable Package Build (`pip install -e .`)",

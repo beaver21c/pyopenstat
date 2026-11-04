@@ -10,7 +10,7 @@ Patch pyjamovi Web Studio for:
 import re
 import os
 
-HTML_PATH = "/mnt/share/temp/pyjamovi/reconstructed/pyjamovi/web/index.html"
+HTML_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "reconstructed", "pyjamovi", "web", "index.html")
 
 with open(HTML_PATH, "r", encoding="utf-8") as f:
     content = f.read()

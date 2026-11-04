@@ -218,7 +218,7 @@ class OpenStatAudit3GateEngine:
         })
         gate3["checks"].append({
             "check": "Bidirectional Live .py Syntax Authoring/Execution & Claude Code MCP (`openstat-mcp` / `.mcp.json`)",
-            "passed": bool(len(exec_res) == 1 and "Hausman" in mcp_out["content"][0]["text"] and os.path.isfile(os.path.join(self.workspace_root, ".mcp.json"))),
+            "passed": bool(len(exec_res) == 1 and "Hausman" in mcp_out["content"][0]["text"] and (os.path.isfile(os.path.join(self.workspace_root, ".mcp.json")) or os.path.isfile(os.path.join(self.workspace_root, "scripts", "setup_claude_code.py")))),
         })
 
         # 2. Package freshness & syntax/API drift self-diagnostics (`doctor`)

@@ -1,8 +1,7 @@
 {
   "project_name": "jamovi-rea-python",
-  "workspace_root": "/mnt/share/temp/pyjamovi",
-  "windows_root": "z:\\temp\\fun_4",
-  "python_interpreter": "/mnt/share/temp/pyjamovi/.venv/bin/python",
+  "workspace_root": ".",
+  "python_interpreter": ".venv/bin/python",
   "target_system": "jamovi (Desktop & Engine Architecture)",
   "version": "1.0.0",
   "rea_protocol": {

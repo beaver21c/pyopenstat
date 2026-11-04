@@ -1,6 +1,6 @@
 # Claude Code × OpenStat Studio v3.0 Integration Guide
 
-See root [`CLAUDE.md`](../CLAUDE.md) for the auto-loaded Claude Code instructions and [`.mcp.json`](../.mcp.json) for zero-config MCP server registration.
+See root [`CLAUDE.md`](../CLAUDE.md) for the auto-loaded Claude Code instructions and `.mcp.json` (generated per machine by [`scripts/setup_claude_code.py`](../scripts/setup_claude_code.py)) for zero-config MCP server registration.
 
 ## 4 Ways Claude Code Directly Operates OpenStat Studio
 
@@ -15,14 +15,14 @@ See root [`CLAUDE.md`](../CLAUDE.md) for the auto-loaded Claude Code instruction
 
 1. **Check Package Freshness & Upstream Python API Drift (`doctor`)**:
    ```bash
-   /mnt/share/temp/fun_4/.venv/bin/openstat doctor --json
+   .venv/bin/openstat doctor --json
    ```
 2. **Detect & Scaffold Newly Added jamovi Features (`sync-jamovi`)**:
    ```bash
-   /mnt/share/temp/fun_4/.venv/bin/openstat sync-jamovi
-   /mnt/share/temp/fun_4/.venv/bin/openstat sync-jamovi --scaffold friedman
+   .venv/bin/openstat sync-jamovi
+   .venv/bin/openstat sync-jamovi --scaffold friedman
    ```
 3. **Rebuild Catalog, Clean Icons & Run Verification (`rebuild`)**:
    ```bash
-   /mnt/share/temp/fun_4/.venv/bin/openstat rebuild
+   .venv/bin/openstat rebuild
    ```

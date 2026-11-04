@@ -15,7 +15,7 @@ In accordance with academic transparency and open-source best practices, the aut
 
 ## 2. Clean-Room Implementation & Original Branding / Iconography
 
-To ensure **zero copyright, license (GPL/AGPL), or trademark encumbrance** for public GitHub distribution:
+To keep the source code in this repository free of copied GPL/AGPL code and third-party trademarks (third-party runtime dependencies are covered separately in Section 3):
 
 - **Zero Copied Source Code**: OpenStat Studio contains **no** R, C++, JavaScript, HTML, CSS, or `.yaml` source files copied from `jamovi/jamovi`, `jamovi/jmv`, or any GPL/AGPL module. Every statistical routine, parser, exporter, and UI component was written from scratch in Python 3 and vanilla HTML/CSS/JS.
 - **Original Custom Brand Logo (No jamovi `V` Logo)**: OpenStat Studio uses its own custom geometric brand mark (`brand-logo.svg`, `brand-logo-mark.svg` — Teal & Cobalt histogram + distribution curve emblem) and **never** uses the jamovi `V` trademark or logo.
@@ -23,15 +23,29 @@ To ensure **zero copyright, license (GPL/AGPL), or trademark encumbrance** for p
 
 ---
 
-## 3. Permissive Scientific Python Ecosystem Dependencies
+## 3. Third-Party Python Dependencies
 
-OpenStat Studio builds upon permissive (BSD / MIT / Apache-2.0 / MPL-2.0) open-source Python packages:
+OpenStat Studio does not bundle or vendor any third-party package source. All dependencies listed in `requirements.txt` / `setup.py` are installed separately from PyPI by `pip`, and each remains under its own license.
 
-- `numpy`, `scipy`, `pandas`, `statsmodels` (BSD-3-Clause)
-- `pingouin` (GPL-free API usage; check environment license policy if redistributing binary bundles) / `scikit-learn` (BSD-3-Clause) / `factor_analyzer` (GPL-free BSD/MIT-compatible wrapper)
+### 3.1 Permissive-licensed dependencies (BSD / MIT / NCSA / PSF)
+
+- `numpy`, `scipy`, `pandas`, `statsmodels`, `scikit-learn`, `seaborn` (BSD-3-Clause)
 - `semopy` (MIT) — Structural Equation Modeling & CFA (`lavaan` syntax)
 - `linearmodels` (NCSA / Permissive) — Panel Econometrics (FE / Two-Way FE / RE / Pooled OLS / Hausman)
 - `lifelines` (MIT) — Kaplan-Meier & Cox Proportional Hazards Survival Analysis
 - `matplotlib` (PSF/BSD-compatible) — Publication Vector/Raster Graphics (`PlotStyle`)
 - `openpyxl` (MIT), `python-docx` (MIT) — Multi-format APA Table Export (`.xlsx`, `.docx`, plus built-in clean-room `.hwpx` OWPML & `.tex` exporters)
 - `fastapi`, `uvicorn`, `pydantic` (MIT) — Optional on-demand local Web Studio & REST API
+
+### 3.2 GPL-licensed dependencies (copyleft)
+
+The following packages are imported at runtime by specific analysis modules and are licensed under the GNU General Public License:
+
+| Package | License | Imported by |
+|---|---|---|
+| `pingouin` | GPL-3.0 | `analyses/anova_advanced.py`, `analyses/bayesian.py`, `analyses/factor_suite.py`, `analyses/posthoc.py`, `analyses/regression_advanced.py` |
+| `factor_analyzer` | GPL-2.0 | `analyses/factor_suite.py`, `diagnostics.py` |
+
+- The MIT License in `LICENSE` covers the OpenStat Studio source code in this repository only. It does not relicense `pingouin` or `factor_analyzer`.
+- Anyone who redistributes OpenStat Studio together with these packages (for example, a bundled installer, frozen executable, or archive that includes a populated `.venv`) must comply with the terms of the GPL for those packages.
+- License identifiers above were taken from the installed package metadata (`pingouin` 0.7.0, `factor_analyzer` 0.5.1). Check the upstream projects for the license of the version you install.

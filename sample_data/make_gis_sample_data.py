@@ -3,6 +3,8 @@ Generate realistic sample GIS dataset for Korea (Seoul 25 Autonomous Districts)
 Variables: region_id, region_name, latitude, longitude, welfare_expenditure, elderly_ratio, poverty_rate, single_household, welfare_centers
 """
 
+import os
+
 import pandas as pd
 import numpy as np
 
@@ -49,5 +51,5 @@ for idx, (name, lat, lon, exp, eld, pov, sng, cnt) in enumerate(districts, start
     })
 
 df = pd.DataFrame(data)
-df.to_csv("/mnt/share/temp/pyjamovi/sample_data/Korea_Regional_Welfare_GIS.csv", index=False)
+df.to_csv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "Korea_Regional_Welfare_GIS.csv"), index=False)
 print("Created sample_data/Korea_Regional_Welfare_GIS.csv with", len(df), "rows.")
