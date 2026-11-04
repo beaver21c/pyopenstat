@@ -34,6 +34,11 @@ from .analyses import (
     TextCluster,
     SummaryTTest,
     SpatialAnalysis,
+    SpatialWeightsAnalysis,
+    SpatialAutocorrelation,
+    SpatialPanelAnalysis,
+    GWRAnalysis,
+    SpatialMapAnalysis,
     SEM,
     Mediation,
     Moderation,
@@ -141,7 +146,12 @@ ANALYSIS_CATALOG: List[Dict[str, Any]] = [
     {"id": "panel", "group": "Linear Models", "title": "Panel Econometrics (FE / RE / Hausman)", "module": "plm", "icon": "analysis-linearmodels.svg"},
     {"id": "mixedModel", "group": "Linear Models", "title": "Linear Mixed Model (Multilevel)", "module": "gamlj", "icon": "analysis-linearmodels.svg"},
     {"id": "survival", "group": "Survival", "title": "Kaplan-Meier & Cox PH Survival", "module": "jsurvival", "icon": "analysis-survival.svg"},
-    {"id": "spatial", "group": "Spatial", "title": "GIS Spatial Analysis & Regression (GeoDa / Stata)", "module": "geoda", "icon": "analysis-scatr-jmvscatter.svg"},
+    {"id": "spatialWeights", "group": "Spatial", "title": "Spatial Weights Matrix (contiguity / kNN / distance)", "module": "geoda", "icon": "analysis-spatial.svg"},
+    {"id": "spatial_moran", "group": "Spatial", "title": "Spatial Autocorrelation (Moran's I / LISA / Gi*)", "module": "geoda", "icon": "analysis-spatial.svg"},
+    {"id": "spatial", "group": "Spatial", "title": "Spatial Regression (OLS-LM / SAR / SEM / SDM / SDEM / SLX / SAC)", "module": "geoda", "icon": "analysis-spatial.svg"},
+    {"id": "spatialPanel", "group": "Spatial", "title": "Spatial Panel Regression (FE / RE, Stata xsmle)", "module": "geoda", "icon": "analysis-spatial.svg"},
+    {"id": "gwr", "group": "Spatial", "title": "Geographically Weighted Regression (GWR)", "module": "geoda", "icon": "analysis-spatial.svg"},
+    {"id": "spatialMap", "group": "Spatial", "title": "Thematic Map (Choropleth)", "module": "geoda", "icon": "analysis-spatial.svg"},
     {"id": "graph", "group": "Graphs", "title": "Graph Builder (15 Chart Types)", "module": "openstat", "icon": "analysis-scatr-jmvbar.svg"},
 
     {"id": "textKeywords", "group": "Text", "title": "Keyword Analysis (Frequency / TF-IDF / Word Cloud)", "module": "openstat", "icon": "analysis-text.svg"},
@@ -217,6 +227,22 @@ def _dispatch_inner(analysis_type: str, df: pd.DataFrame, p: Dict[str, Any]) -> 
         "graph_network": "graphNetwork",
         "edge_network": "graphNetwork",
         "sna": "graphNetwork",
+        "spatial_weights": "spatialWeights",
+        "spmatrix": "spatialWeights",
+        "spatialMoran": "spatial_moran",
+        "spatial_autocorrelation": "spatial_moran",
+        "moran": "spatial_moran",
+        "lisa": "spatial_moran",
+        "spatial_regression": "spatial",
+        "spregress": "spatial",
+        "spatialAnalysis": "spatial",
+        "spatial_panel": "spatialPanel",
+        "xsmle": "spatialPanel",
+        "spxtregress": "spatialPanel",
+        "geographically_weighted_regression": "gwr",
+        "mgwr": "gwr",
+        "spatial_map": "spatialMap",
+        "choropleth": "spatialMap",
     }
     t = alias_map.get(t, t)
 
@@ -632,20 +658,27 @@ def _dispatch_inner(analysis_type: str, df: pd.DataFrame, p: Dict[str, Any]) -> 
             km_plot=bool(p.get("kmPlot", True))
         )
 
-    elif t in ("spatial", "spatialAnalysis", "spatial_regression", "spregress"):
-        return SpatialAnalysis(
-            df,
-            dep=_as_single(p.get("dep") or p.get("y")),
-            covs=_as_list(p.get("covs") or p.get("x") or p.get("indeps")),
-            lat=_as_single(p.get("lat") or p.get("latitude")),
-            lon=_as_single(p.get("lon") or p.get("longitude")),
-            region_id=_as_single(p.get("region_id") or p.get("region")),
-            weights_method=str(p.get("weightsMethod", p.get("method", "knn"))),
-            k=int(p.get("k", 4)),
-            model_type=str(p.get("modelType", p.get("model_type", p.get("model", "lag")))),
-            plot_moran=bool(p.get("plotMoran", True)),
-            plot_map=bool(p.get("plotMap", True))
-        )
+    elif t == "spatial":
+        q = dict(p)
+        q.pop("plotStyle", None)
+        q.pop("plot_style", None)
+        if "covs" in q:
+            q["covs"] = _as_list(q.get("covs"))
+        elif q.get("x") or q.get("indeps"):
+            q["covs"] = _as_list(q.get("x") or q.get("indeps"))
+        q["dep"] = _as_single(q.get("dep") or q.get("y")) or ""
+        return SpatialAnalysis(df, **q)
+
+    elif t in ("spatialWeights", "spatial_moran", "spatialPanel", "gwr", "spatialMap"):
+        q = {k: v for k, v in p.items() if k not in ("plotStyle", "plot_style")}
+        for key in ("covs", "vars", "durbinVars"):
+            if key in q:
+                q[key] = _as_list(q[key])
+        if t == "spatial_moran" and not q.get("vars") and q.get("dep"):
+            q["vars"] = _as_list(q.get("dep"))
+        cls = {"spatialWeights": SpatialWeightsAnalysis, "spatial_moran": SpatialAutocorrelation,
+               "spatialPanel": SpatialPanelAnalysis, "gwr": GWRAnalysis, "spatialMap": SpatialMapAnalysis}[t]
+        return cls(df, **q)
 
     elif t in ("textKeywords", "textNetwork", "textCluster"):
         text_c = _as_single(p.get("text") or p.get("text_col"))

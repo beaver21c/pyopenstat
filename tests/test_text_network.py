@@ -155,3 +155,32 @@ def test_csv_reader_keeps_long_text(tmp_path):
     df.to_csv(p, index=False, encoding="utf-8-sig")
     loaded =jmv.Session(str(p), auto_sync_workspace=False).df
     assert loaded.shape == (2, 2) and loaded["본문"].iloc[0] == df["본문"].iloc[0]
+
+
+def test_select_options_are_validated_and_new_units_metrics(docs_df):
+    """Unknown select values raise; aliases map to canonical keys; paragraph unit and cosine metric exist."""
+    for bad in [{"edgeMetric": "pmi"}, {"unit": "page"}, {"layout": "grid"}, {"posMode": "verbs"}]:
+        with pytest.raises(ValueError):
+            dispatch_analysis("textNetwork", docs_df, {"text": "본문", **bad})
+    with pytest.raises(ValueError):
+        dispatch_analysis("textKeywords", docs_df, {"text": "본문", "rankBy": "tf"})
+    with pytest.raises(ValueError):
+        dispatch_analysis("textCluster", docs_df, {"text": "본문", "method": "dbscan"})
+    with pytest.raises(ValueError):
+        dispatch_analysis("graphNetwork", pd.DataFrame({"a": ["x", "y"], "b": ["y", "z"]}),
+                          {"source": "a", "target": "b", "sizeBy": "hub"})
+
+    a = dispatch_analysis("textNetwork", docs_df, {"text": "본문", "edgeMetric": "freq", "topNodes": 25})
+    assert any("연결 강도 = 동시출현 빈도" in n for n in a.tables[0].notes)
+
+    toy = pd.DataFrame({"t": ["돌봄 서비스 확대 필요\n\n지역 돌봄 인력 부족 문제\n돌봄 인력 처우 개선",
+                              "청년 일자리 지원\n청년 주거 지원 확대", "노인 돌봄 서비스와 지역 인력"] * 3})
+    units = {}
+    for unit in ("paragraph", "document"):
+        r = dispatch_analysis("textNetwork", toy, {"text": "t", "unit": unit, "minCooc": 1, "topNodes": 20,
+                                                   "edgeMetric": "cosine"})
+        units[unit] = [row["value"] for row in r.tables[0].rows if "분석 단위 수" in row["stat"]][0]
+        pairs = [t for t in r.tables if t.name == "pairs"][0]
+        assert all(0 < row["cosine"] <= 1 + 1e-12 for row in pairs.rows)
+        assert all(row["cosine"] >= row["jaccard"] - 1e-12 for row in pairs.rows)
+    assert units == {"paragraph": 18, "document": 9}

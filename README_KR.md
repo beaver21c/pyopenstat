@@ -86,8 +86,16 @@ OpenStat Studio는 파이썬 초보자부터 데이터 사이언티스트까지 
 | | `textNetwork` | 키워드 동시출현 관계망, 중심성, Louvain 묶음 |
 | | `textCluster` | 문서 임베딩(TF-IDF+LSA 또는 bge-m3) → UMAP → HDBSCAN 군집, 군집 키워드, 주제 묶음, 관계망 |
 | **관계망 분석** | `graphNetwork` | 연결 목록 기반 중심성 6종, 밀도·경로 길이, Louvain 묶음, 관계망 그림 |
+| **GIS 공간분석** | `spatialWeights` | 공간가중행렬(퀸·룩 인접, k-최근접, 거리, 역거리, 외부 파일), 정규화·고립 지역 처리, .gal·.gwt·.csv 저장 |
+| | `spatial_moran` | 전역 Moran's I(정규 근사·순열), LISA 군집(FDR·Bonferroni), Getis–Ord Gi* |
+| | `spatial` | 횡단면 공간회귀 OLS·SLX·SAR·SEM·SDM·SDEM·SAC, LM 진단, 모형 비교·LR 검정, 직접·간접·총효과 |
+| | `spatialPanel` | 공간패널회귀 고정효과(지역·시점·양방향, Lee–Yu 보정)·확률효과, Hausman, 패널 LM (Stata xsmle·spxtregress 대응) |
+| | `gwr` | 지리가중회귀(커널·대역폭 선택, 국지 계수 지도, 공간 변이 검정) |
+| | `spatialMap` | 주제도(분위수·자연 구분·등간격 단계구분도) |
 
 > **텍스트 파일 불러오기**: [텍스트 분석 ▸ 텍스트 파일 불러오기]에서 `.txt` `.md` `.docx` `.pdf` `.hwpx` 파일이나 폴더를 선택하면 문서 1건 = 1행 데이터로 변환 (하위 폴더 이름은 '폴더' 변수에 기록).
+
+> **지도 경계 연결**: [데이터 ▸ 지도 경계 연결]에서 `.shp`·`.shx`·`.dbf`(선택 `.prj`·`.cpg`) 또는 `.zip`·`.geojson`·`.gpkg`를 선택하고 데이터의 지역 코드 변수와 경계 속성을 연결 (연결 변수 자동 추천, 일치 지역 수 표시). 경계 없이 경도·위도 좌표 변수로도 분석 가능.
 
 ---
 

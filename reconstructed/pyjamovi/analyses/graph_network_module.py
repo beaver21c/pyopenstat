@@ -18,7 +18,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as path_effects
 
-from .base import BaseAnalysis, ResultsTable
+from .base import BaseAnalysis, ResultsTable, resolve_choice
 from .plots import fig_to_base64, _pal
 from .plot_style import get_active_style
 
@@ -39,6 +39,15 @@ CENTRALITY_LABELS = {
     "eigenvector": "고유벡터 중심성",
     "pagerank": "PageRank",
 }
+
+
+LAYOUT_LABELS = {"spring": "스프링", "kamada_kawai": "Kamada-Kawai", "circular": "원형"}
+_LAYOUT_ALIASES = {"kk": "kamada_kawai", "kamada": "kamada_kawai", "kamada-kawai": "kamada_kawai", "circle": "circular",
+                   "fr": "spring", "fruchterman_reingold": "spring", "force": "spring"}
+
+
+def resolve_layout(layout) -> str:
+    return resolve_choice("배치 방식", layout, list(LAYOUT_LABELS), _LAYOUT_ALIASES, default="spring")
 
 
 def _set_distance(G, weight: str = "weight"):
@@ -360,9 +369,12 @@ class GraphNetworkAnalysis(BaseAnalysis):
         plot_centrality: bool = True,
         seed: int = 42,
     ):
+        size_by = resolve_choice("노드 크기 기준", size_by, list(CENTRALITY_LABELS),
+                                 {"weighted_degree": "strength", "weighted": "strength", "page_rank": "pagerank"}, default="strength")
+        layout = resolve_layout(layout)
         super().__init__(
             name="graphNetwork",
-            title="관계망 분석 (Relational Network Analysis)",
+            title="관계망 분석 (연결 목록)",
             dataset=data,
             options={
                 "source": source, "target": target, "weight": weight or "", "directed": directed,

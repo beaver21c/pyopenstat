@@ -131,6 +131,18 @@ sess.save_py("reports/analysis_script.py")       # 100% 재현 가능한 파이�
 - **관계망 분석** (`graphNetwork`): 연결 목록(출발·도착·가중치) → 밀도·경로 길이·군집계수, 중심성 6종(연결·가중 연결정도·매개·근접·고유벡터·PageRank), Louvain 묶음, 관계망 그림
 - 예제 데이터: `sample_data/Text_PolicyDocs.csv` (합성 정책문서 150건), `sample_data/Network_Collaboration.csv` (합성 기관 협력 86건)
 
+### 3-2. GIS 공간분석 (리본 [공간분석 (GIS)]·데이터 탭 [지도 경계 연결])
+- **지도 경계 연결**: `.shp`(+`.shx` `.dbf`, 선택 `.prj` `.cpg`)·`.zip`·`.geojson`·`.gpkg`를 데이터의 지역 코드와 연결(연결 변수 자동 추천·일치율 확인), 또는 경계 속성표를 데이터로 열기. `.cpg`가 없는 한글 속성표는 CP949로 읽음. 좌표 변수(경도·위도)만으로도 분석 가능
+- **공간가중행렬** (`spatialWeights`): 퀸·룩 인접(1~3차), k-최근접, 거리 임계값, 역거리, 외부 파일(.gal·.gwt·.csv) / 행 표준화·스펙트럼(Stata 기본)·최소-최대 정규화 / 이웃 없는 지역 처리(최근접 연결·제외·유지) / 연결 지도, `.gal`·`.gwt`·Stata `spmatrix fromdata`용 `.csv` 저장
+- **공간자기상관** (`spatial_moran`): 전역 Moran's I(정규 근사·순열), LISA 군집(조건부 순열, FDR·Bonferroni 보정), Getis–Ord Gi* 열점·냉점, 주제도(분위수·자연 구분·등간격)
+- **횡단면 공간회귀** (`spatial`, Stata `spregress`): OLS·SLX·SAR·SEM·SDM·SDEM·SAC 최우추정, OLS 진단(잔차 Moran's I, LM·강건 LM, Jarque–Bera, Koenker–Bassett, 조건수), 7개 모형 비교·LR 검정, 직접·간접·총효과(델타 방법·모의추출), OIM·EIM 표준오차
+- **공간패널회귀** (`spatialPanel`, Stata `xsmle`·`spxtregress`): 지역·시점·양방향 고정효과(Lee–Yu 보정), 확률효과(SAR·SDM), Hausman 검정, 패널 LM 검정, 효과 분해, 균형패널 자동 구성
+- **지리가중회귀** (`gwr`, mgwr): 이중제곱·가우시안·지수 커널, 적응형·고정 대역폭, AICc 선택, 유효 모수 보정 유의성, 국지 계수 지도, 몬테카를로 공간 변이 검정
+- 모든 분석 결과 첫 표에 **분석 가정·설정**(가중행렬 기준·정규화·고립 지역 처리·모형·패널 효과·편의보정·표준오차 기준) 기록
+- 검증: 횡단면 SAR·SEM·SDM·SDEM 계수·로그우도와 EIM 표준오차, LM 검정, 패널 고정효과·확률효과 SAR 추정값이 PySAL `spreg`와 일치(`tests/test_spatial.py`)
+- 예제 데이터(합성): `sample_data/geo/Synthetic_Regions.shp`(가상 73개 지역), `Spatial_Panel_Welfare.csv`(73개 지역 × 8년), `Spatial_CrossSection_Welfare.csv` — 예제 자료를 열면 경계가 자동 연결됨
+- SDK: `sess.attach_boundary("경계.shp", key="SIG_CD", data_key="지역코드")` → `sess.spatial_panel(dep=..., covs=[...], timeVar="연도", model="sdm", effectsType="fe", feType="both")`
+
 ### 4. 11개 포맷 결과 보고서 내보내기 (통계 표 + 고해상도 그림)
 - **`.hwpx`**: 한글 OWPML 네이티브 편집 가능 표(`<hp:tbl>`) **+ 삽입된 PNG 그림(`<hp:pic>`)**
 - **`.pdf`**: 다면 출판 품질의 APA 3선 표 및 고해상도 그래프 리포트

@@ -41,6 +41,8 @@ OpenStat Studio does not bundle or vendor any third-party package source. All de
 - `networkx` (BSD-3-Clause) — Keyword co-occurrence & relational networks, centrality, Louvain communities
 - `umap-learn` (BSD-3-Clause) with `pynndescent` (BSD-2-Clause), `numba` (BSD-2-Clause), `llvmlite` (BSD-2-Clause / Apache-2.0 with LLVM exception) — Dimension reduction for document clustering
 - `pypdf` (BSD-3-Clause) — Text extraction from PDF files
+- `geopandas` (BSD-3-Clause), `pyogrio` (MIT; wheels bundle GDAL, MIT/X), `shapely` (BSD-3-Clause; wheels bundle the GEOS library, LGPL-2.1, dynamically linked and unmodified), `pyproj` (MIT; wheels bundle PROJ, MIT) — Boundary files, geometry and coordinate reference systems
+- `libpysal`, `mapclassify`, `mgwr`, `spglm`, `spreg` (BSD-3-Clause, PySAL project) — Contiguity weights, map class breaks, geographically weighted regression. The spatial econometric estimators (SAR/SEM/SDM/SDEM/SAC, spatial panels, effects, LM tests) are implemented in OpenStat itself; `spreg` (installed with `mgwr`) serves as an independent reference implementation in the test suite
 - Optional (`requirements-embedding.txt`, not installed by default): `sentence-transformers` (Apache-2.0), `torch` (BSD-3-Clause); embedding models are downloaded from Hugging Face under their own model licenses (e.g. `BAAI/bge-m3`: MIT)
 
 ### 3.2 GPL-licensed dependencies (copyleft)

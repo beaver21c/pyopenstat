@@ -174,17 +174,53 @@ def transpile_stata_line(line: str) -> Optional[str]:
         spec = m.group(1)
         return f"sess.sem(formula={spec!r})"
 
-    # 13. spregress dep indep1 ..., dvarlag(W) / errorlag(W)
-    m = re.match(r"^spregress\s+([A-Za-z0-9_]+)\s+([^,]+)(?:,\s*(.*))?", s, re.IGNORECASE)
+    # 12a. Sp setup commands: weights and effects are handled by the spatial analysis options
+    m = re.match(r"^(spmatrix|spset|spshape2dta|spcompare|spdistance|estat\s+impact|estat\s+moran)\b(.*)$", s, re.IGNORECASE)
     if m:
-        dep = m.group(1)
-        indeps = [x.strip() for x in m.group(2).split() if x.strip()]
-        opt_str = (m.group(3) or "").lower()
-        m_type = "error" if "errorlag" in opt_str else "lag"
-        return f"sess.spatial_regression(dep={dep!r}, covs={indeps!r}, model_type={m_type!r})"
+        return (f"# [Stata] {s}  → 건너뜀: 공간가중행렬은 분석 옵션(wType·wNorm 등)과 연결된 지도 경계로 지정, "
+                "직접·간접·총효과와 Moran 검정은 분석 결과에 기본 포함")
+
+    # 12b. xtset panelvar [timevar]
+    m = re.match(r"^xtset\s+(\S+)(?:\s+(\S+))?", s, re.IGNORECASE)
+    if m:
+        return f"sess.xtset({m.group(1)!r}, {m.group(2)!r})" if m.group(2) else f"sess.xtset({m.group(1)!r})"
+
+    # 13. spregress / spxtregress / xsmle: dvarlag(W) errorlag(W) ivarlag(W: x1 x2) | model(sar|sdm|sem|sac) fe re type(both, leeyu)
+    m = re.match(r"^(spregress|spxtregress|xsmle)\s+(\S+)\s+([^,]+)(?:,\s*(.*))?", s, re.IGNORECASE)
+    if m:
+        cmd = m.group(1).lower()
+        dep = m.group(2)
+        indeps = [x.strip() for x in m.group(3).split() if x.strip()]
+        opt_str = (m.group(4) or "").lower()
+        lag = "dvarlag(" in opt_str
+        err = "errorlag(" in opt_str
+        iv = re.search(r"ivarlag\(\s*\w+\s*:\s*([^)]*)\)", opt_str)
+        durbin = [x for x in (iv.group(1).split() if iv else []) if x]
+        mm = re.search(r"model\((\w+)\)", opt_str)
+        if mm:
+            m_type = {"gspre": "sem"}.get(mm.group(1), mm.group(1))
+            dm = re.search(r"durbin\(([^)]*)\)", opt_str)
+            durbin = dm.group(1).split() if dm else durbin
+        else:
+            m_type = ("sac" if lag and err else "sdm" if lag and durbin else "sdem" if err and durbin else
+                      "slx" if durbin else "sem" if err else "sar")
+        extra = f", durbinVars={durbin!r}" if durbin else ""
+        note = "  # W: 분석 옵션의 가중행렬(기본: 면 경계 퀸 인접·행 표준화) 사용"
+        if "gs2sls" in opt_str:
+            note += ", gs2sls 대신 최우추정(ML)"
+        if cmd == "spregress":
+            return f"sess.spatial_regression(dep={dep!r}, covs={indeps!r}, model_type={m_type!r}{extra}){note}"
+        eff = "re" if re.search(r"(^|[\s,])re($|[\s,])", opt_str) else "fe"
+        tm = re.search(r"type\(([^)]*)\)", opt_str)
+        type_parts = [x.strip() for x in tm.group(1).split(",")] if tm else []
+        fe_type = {"ind": "ind", "time": "time", "both": "both"}.get(type_parts[0] if type_parts else "ind", "ind")
+        # xsmle applies the Lee-Yu correction only with type(..., leeyu); spxtregress, fe always uses it
+        leeyu = ("leeyu" in type_parts) if cmd == "xsmle" else True
+        return (f"sess.spatial_panel(dep={dep!r}, covs={indeps!r}, model={m_type!r}, effectsType={eff!r}, "
+                f"feType={fe_type!r}, leeyu={leeyu}{extra}){note}")
 
     # 14. moran var
-    m = re.match(r"^moran\s+([A-Za-z0-9_]+)", s, re.IGNORECASE)
+    m = re.match(r"^moran\s+(\S+)", s, re.IGNORECASE)
     if m:
         return f"sess.spatial_regression(dep={m.group(1)!r}, model_type='moran_only')"
 

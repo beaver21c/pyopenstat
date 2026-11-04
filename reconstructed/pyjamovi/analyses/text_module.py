@@ -15,6 +15,7 @@ themes by average-linkage cosine distance 0.3; stability seeds 42 / 7 / 2026).
 """
 
 import hashlib
+import bisect
 import re
 from collections import Counter, OrderedDict
 from typing import Any, Dict, List, Optional, Sequence, Tuple
@@ -29,9 +30,10 @@ import matplotlib.patheffects as path_effects
 from .base import BaseAnalysis, ResultsTable
 from .plots import fig_to_base64, _pal
 from .plot_style import get_active_style
+from .base import resolve_choice
 from .graph_network_module import (
     require_networkx, compute_centrality, detect_communities, community_modularity,
-    plot_network_map, add_centrality_table,
+    plot_network_map, add_centrality_table, resolve_layout,
 )
 
 POS_MODES = {
@@ -127,7 +129,10 @@ class TextPrep:
     def __init__(self, pos_mode: str = "nouns_foreign", min_len: int = 2, compound: bool = True,
                  default_stop: bool = True, stopwords: Any = "", user_words: Any = "", synonyms: Any = "",
                  max_chars: int = 100000):
-        self.pos_mode = pos_mode if pos_mode in POS_MODES else "nouns_foreign"
+        self.pos_mode = resolve_choice("품사 범위", pos_mode, list(POS_MODES),
+                                       {"noun": "nouns", "nouns_only": "nouns", "nouns_sl": "nouns_foreign",
+                                        "nouns_verbs": "nouns_predicates", "predicates": "nouns_predicates"},
+                                       default="nouns_foreign")
         self.min_len = max(int(min_len or 1), 1)
         self.compound = bool(compound)
         self.default_stop = bool(default_stop)
@@ -170,10 +175,14 @@ class TextPrep:
 
     def terms(self, raw_doc: List[tuple]) -> List[Tuple[str, int]]:
         """[(term, sentence_index)] after compound joining, POS filter, synonyms and stopwords."""
+        return [(t, s) for t, s, _ in self.terms_full(raw_doc)]
+
+    def terms_full(self, raw_doc: List[tuple]) -> List[Tuple[str, int, int]]:
+        """[(term, sentence_index, character_offset)]; the offset locates paragraphs."""
         allowed = POS_MODES[self.pos_mode]
         stop = self.stopwords
         syn = self.synonyms
-        out: List[Tuple[str, int]] = []
+        out: List[Tuple[str, int, int]] = []
         i, n = 0, len(raw_doc)
         while i < n:
             form, tag, sent, start, end, lemma = raw_doc[i]
@@ -194,7 +203,7 @@ class TextPrep:
             term = syn.get(term, term)
             if len(term) < self.min_len or term in stop:
                 continue
-            out.append((term, sent))
+            out.append((term, sent, start))
         return out
 
 
@@ -228,7 +237,9 @@ class TextCorpus:
             self.labels = [re.sub(r"\s+", " ", t).strip()[:30] or f"문서 {i + 1}" for t, i in zip(self.texts, self.index)]
         self.groups = [None if pd.isna(v) else str(v) for v in sub[group_col].tolist()] if group_col and group_col in df.columns else None
         raw = prep.raw_tokens(self.texts)
-        self.terms_with_sent = [prep.terms(r) for r in raw]
+        full = [prep.terms_full(r) for r in raw]
+        self.terms_with_sent = [[(t, s) for t, s, _ in d] for d in full]
+        self.term_starts = [[st for _, _, st in d] for d in full]
         self.tokens = [[t for t, _ in d] for d in self.terms_with_sent]
         self.prep = prep
 
@@ -245,6 +256,7 @@ class TextCorpus:
         if self.groups is not None:
             self.groups = [self.groups[i] for i in sel]
         self.terms_with_sent = [self.terms_with_sent[i] for i in sel]
+        self.term_starts = [self.term_starts[i] for i in sel]
         self.tokens = [self.tokens[i] for i in sel]
 
     def summary_table(self, extra: Optional[List[Tuple[str, float]]] = None) -> ResultsTable:
@@ -380,6 +392,13 @@ class TextKeywords(BaseAnalysis):
                  top_n: int = 30, group_top_n: int = 10, wordcloud: bool = True, cloud_weight: str = "freq",
                  max_words: int = 120, cloud_shape: str = "rect", bar_plot: bool = True, group_cloud: bool = False,
                  seed: int = 42, **prep_kw):
+        rank_by = resolve_choice("정렬 기준", rank_by, ["freq", "tfidf", "df"],
+                                 {"frequency": "freq", "count": "freq", "tf-idf": "tfidf", "tf_idf": "tfidf",
+                                  "docfreq": "df", "doc_freq": "df", "document_frequency": "df"}, default="freq")
+        cloud_weight = resolve_choice("워드클라우드 가중치", cloud_weight, ["freq", "tfidf"],
+                                      {"frequency": "freq", "count": "freq", "tf-idf": "tfidf", "tf_idf": "tfidf"}, default="freq")
+        cloud_shape = resolve_choice("워드클라우드 모양", cloud_shape, ["rect", "circle"],
+                                     {"rectangle": "rect", "square": "rect", "round": "circle", "ellipse": "circle"}, default="rect")
         opts = _base_text_options(text, group, None, prep_kw)
         opts.update({"rankBy": rank_by, "topN": top_n, "groupTopN": group_top_n, "wordcloud": wordcloud,
                      "cloudWeight": cloud_weight, "maxWords": max_words, "cloudShape": cloud_shape,
@@ -489,10 +508,27 @@ class TextKeywords(BaseAnalysis):
 # ---------------------------------------------------------------------------
 # 2. Keyword co-occurrence network
 # ---------------------------------------------------------------------------
+UNIT_LABELS = {"sentence": "문장", "paragraph": "단락", "document": "문서"}
+EDGE_METRIC_LABELS = {"count": "동시출현 빈도", "jaccard": "Jaccard 계수", "cosine": "코사인 계수", "npmi": "NPMI"}
+
+
+def paragraph_index(text: str, starts: Sequence[int]) -> List[int]:
+    """Paragraph number of each character offset; a paragraph ends at a line break (runs of breaks count once)."""
+    cuts = [m.start() for m in re.finditer(r"[ \t]*\r?\n\s*", text)]
+    return [bisect.bisect_right(cuts, st) for st in starts]
+
+
 class TextNetwork(BaseAnalysis):
     def __init__(self, data: pd.DataFrame, text: str, unit: str = "sentence", top_nodes: int = 60, min_cooc: int = 2,
                  edge_metric: str = "count", max_edges: int = 150, community: bool = True, resolution: float = 1.0,
                  layout: str = "spring", label_top: int = 40, top_pairs: int = 30, seed: int = 42, **prep_kw):
+        unit = resolve_choice("분석 단위", unit, list(UNIT_LABELS),
+                              {"sent": "sentence", "sentences": "sentence", "para": "paragraph", "paragraphs": "paragraph",
+                               "doc": "document", "documents": "document"}, default="sentence")
+        edge_metric = resolve_choice("연결 강도", edge_metric, list(EDGE_METRIC_LABELS),
+                                     {"freq": "count", "frequency": "count", "cooc": "count", "cooccurrence": "count",
+                                      "salton": "cosine", "ochiai": "cosine", "cos": "cosine"}, default="count")
+        layout = resolve_layout(layout)
         opts = _base_text_options(text, None, None, prep_kw)
         opts.update({"unit": unit, "topNodes": top_nodes, "minCooc": min_cooc, "edgeMetric": edge_metric,
                      "maxEdges": max_edges, "community": community, "resolution": resolution, "layout": layout,
@@ -515,9 +551,15 @@ class TextNetwork(BaseAnalysis):
         keep_set = set(keep)
 
         units: List[set] = []
-        for d in corpus.terms_with_sent:
+        for d, txt, starts in zip(corpus.terms_with_sent, corpus.texts, corpus.term_starts):
             if o["unit"] == "document":
                 units.append({t for t, _ in d if t in keep_set})
+            elif o["unit"] == "paragraph":
+                by_para: Dict[int, set] = {}
+                for (t, _), q in zip(d, paragraph_index(txt, starts)):
+                    if t in keep_set:
+                        by_para.setdefault(q, set()).add(t)
+                units.extend(by_para.values())
             else:
                 by_sent: Dict[int, set] = {}
                 for t, s in d:
@@ -539,13 +581,14 @@ class TextNetwork(BaseAnalysis):
             if c < int(o["minCooc"]):
                 continue
             jac = c / max(node_df[a] + node_df[b] - c, 1)
+            cos = c / np.sqrt(max(node_df[a] * node_df[b], 1))
             pab, pa, pb = c / n_units, node_df[a] / n_units, node_df[b] / n_units
             npmi = np.log(pab / (pa * pb)) / -np.log(pab) if pab < 1 else 1.0
-            rows.append((a, b, c, jac, float(npmi)))
+            rows.append((a, b, c, jac, float(cos), float(npmi)))
         if not rows:
             raise ValueError(f"동시출현 관계망: 최소 동시출현 {o['minCooc']}회 이상인 단어 쌍 없음. 기준을 낮추거나 분석 단위를 '문서'로 변경 필요")
-        edges = pd.DataFrame(rows, columns=["a", "b", "count", "jaccard", "npmi"])
-        metric = o["edgeMetric"] if o["edgeMetric"] in ("count", "jaccard", "npmi") else "count"
+        edges = pd.DataFrame(rows, columns=["a", "b", "count", "jaccard", "cosine", "npmi"])
+        metric = o["edgeMetric"]
         if metric == "npmi":
             edges = edges[edges["npmi"] > 0]
         edges = edges.sort_values([metric, "count"], ascending=False).head(max(int(o["maxEdges"]), 1))
@@ -557,15 +600,19 @@ class TextNetwork(BaseAnalysis):
         membership = detect_communities(G, resolution=float(o["resolution"]), seed=int(o["seed"])) if o["community"] else {}
         modularity = community_modularity(G, membership) if membership else float("nan")
 
-        unit_label = "문장" if o["unit"] != "document" else "문서"
+        unit_label = UNIT_LABELS[o["unit"]]
         summ = corpus.summary_table(extra=[
             (f"분석 단위 수 ({unit_label})", n_units), ("관계망 노드 수", G.number_of_nodes()),
             ("관계망 연결 수", G.number_of_edges()), ("밀도", nx.density(G)),
         ] + ([("묶음(커뮤니티) 수", len(set(membership.values()))), ("모듈성 Q", modularity)] if membership else []))
         summ.title = "말뭉치·관계망 요약"
         summ.add_note(f"동시출현: 같은 {unit_label} 안에 함께 나온 횟수. 상위 {len(keep)}개 단어 대상, "
-                      f"최소 {o['minCooc']}회, 연결 강도 = {dict(count='동시출현 빈도', jaccard='Jaccard 계수', npmi='NPMI')[metric]}, "
+                      f"최소 {o['minCooc']}회, 연결 강도 = {EDGE_METRIC_LABELS[metric]}, "
                       f"상위 {len(edges)}개 연결 표시.")
+        if o["unit"] == "paragraph" and n_units <= corpus.n_docs:
+            summ.add_note("문서에 줄바꿈이 거의 없어 단락 단위가 문서 단위와 사실상 같음.")
+        if metric == "cosine":
+            summ.add_note("코사인 계수 = 동시출현 / √(단어 A 출현 단위 수 × 단어 B 출현 단위 수) (Salton 코사인).")
         self.add_table(summ)
 
         add_centrality_table(self, df_cent, membership, sort_by="strength", title="키워드 중심성", node_title="키워드",
@@ -577,9 +624,11 @@ class TextNetwork(BaseAnalysis):
         ptab.add_column("b", "단어 2", col_type="text")
         ptab.add_column("count", "동시출현 빈도", col_type="integer")
         ptab.add_column("jaccard", "Jaccard", col_type="number")
+        ptab.add_column("cosine", "코사인", col_type="number")
         ptab.add_column("npmi", "NPMI", col_type="number")
         for r, row in enumerate(edges.head(max(int(o["topPairs"]), 1)).itertuples(index=False)):
-            ptab.add_row({"rank": r + 1, "a": row.a, "b": row.b, "count": int(row.count), "jaccard": float(row.jaccard), "npmi": float(row.npmi)})
+            ptab.add_row({"rank": r + 1, "a": row.a, "b": row.b, "count": int(row.count), "jaccard": float(row.jaccard),
+                          "cosine": float(row.cosine), "npmi": float(row.npmi)})
         self.add_table(ptab)
 
         names = {}
@@ -691,7 +740,7 @@ def _auto_k(Z: np.ndarray, method: str, seed: int, k_max: int = 10) -> Tuple[int
 
 
 def _fit_flat(Z: np.ndarray, method: str, k: int, seed: int) -> np.ndarray:
-    if method == "agglomerative":
+    if method in ("agglomerative", "hierarchical"):
         from sklearn.cluster import AgglomerativeClustering
         return AgglomerativeClustering(n_clusters=k, linkage="ward").fit_predict(Z)
     from sklearn.cluster import KMeans
@@ -702,7 +751,7 @@ def _cluster_once(X: np.ndarray, o: Dict[str, Any], seed: int, notes: List[str])
     """Returns (labels with -1 = noise, reduced matrix, method actually used)."""
     n = X.shape[0]
     Z = _reduce(X, bool(o["useUmap"]), int(o["nNeighbors"]), 5, 0.0, seed)
-    method = o["method"]
+    method = "agglomerative" if o["method"] == "hierarchical" else o["method"]
     if method == "hdbscan":
         from sklearn.cluster import HDBSCAN
         mcs = int(o.get("minClusterSize") or 0)
@@ -732,6 +781,12 @@ class TextCluster(BaseAnalysis):
                  noise_assign_min: float = 0.6, themes: bool = True, theme_distance: float = 0.3, stability: bool = False,
                  kw_top: int = 8, min_df: int = 2, cluster_map: bool = True, cluster_network: bool = True,
                  doc_network: bool = False, doc_sim_min: float = 0.6, doc_table: bool = True, seed: int = 42, **prep_kw):
+        embedding = resolve_choice("문서 표현", embedding, ["tfidf", "sbert"],
+                                   {"lsa": "tfidf", "tf-idf": "tfidf", "tf_idf": "tfidf", "bge": "sbert", "bge-m3": "sbert",
+                                    "embedding": "sbert", "sentence": "sbert", "sentence_embedding": "sbert"}, default="tfidf")
+        method = resolve_choice("군집 방법", method, ["hdbscan", "kmeans", "agglomerative"],
+                                {"hierarchical": "agglomerative", "ward": "agglomerative", "k-means": "kmeans", "k_means": "kmeans"},
+                                default="hdbscan")
         opts = _base_text_options(text, group, doc_label, prep_kw)
         opts.update({"embedding": embedding, "model": model, "method": method, "nClusters": n_clusters,
                      "minClusterSize": min_cluster_size, "useUmap": use_umap, "nNeighbors": n_neighbors,
@@ -844,8 +899,10 @@ class TextCluster(BaseAnalysis):
                                     + ([("안정성 평균 ARI", stab[0])] if stab else []))
         qual.title = "말뭉치·군집 요약"
         qual.add_note("문서 표현: " + emb_desc + ".")
+        if o["useUmap"] and n >= 15:
+            qual.add_note("실루엣 계수는 UMAP 축소 공간에서 계산 — 원래 고차원 공간보다 높게 나오는 경향이 있어 군집 간 비교용으로 사용.")
         qual.add_note(("UMAP 5차원 축소 (이웃 " + str(o["nNeighbors"]) + ", min_dist 0, 코사인) 후 " if (o["useUmap"] and n >= 15) else "차원 축소 없이 ")
-                      + {"hdbscan": "HDBSCAN", "kmeans": "k-평균", "agglomerative": "Ward 계층 군집"}[used] + " 군집화.")
+                      + {"hdbscan": "HDBSCAN", "kmeans": "k-평균", "agglomerative": "Ward 계층 군집", "hierarchical": "Ward 계층 군집"}.get(used, used) + " 군집화.")
         for nt in notes:
             qual.add_note(nt)
         if stab:

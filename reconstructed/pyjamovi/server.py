@@ -46,6 +46,7 @@ from pyjamovi.syntax_engine import (
 )
 from pyjamovi.omv.writer import write_omv
 from pyjamovi.text_import import texts_to_dataframe, SUPPORTED_TEXT_EXTENSIONS
+from pyjamovi import spatial_io
 from pyjamovi.renderers.html_renderer import render_jamovi_html_report
 
 PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -85,6 +86,8 @@ DATASET_DESCRIPTIONS: Dict[str, str] = {
     "panel_sample.csv": "Compact Balanced Panel Benchmark Dataset — Panel Fixed/Random Effects",
     "Text_PolicyDocs.csv": "합성 정책문서 말뭉치 (N=150, 분야 5종) — 키워드·워드클라우드, 동시출현 관계망, 문서 군집",
     "Network_Collaboration.csv": "합성 기관 협력 연결 목록 (기관 30개, 연결 86개) — 관계망 분석, 중심성, 커뮤니티",
+    "Spatial_Panel_Welfare.csv": "합성 지역 패널 (73개 지역 × 2016–2023, 가상 경계 자동 연결) — 공간패널회귀(SDM·고정효과), 공간가중행렬",
+    "Spatial_CrossSection_Welfare.csv": "합성 지역 횡단면 (73개 지역, 가상 경계 자동 연결) — Moran's I·LISA, 공간회귀, 지리가중회귀, 주제도",
 }
 
 MIME_MAP: Dict[str, str] = {
@@ -259,6 +262,10 @@ class GlobalState:
         self.next_id = 1
         self.custom_py_code = None
         self.revision += 1
+        self.boundary = None
+        sample_geo = SAMPLE_BOUNDARIES.get(name)
+        if sample_geo and os.path.exists(os.path.join(WORKSPACE_ROOT, sample_geo["boundary"])):
+            self.boundary = dict(sample_geo, name=os.path.basename(sample_geo["boundary"]))
         if sync_ws:
             self.sync_to_workspace()
 
@@ -361,9 +368,16 @@ class GlobalState:
                 "analysisSteps": len(self.analyses_store),
                 "exportSteps": len(self.session.export_ops),
             },
-            "revision": self.revision
+            "revision": self.revision,
+            "boundary": getattr(self, "boundary", None),
         }
 
+
+SAMPLE_BOUNDARIES = {
+    "Spatial_Panel_Welfare.csv": {"boundary": "sample_data/geo/Synthetic_Regions.shp", "boundaryKey": "SIG_CD", "idVar": "지역코드", "labelVar": "지역명"},
+    "Spatial_CrossSection_Welfare.csv": {"boundary": "sample_data/geo/Synthetic_Regions.shp", "boundaryKey": "SIG_CD", "idVar": "지역코드", "labelVar": "지역명"},
+}
+BOUNDARY_DIR = os.path.join(WORKSPACE_ROOT, "workspace", "boundaries")
 
 STATE = GlobalState()
 
@@ -622,6 +636,139 @@ async def import_text_files(
         "skipped": [{"path": p, "reason": r} for p, r in skipped],
     }
     return payload
+
+
+def _rel_root(path: str) -> str:
+    try:
+        r = os.path.relpath(path, WORKSPACE_ROOT)
+        return r.replace(os.sep, "/") if not r.startswith("..") else path
+    except ValueError:
+        return path
+
+
+def _key_suggestions(gdf, df: Optional[pd.DataFrame], limit: int = 5) -> List[Dict[str, Any]]:
+    """Rank (data column, boundary attribute) pairs by the share of data units found in the boundary file."""
+    if df is None or df.empty:
+        return []
+    out = []
+    bcols = [c for c in gdf.columns if c != "geometry"]
+    bkeys = {c: set(spatial_io.normalize_keys(gdf[c]).dropna()) for c in bcols}
+    for dc in list(df.columns)[:80]:
+        dvals = spatial_io.normalize_keys(df[dc]).dropna()
+        if dvals.empty:
+            continue
+        du = set(dvals)
+        if len(du) < 2:
+            continue
+        for bc, bs in bkeys.items():
+            if len(bs) < 2:
+                continue
+            hit = len(du & bs)
+            if hit == 0:
+                continue
+            out.append({"idVar": dc, "boundaryKey": bc, "matched": hit, "dataUnits": len(du), "boundaryUnits": len(bs),
+                        "share": hit / len(du)})
+    out.sort(key=lambda r: (-r["share"], -r["matched"], r["boundaryKey"] == spatial_io.GID))
+    good = [r for r in out if r["share"] >= 0.5]
+    return (good or out[:1])[:limit]
+
+
+def _boundary_preview(gdf, keys_matched: Optional[set], key: Optional[str]) -> str:
+    from pyjamovi.analyses import spatial_maps as smap
+    from pyjamovi.analyses.plot_style import use_plot_style
+    cats = ["연결됨" if (keys_matched is None or k in keys_matched) else "자료 없음"
+            for k in (spatial_io.normalize_keys(gdf[key]) if key else [None] * len(gdf))]
+    pal = {"연결됨": "#3B82F6", "자료 없음": "#E5E7EB"} if keys_matched is not None else {"연결됨": "#93C5FD"}
+    geoms = gdf.geometry.copy()
+    geoms.index = [str(i) for i in range(len(gdf))]
+    with use_plot_style(None):
+        return smap.plot_categories(geoms, cats, pal, "경계 미리보기", "", figsize=(5.6, 4.6))
+
+
+@app.post("/api/geo/upload")
+async def upload_boundary(files: List[UploadFile] = File(...), name: Optional[str] = Form(None)):
+    """Save a boundary file (.shp + .shx + .dbf [+ .prj .cpg], .zip, .geojson or .gpkg) and describe it."""
+    items = [(f.filename or f"file_{i}", await f.read()) for i, f in enumerate(files)]
+    stem = os.path.splitext(os.path.basename(next((n for n, _ in items if n.lower().endswith((".shp", ".zip", ".geojson", ".json", ".gpkg"))), items[0][0])))[0]
+    base = re.sub(r"[^0-9A-Za-z가-힣_\-]+", "_", (name or stem).strip()).strip("_") or "boundary"
+    dest = os.path.join(BOUNDARY_DIR, f"{base}_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+    try:
+        path = spatial_io.save_uploaded_boundary(items, dest)
+        gdf = spatial_io.read_boundary(path)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"경계 파일을 읽지 못함: {e}")
+    info = spatial_io.describe_boundary(gdf)
+    info["path"] = _rel_root(path)
+    info["files"] = sorted(os.listdir(dest))
+    info["hasPrj"] = any(f.lower().endswith(".prj") for f in info["files"]) or not path.lower().endswith(".shp")
+    info["suggestions"] = _key_suggestions(gdf, STATE.session.df)
+    info["preview"] = _boundary_preview(gdf, None, None)
+    return info
+
+
+class BoundaryAttachRequest(BaseModel):
+    path: str
+    boundaryKey: str
+    idVar: str
+    labelVar: Optional[str] = None
+
+
+@app.post("/api/geo/attach")
+def attach_boundary(req: BoundaryAttachRequest):
+    df = STATE.session.df
+    if df is None or req.idVar not in df.columns:
+        raise HTTPException(status_code=400, detail=f"데이터에 '{req.idVar}' 변수 없음")
+    path = req.path if os.path.isabs(req.path) else os.path.join(WORKSPACE_ROOT, req.path)
+    try:
+        gdf = spatial_io.read_boundary(path)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    if req.boundaryKey not in gdf.columns:
+        raise HTTPException(status_code=400, detail=f"경계 파일에 '{req.boundaryKey}' 속성 없음")
+    rep = spatial_io.match_keys(df[req.idVar], gdf[req.boundaryKey])
+    if rep["matched"] == 0:
+        raise HTTPException(status_code=400, detail="일치하는 지역이 없음 — 연결 변수 조합을 확인")
+    matched = set(spatial_io.normalize_keys(df[req.idVar]).dropna()) & set(spatial_io.normalize_keys(gdf[req.boundaryKey]).dropna())
+    label = req.labelVar if req.labelVar and req.labelVar in df.columns else None
+    STATE.boundary = {"boundary": _rel_root(path), "boundaryKey": req.boundaryKey, "idVar": req.idVar,
+                      "labelVar": label, "name": os.path.basename(path), "matched": rep["matched"],
+                      "dataUnits": rep["dataUnits"], "boundaryUnits": rep["boundaryUnits"]}
+    payload = STATE.dataset_payload()
+    payload["match"] = rep
+    payload["preview"] = _boundary_preview(gdf, matched, req.boundaryKey)
+    return payload
+
+
+class BoundaryPathRequest(BaseModel):
+    path: str
+
+
+@app.post("/api/geo/open_as_data")
+def open_boundary_as_data(req: BoundaryPathRequest):
+    """Use the boundary attribute table as the dataset (row key `_GID`), with the boundary linked."""
+    path = req.path if os.path.isabs(req.path) else os.path.join(WORKSPACE_ROOT, req.path)
+    try:
+        gdf = spatial_io.read_boundary(path)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    attrs = pd.DataFrame(gdf.drop(columns="geometry"))
+    base = re.sub(r"[^0-9A-Za-z가-힣_\-]+", "_", os.path.splitext(os.path.basename(path))[0]).strip("_") or "boundary"
+    fname = f"{base}_속성_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    attrs.to_csv(os.path.join(SAMPLE_DIR, fname), index=False, encoding="utf-8-sig")
+    STATE.load_file(fname)
+    label = next((c for c in attrs.columns if re.search(r"(NM|NAME|명|이름)$", str(c), re.I)), None)
+    STATE.boundary = {"boundary": _rel_root(path), "boundaryKey": spatial_io.GID, "idVar": spatial_io.GID,
+                      "labelVar": label, "name": os.path.basename(path), "matched": len(attrs),
+                      "dataUnits": len(attrs), "boundaryUnits": len(attrs)}
+    return STATE.dataset_payload()
+
+
+@app.post("/api/geo/detach")
+def detach_boundary():
+    STATE.boundary = None
+    return STATE.dataset_payload()
 
 
 @app.post("/api/cell/edit")
@@ -890,7 +1037,9 @@ def execute_syntax_endpoint(req: ExecuteSyntaxRequest):
             code_to_run,
             default_df=STATE.session.df,
             default_dataset_path=default_path if os.path.isfile(default_path) else None,
-            sync_workspace=False
+            sync_workspace=False,
+            session_attrs={"boundary": {k: v for k, v in (getattr(STATE, "boundary", None) or {}).items()
+                                        if k in ("boundary", "boundaryKey", "idVar", "labelVar") and v} or None},
         )
         if final_df is not None:
             STATE.session = JamoviSession(final_df, auto_sync_workspace=False)

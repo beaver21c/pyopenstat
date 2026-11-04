@@ -353,6 +353,7 @@ def execute_python_syntax(
     default_dataset_path: Optional[str] = None,
     sync_workspace: bool = True,
     return_meta: bool = False,
+    session_attrs: Optional[Dict[str, Any]] = None,
 ) -> Tuple[List[BaseAnalysis], str, Optional[pd.DataFrame], str]:
     """
     Executes user- or Claude-written Python (.py) statistical syntax and captures:
@@ -374,6 +375,10 @@ def execute_python_syntax(
     proxy = _RecordingProxy(_jmv_mod, default_df, default_dataset_path, collected, collected_specs)
 
     active_sess = proxy.Session(default_df if default_df is not None else default_dataset_path) if (default_df is not None or default_dataset_path) else None
+    if active_sess is not None and session_attrs:
+        for _k, _v in session_attrs.items():
+            if _v is not None:
+                setattr(active_sess, _k, _v)
 
     def _push_figure(fig=None, title: str = "Custom Visualization", caption: str = "", summary_df=None, attach_to_last: bool = False):
         target_fig = fig if fig is not None else plt.gcf()

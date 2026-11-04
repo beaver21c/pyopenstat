@@ -22,6 +22,31 @@ def _is_nan(val: Any) -> bool:
         return False
 
 
+def resolve_choice(label: str, value: Any, allowed, aliases: Optional[Dict[str, str]] = None,
+                   default: Optional[str] = None) -> str:
+    """Canonical value of a select-type option.
+
+    Matching ignores case and surrounding blanks, aliases map to canonical keys, and an unknown
+    value raises ValueError listing the accepted keys (no silent substitution).
+    """
+    if value is None or (isinstance(value, str) and not value.strip()):
+        if default is None:
+            raise ValueError(f"{label}: 값 지정 필요 (가능: {', '.join(allowed)})")
+        return default
+    raw = str(value).strip()
+    keys = list(allowed)
+    if raw in keys:
+        return raw
+    low = raw.lower()
+    for k in keys:
+        if k.lower() == low:
+            return k
+    for a, k in (aliases or {}).items():
+        if a.lower() == low:
+            return k
+    raise ValueError(f"{label}: 알 수 없는 값 '{raw}' (가능: {', '.join(keys)})")
+
+
 class ResultsTable:
     def __init__(self, name: str, title: str, columns: Optional[List[Dict[str, Any]]] = None):
         self.name = name

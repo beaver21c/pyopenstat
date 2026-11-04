@@ -24,7 +24,14 @@ from .network_module import NetworkAnalysis
 from .graph_network_module import GraphNetworkAnalysis
 from .text_module import TextKeywords, TextNetwork, TextCluster
 from .summary_stats import SummaryTTest
-from .spatial_module import SpatialAnalysis
+from .spatial_module import (
+    SpatialAnalysis,
+    SpatialWeightsAnalysis,
+    SpatialAutocorrelation,
+    SpatialPanelAnalysis,
+    GWRAnalysis,
+    SpatialMapAnalysis,
+)
 from .sem_module import SEM
 from .medmod import Mediation, Moderation
 from .panel_module import PanelAnalysis
@@ -88,6 +95,11 @@ __all__ = [
     "TextCluster",
     "SummaryTTest",
     "SpatialAnalysis",
+    "SpatialWeightsAnalysis",
+    "SpatialAutocorrelation",
+    "SpatialPanelAnalysis",
+    "GWRAnalysis",
+    "SpatialMapAnalysis",
     "SEM",
     "Mediation",
     "Moderation",

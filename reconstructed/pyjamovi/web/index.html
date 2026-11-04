@@ -923,6 +923,25 @@ table.jmv-grid td[contenteditable="true"]:focus {
 .ti-list { max-height: 190px; overflow-y: auto; border: 1px solid #E2E8F0; margin-top: 8px; font-size: 11.5px; }
 .ti-list > div { display: flex; justify-content: space-between; gap: 10px; padding: 3px 8px; border-bottom: 1px solid #F1F5F9; }
 .ti-list .bad { color: #B91C1C; }
+.sp-ctx { border: 1px solid #CBD5E1; border-left: 3px solid #2563EB; background: #F8FAFC; padding: 7px 10px; margin-bottom: 10px; font-size: 11.5px; color: #1E293B; line-height: 1.5; }
+.sp-ctx.warn { border-left-color: #D97706; background: #FFFBEB; }
+.sp-ctx-sub { color: #475569; font-size: 11px; margin-top: 2px; }
+.sp-ctx-btns { margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; }
+.sp-ctx-btns button { font-size: 11px; padding: 3px 9px; border: 1px solid #94A3B8; background: #FFFFFF; border-radius: 3px; cursor: pointer; color: #1E293B; }
+.sp-ctx-btns button:hover { border-color: #2563EB; color: #1D4ED8; }
+.subset-box { display: flex; flex-wrap: wrap; gap: 4px 12px; border: 1px solid #E2E8F0; padding: 6px 8px; background: #FFFFFF; }
+.bd-parts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; font-size: 11.5px; }
+.bd-parts span { padding: 2px 8px; border-radius: 10px; border: 1px solid #CBD5E1; background: #F8FAFC; color: #64748B; }
+.bd-parts span.ok { border-color: #0D9488; color: #0F766E; background: #F0FDFA; }
+.bd-parts span.miss { border-color: #DC2626; color: #B91C1C; background: #FEF2F2; }
+.bd-grid { display: grid; grid-template-columns: 250px 1fr; gap: 14px; margin-top: 12px; align-items: start; }
+.bd-grid img { width: 100%; border: 1px solid #E2E8F0; background: #FFFFFF; }
+.bd-info { font-size: 11.8px; line-height: 1.6; color: #334155; }
+.bd-sel { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
+.bd-sugg { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 2px; }
+.bd-sugg button { font-size: 11px; padding: 3px 8px; border: 1px solid #93C5FD; background: #EFF6FF; color: #1E3A5F; border-radius: 3px; cursor: pointer; }
+.bd-match { font-size: 12px; line-height: 1.55; margin-top: 10px; }
+.bd-step { font-weight: 700; font-size: 12.5px; color: #1E3A5F; margin: 4px 0 6px; }
 
 /* --- Right Results View (Authentic jamovi Output Document) --- */
 #welcome-screen {
@@ -1647,6 +1666,10 @@ table.jmv-apa-table tbody tr:last-child {
                     <img class="rb-icon" src="assets/analysis-text.svg" alt="Import Texts">
                     <span class="rb-label" data-i18n="data_import_texts">텍스트 불러오기</span>
                 </button>
+                <button class="ribbon-btn" onclick="openBoundaryModal()" title="행정구역 경계 파일(.shp·.zip·.geojson·.gpkg)을 현재 데이터에 연결하거나 속성표를 데이터로 열기">
+                    <img class="rb-icon" src="assets/analysis-spatial.svg" alt="Boundary">
+                    <span class="rb-label" data-i18n="data_boundary">지도 경계 연결</span>
+                </button>
                 <button class="ribbon-btn" onclick="toggleComputeBar()" title="Compute Derived Variable (Stata: generate / replace)">
                     <img class="rb-icon" src="assets/menu-compute.svg" alt="Compute">
                     <span class="rb-label" data-i18n="var_compute">변수 계산</span>
@@ -1737,7 +1760,7 @@ table.jmv-apa-table tbody tr:last-child {
                     <span class="rb-label" data-i18n="ana_survival">생존분석</span>
                 </button>
                 <button class="ribbon-btn" id="rb-spatial" onclick="openRibbonMenu(event, 'spatial')">
-                    <img class="rb-icon" src="assets/analysis-scatr-jmvscatter.svg" alt="Spatial GIS">
+                    <img class="rb-icon" src="assets/analysis-spatial.svg" alt="Spatial GIS">
                     <span class="rb-label"><span data-i18n="ana_spatial">공간분석 (GIS)</span> <span class="rb-caret">▾</span></span>
                 </button>
                 <button class="ribbon-btn" id="rb-text" onclick="openRibbonMenu(event, 'text')" title="키워드·워드클라우드·동시출현 관계망·문서 군집">
@@ -1976,7 +1999,11 @@ table.jmv-apa-table tbody tr:last-child {
                 </div>
                 <div class="welcome-quick-pills">
                     <span class="quick-pill" onclick="loadDatasetByName('ToothGrowth.csv')">ToothGrowth (T-검정 / ANOVA / 베이지안)</span>
-                    <span class="quick-pill" onclick="loadDatasetByName('Korea_Regional_Welfare_GIS.csv')">🗺️ 서울 복지예산 GIS (모란 지수 / 공간회귀 SAR·SEM)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('Spatial_Panel_Welfare.csv')">🗺️ 가상 지역 패널 + 경계 (공간패널회귀 SDM·고정효과)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('Spatial_CrossSection_Welfare.csv')">🗺️ 가상 지역 횡단면 + 경계 (Moran's I·공간회귀·GWR)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('Korea_Regional_Welfare_GIS.csv')">🗺️ 서울 복지예산 좌표 (k-최근접 가중행렬)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('Text_PolicyDocs.csv')">📄 정책문서 텍스트 (키워드·문서 군집)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('Network_Collaboration.csv')">🔗 기관 협력 연결 목록 (관계망 분석)</span>
                     <span class="quick-pill" onclick="loadDatasetByName('iris.csv')">Iris 붓꽃 (ANOVA / 회귀분석 / PCA)</span>
                     <span class="quick-pill" onclick="loadDatasetByName('SEM_Latent3Factor.csv')">SEM_Latent3Factor (구조방정식 SEM / CFA)</span>
                     <span class="quick-pill" onclick="loadDatasetByName('Grunfeld_Panel.csv')">Grunfeld_Panel (패널 고정효과 FE / 하우스만 검정)</span>
@@ -2196,7 +2223,7 @@ table.jmv-apa-table tbody tr:last-child {
     </div>
 </div>
 
-<!-- Recode Variable Modal (Stata: recode ..., generate()) -->
+<!-- Text Import Modal (folder / files -> one row per document) -->
 <div class="ost-modal-backdrop" id="textimport-modal" onclick="if(event.target===this) closeTextImportModal()">
     <div class="ost-modal-box" style="width:640px;">
         <div class="ost-modal-hdr">
@@ -2231,6 +2258,57 @@ table.jmv-apa-table tbody tr:last-child {
     </div>
 </div>
 
+<!-- Boundary Modal (.shp / .zip / .geojson / .gpkg -> link to the dataset) -->
+<div class="ost-modal-backdrop" id="boundary-modal" onclick="if(event.target===this) closeBoundaryModal()">
+    <div class="ost-modal-box" style="width:780px;">
+        <div class="ost-modal-hdr">
+            <span>🗺️ 지도 경계 연결</span>
+            <button class="silky-small-btn" onclick="closeBoundaryModal()">닫기</button>
+        </div>
+        <div class="ost-modal-body">
+            <div id="bd-current"></div>
+            <div style="font-size:12px;color:#475569;margin-bottom:10px;line-height:1.55;">
+                행정구역 등 경계 파일을 현재 데이터의 지역 코드와 연결하면 공간가중행렬(인접 기준)·주제도·공간회귀에 사용됩니다.
+                Shapefile은 <b>.shp · .shx · .dbf</b>를 함께 선택해야 하며, <b>.prj</b>(좌표계)와 <b>.cpg</b>(글자 인코딩)도 있으면 함께 선택합니다.
+                압축 파일(.zip), GeoJSON, GeoPackage는 파일 1개로 충분합니다. .cpg가 없는 한글 속성표는 CP949(EUC-KR)로 읽습니다.
+            </div>
+            <div class="bd-step">1. 경계 파일 선택</div>
+            <div class="ti-drop" id="bd-drop" ondragover="event.preventDefault(); this.classList.add('drag');" ondragleave="this.classList.remove('drag');" ondrop="bdHandleDrop(event)">
+                <div style="font-size:13px;font-weight:600;margin-bottom:8px;">경계 파일을 여기에 끌어다 놓기</div>
+                <button class="silky-small-btn" onclick="document.getElementById('bd-files').click()">파일 선택...</button>
+                <input type="file" id="bd-files" multiple accept=".shp,.shx,.dbf,.prj,.cpg,.zip,.geojson,.json,.gpkg" style="display:none" onchange="bdAddFiles(Array.from(this.files)); this.value='';">
+                <div class="bd-parts" id="bd-parts" style="justify-content:center;"></div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
+                <button class="silky-small-btn" onclick="APP.bdFiles=[]; bdRenderParts();">목록 비우기</button>
+                <button class="py-btn run" id="bd-upload" onclick="bdUpload()" disabled>경계 파일 읽기</button>
+            </div>
+            <div id="bd-msg" style="font-size:12px;margin-top:6px;"></div>
+            <div id="bd-step2" style="display:none;margin-top:6px;border-top:1px solid #E2E8F0;padding-top:10px;">
+                <div class="bd-step">2. 데이터와 연결할 변수 선택</div>
+                <div class="bd-grid">
+                    <img id="bd-preview" alt="경계 미리보기">
+                    <div>
+                        <div class="bd-info" id="bd-info"></div>
+                        <div class="bd-sugg" id="bd-sugg"></div>
+                        <div class="bd-sel">
+                            <div class="silky-field"><label>데이터의 지역 코드 변수</label><select id="bd-idvar" onchange="bdPreviewMatch()"></select></div>
+                            <div class="silky-field"><label>경계 파일의 연결 속성</label><select id="bd-bkey" onchange="bdPreviewMatch()"></select></div>
+                            <div class="silky-field"><label>지역명 변수 (지도 표기)</label><select id="bd-label"></select></div>
+                        </div>
+                        <div class="bd-match" id="bd-match"></div>
+                    </div>
+                </div>
+                <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid #E2E8F0;">
+                    <button class="silky-small-btn" onclick="bdOpenAsData()" title="현재 데이터를 경계 파일의 속성표(.dbf)로 교체하고 경계를 자동 연결">경계 속성표를 데이터로 열기</button>
+                    <button class="py-btn run" id="bd-attach" onclick="bdAttach()">▶ 현재 데이터에 연결</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recode Variable Modal (Stata: recode ..., generate()) -->
 <div class="ost-modal-backdrop" id="recode-modal" onclick="if(event.target===this) closeRecodeModal()">
     <div class="ost-modal-box" style="width:620px;">
         <div class="ost-modal-hdr">
@@ -2449,6 +2527,7 @@ const I18N = {
         ana_text: "텍스트 분석",
         ana_network: "관계망 분석",
         data_import_texts: "텍스트 불러오기",
+        data_boundary: "지도 경계 연결",
         ana_doctor: "자가진단 &amp; 동기화",
         ana_modules: "추가 모듈",
 
@@ -2526,6 +2605,7 @@ const I18N = {
         ana_text: "Text Mining",
         ana_network: "Networks",
         data_import_texts: "Import Texts",
+        data_boundary: "Link Boundary",
         ana_doctor: "Doctor &amp; Sync",
         ana_modules: "Modules",
 
@@ -2633,9 +2713,18 @@ const RIBBON_MENUS_I18N = {
             { id: "survival", label: "생존분석 (Kaplan-Meier & Cox 비례위험)" }
         ],
         spatial: [
-            { section: "공간 통계 & 공간계량 회귀 (GeoDa & Stata spregress)" },
-            { id: "spatial", label: "공간회귀 모형 (Spatial Lag & Error / spregress)", badge: "GIS" },
-            { id: "spatial_moran", label: "모란 지수 및 LISA 공간 클러스터 (Moran's I)", badge: "GeoDa" }
+            { section: "지도 경계·공간가중행렬" },
+            { action: "openBoundaryModal()", label: "지도 경계 연결 (.shp·.zip·.geojson)", badge: "경계" },
+            { id: "spatialMap", label: "주제도 (단계구분도)" },
+            { id: "spatialWeights", label: "공간가중행렬 생성·진단 (인접·거리·k-최근접)", badge: "W" },
+            { sep: true },
+            { section: "탐색적 공간자료분석" },
+            { id: "spatial_moran", label: "공간자기상관 (Moran's I · LISA · Gi*)", badge: "GeoDa" },
+            { sep: true },
+            { section: "공간회귀" },
+            { id: "spatial", label: "공간회귀 — 횡단면 (OLS 진단·SAR·SEM·SDM·SDEM·SAC)", badge: "spregress" },
+            { id: "spatialPanel", label: "공간패널회귀 (고정효과·확률효과)", badge: "xsmle" },
+            { id: "gwr", label: "지리가중회귀 (GWR)", badge: "mgwr" }
         ],
         text: [
             { section: "텍스트 자료" },
@@ -2738,9 +2827,18 @@ const RIBBON_MENUS_I18N = {
             { id: "survival", label: "Survival Analysis (Kaplan-Meier & Cox)" }
         ],
         spatial: [
-            { section: "Spatial Econometrics & Autocorrelation" },
-            { id: "spatial", label: "Spatial Regression (SAR / SEM / spregress)", badge: "GIS" },
-            { id: "spatial_moran", label: "Moran's I & LISA Spatial Clusters", badge: "GeoDa" }
+            { section: "Boundaries & spatial weights" },
+            { action: "openBoundaryModal()", label: "Link boundary file (.shp · .zip · .geojson)", badge: "Boundary" },
+            { id: "spatialMap", label: "Thematic Map (Choropleth)" },
+            { id: "spatialWeights", label: "Spatial Weights Matrix (contiguity · distance · kNN)", badge: "W" },
+            { sep: true },
+            { section: "Exploratory spatial data analysis" },
+            { id: "spatial_moran", label: "Spatial Autocorrelation (Moran's I · LISA · Gi*)", badge: "GeoDa" },
+            { sep: true },
+            { section: "Spatial regression" },
+            { id: "spatial", label: "Spatial Regression — cross-section (OLS-LM · SAR · SEM · SDM · SDEM · SAC)", badge: "spregress" },
+            { id: "spatialPanel", label: "Spatial Panel Regression (FE · RE)", badge: "xsmle" },
+            { id: "gwr", label: "Geographically Weighted Regression (GWR)", badge: "mgwr" }
         ],
         text: [
             { section: "Text data" },
@@ -3030,8 +3128,8 @@ const TEXT_NETWORK_SCHEMAS = {
             {
                 title: "동시출현 기준",
                 items: [
-                    { type: "select", key: "unit", label: "분석 단위", def: "sentence", options: [["sentence", "문장 (권장)"], ["document", "문서 전체"]] },
-                    { type: "select", key: "edgeMetric", label: "연결 강도", def: "count", options: [["count", "동시출현 빈도"], ["jaccard", "Jaccard 계수 (빈도 보정)"], ["npmi", "NPMI (우연 대비 연관성)"]] },
+                    { type: "select", key: "unit", label: "분석 단위", def: "sentence", options: [["sentence", "문장 (권장)"], ["paragraph", "단락 (줄바꿈 기준)"], ["document", "문서 전체"]] },
+                    { type: "select", key: "edgeMetric", label: "연결 강도", def: "count", options: [["count", "동시출현 빈도"], ["jaccard", "Jaccard 계수 (빈도 보정)"], ["cosine", "코사인 계수 (Salton)"], ["npmi", "NPMI (우연 대비 연관성)"]] },
                     { type: "number", key: "topNodes", label: "대상 단어 수 (빈도 상위)", def: 60, min: 10, max: 300, step: 10 },
                     { type: "number", key: "minCooc", label: "최소 동시출현 횟수", def: 2, min: 1, max: 200, step: 1 },
                     { type: "number", key: "maxEdges", label: "최대 연결 수", def: 150, min: 20, max: 1000, step: 10 },
@@ -3066,7 +3164,7 @@ const TEXT_NETWORK_SCHEMAS = {
                     { type: "select", key: "embedding", label: "표현 방식", def: "tfidf", span2: true, options: [["tfidf", "TF-IDF + LSA (기본, 추가 설치 불필요)"], ["sbert", "문장 임베딩 모델 (bge-m3 등, 선택 설치)"]] },
                     { type: "number", key: "minDf", label: "최소 문서 빈도 (어휘 기준)", def: 2, min: 1, max: 50, step: 1, showIf: { embedding: "tfidf" } },
                     { type: "select", key: "model", label: "임베딩 모델", def: "BAAI/bge-m3", span2: true, showIf: { embedding: "sbert" }, options: [["BAAI/bge-m3", "BAAI/bge-m3 (다국어, 이전 연구 설정)"], ["dragonkue/BGE-m3-ko", "dragonkue/BGE-m3-ko (한국어 미세조정)"], ["jhgan/ko-sroberta-multitask", "jhgan/ko-sroberta-multitask (경량 한국어)"]] },
-                    { type: "info", text: "문장 임베딩은 sentence-transformers·torch 설치 필요 (pip install -r requirements-embedding.txt). 모델은 첫 실행 때 내려받음 (bge-m3 약 2.3GB). GPU가 없으면 문서 1,000건 기준 수 분 소요.", showIf: { embedding: "sbert" } }
+                    { type: "info", text: "문장 임베딩은 sentence-transformers·torch 설치 필요 (pip install -r requirements-embedding.txt). 모델은 첫 실행 때 내려받음 (bge-m3 약 2.3GB). GPU가 없으면 문서 1,000건 기준 수 분 소요. 문서마다 앞부분 최대 512토큰(대략 한국어 700~1,000자)까지만 반영되므로 긴 문서는 요약·초록 열 사용을 권장.", showIf: { embedding: "sbert" } }
                 ]
             },
             {
@@ -3136,88 +3234,488 @@ const TEXT_NETWORK_SCHEMAS = {
     }
 };
 
-/* Complete Declarative UI Schema for All 28 Statistical Analyses */
-const ANALYSIS_SCHEMAS = {
-    ...TEXT_NETWORK_SCHEMAS,
-    spatial: {
-        title: "GIS Spatial Analysis & Regression (GeoDa & Stata spregress)",
-        slots: [
-            { key: "dep", label: "종속변수 (Dependent Variable - Y)", multi: false, req: true, prefer: "num" },
-            { key: "covs", label: "설명변수 (Covariates - X)", multi: true, req: false, prefer: "num" },
-            { key: "lat", label: "위도 좌표 (Latitude - lat)", multi: false, req: true, prefer: "num" },
-            { key: "lon", label: "경도 좌표 (Longitude - lon)", multi: false, req: true, prefer: "num" },
-            { key: "region_id", label: "지역 식별자 / 명칭 (Region ID / Name)", multi: false, req: false, prefer: "any" }
-        ],
+
+/* ---------------- GIS spatial analysis (boundary file or x/y coordinates) ---------------- */
+const SPATIAL_TYPES = new Set(["spatial", "spatial_moran", "spatialPanel", "gwr", "spatialMap", "spatialWeights"]);
+const SP_SLOT_ID = { key: "idVar", label: "지역 식별자 (경계 연결 변수)", multi: false, req: false, prefer: "any", hint: "경계 파일과 연결하는 지역 코드. 경계를 연결하면 자동 지정" };
+const SP_SLOT_LABEL = { key: "labelVar", label: "지역명 (지도·표 표기, 선택)", multi: false, req: false, prefer: "any" };
+const SP_SLOT_X = { key: "coordX", label: "x 좌표 (경도) — 경계 미연결 시", multi: false, req: true, prefer: "num", showIf: { __boundary__: false } };
+const SP_SLOT_Y = { key: "coordY", label: "y 좌표 (위도) — 경계 미연결 시", multi: false, req: true, prefer: "num", showIf: { __boundary__: false } };
+const SP_SLOTS_LOC = [SP_SLOT_ID, SP_SLOT_LABEL, SP_SLOT_X, SP_SLOT_Y];
+const SP_SLOT_PERIOD = { key: "timeVar", label: "시점 변수 (패널 자료일 때, 선택)", multi: false, req: false, prefer: "any", hint: "지역별로 여러 시점이 있는 자료에서 1개 시점만 사용" };
+const SP_PERIOD_ITEM = { type: "text", key: "period", label: "분석 시점 (비우면 마지막 시점)", def: "", placeholder: "예: 2023", showIf: { timeVar: "__filled__" } };
+
+function spatialWeightsSection(collapsed) {
+    return {
+        title: "공간가중행렬 W — 이웃 정의 가정",
+        collapsed: !!collapsed,
+        items: [
+            { type: "select", key: "wType", label: "이웃 기준", def: "auto", span2: true, options: [
+                ["auto", "자동 (면 경계: 퀸 인접 / 점 좌표: k-최근접)"],
+                ["queen", "퀸 인접 — 경계선 또는 꼭짓점 공유"],
+                ["rook", "룩 인접 — 경계선 공유"],
+                ["knn", "k-최근접 이웃 — 대표점(면 내부 중심) 거리"],
+                ["distance", "거리 임계값 이내 (이진)"],
+                ["idw", "역거리 가중 — 거리^(−α)"],
+                ["file", "외부 가중행렬 파일 (.gal · .gwt · .csv)"]],
+              help: "W의 각 행은 한 지역의 이웃과 영향의 크기를 정함. 면(행정구역) 자료는 인접 기준, 점 자료는 거리 기준을 주로 사용" },
+            { type: "number", key: "wOrder", label: "인접 차수", def: 1, min: 1, max: 3, step: 1, showIf: { wType: ["queen", "rook", "auto"] }, help: "2차: 이웃의 이웃까지 포함" },
+            { type: "check", key: "wLower", label: "하위 차수 포함", def: true, showIf: { wType: ["queen", "rook", "auto"] } },
+            { type: "number", key: "k", label: "이웃 수 k", def: 4, min: 1, max: 50, step: 1, showIf: { wType: ["knn", "auto"] } },
+            { type: "check", key: "wSymmetric", label: "대칭화 (한쪽만 이웃이어도 서로 이웃)", def: false, showIf: { wType: "knn" } },
+            { type: "number", key: "wThreshold", label: "거리 임계값 (km, 0 = 자동)", def: 0, min: 0, step: 1, showIf: { wType: ["distance", "idw"] },
+              help: "0: 거리 기준은 모든 지역이 이웃을 1곳 이상 갖는 최소 거리, 역거리는 전체 지역 쌍" },
+            { type: "number", key: "wPower", label: "거리 감쇠 지수 α", def: 1, min: 0.5, max: 3, step: 0.5, showIf: { wType: "idw" } },
+            { type: "text", key: "wFile", label: "가중행렬 파일 경로", def: "", placeholder: "예: workspace/W_queen.gal", span2: true, showIf: { wType: "file" },
+              help: "GeoDa·PySAL의 .gal/.gwt 또는 첫 열이 지역 코드인 정방행렬 CSV" },
+            { type: "select", key: "wNorm", label: "정규화", def: "row", span2: true, options: [
+                ["row", "행 표준화 — 각 행의 합 1 (GeoDa·xsmle 관행)"],
+                ["spectral", "스펙트럼 정규화 — 최대 고유값 1 (Stata spmatrix 기본값)"],
+                ["minmax", "최소-최대 정규화 (Kelejian–Prucha)"],
+                ["none", "정규화 없음"]],
+              help: "행 표준화하면 W·y는 이웃 지역 값의 가중평균으로 해석됨" },
+            { type: "select", key: "wIslands", label: "이웃 없는 지역(섬 등) 처리", def: "nearest", span2: true, options: [
+                ["nearest", "가장 가까운 지역 1곳과 연결"],
+                ["drop", "분석에서 제외"],
+                ["keep", "이웃 없는 상태로 유지"]] }
+        ]
+    };
+}
+
+function spatialMapItems(showIfCond) {
+    const w = (it) => (showIfCond ? Object.assign({ showIf: showIfCond }, it) : it);
+    return [
+        w({ type: "select", key: "scheme", label: "계급 구분", def: "quantiles", options: [
+            ["quantiles", "분위수 (계급별 지역 수 균등)"], ["natural_breaks", "자연 구분 (Fisher–Jenks)"],
+            ["equal_interval", "등간격"], ["std_mean", "평균·표준편차 구간"]] }),
+        w({ type: "number", key: "classes", label: "계급 수", def: 5, min: 3, max: 9, step: 1 }),
+        w({ type: "select", key: "cmap", label: "색상", def: "YlOrRd", options: [
+            ["YlOrRd", "노랑–빨강"], ["Blues", "파랑"], ["Greens", "초록"], ["Purples", "보라"],
+            ["kihasa", "남색 (KIHASA)"], ["viridis", "viridis (색각 이상 고려)"], ["RdBu_r", "파랑–빨강 (발산형)"]] }),
+        w({ type: "check", key: "showLabels", label: "지역명 표기", def: false })
+    ];
+}
+
+const SP_MODEL_OPTIONS = [
+    ["sar", "SAR 공간시차: y = ρWy + Xβ + ε"],
+    ["sem", "SEM 공간오차: y = Xβ + u,  u = λWu + ε"],
+    ["sdm", "SDM 공간더빈: y = ρWy + Xβ + WXθ + ε"],
+    ["sdem", "SDEM 공간더빈오차: y = Xβ + WXθ + u,  u = λWu + ε"],
+    ["slx", "SLX 설명변수 공간시차: y = Xβ + WXθ + ε"],
+    ["sac", "SAC 시차·오차 혼합: y = ρWy + Xβ + u,  u = λWu + ε"],
+    ["ols", "OLS (공간효과 없음, 비교 기준)"]
+];
+
+function spatialInferenceItems(withSe) {
+    const items = [];
+    if (withSe) {
+        items.push({ type: "select", key: "seType", label: "표준오차 기준", def: "oim", options: [
+            ["oim", "관측정보행렬 OIM (Stata 기본)"], ["eim", "기대정보행렬 EIM (GeoDa·PySAL)"]],
+            showIf: { model: ["sar", "sem", "sdm", "sdem", "sac"] } });
+    }
+    items.push(
+        { type: "check", key: "effects", label: "직접·간접·총효과 (LeSage–Pace)", def: true, showIf: { model: ["sar", "sdm", "sac", "slx", "sdem"] },
+          help: "ρ가 있는 모형에서는 계수 대신 효과로 한계효과를 해석" },
+        { type: "select", key: "effectsMethod", label: "효과 표준오차", def: "delta", options: [
+            ["delta", "델타 방법 (Stata estat impact)"], ["sim", "모의추출 (xsmle nsim)"]], showIf: { effects: true, model: ["sar", "sdm", "sac", "slx", "sdem"] } },
+        { type: "number", key: "nsim", label: "모의추출 횟수", def: 1000, min: 100, max: 10000, step: 100, showIf: { effectsMethod: "sim", effects: true } },
+        { type: "select", key: "ciLevel", label: "신뢰수준", def: "0.95", options: [["0.90", "90%"], ["0.95", "95%"], ["0.99", "99%"]] }
+    );
+    return items;
+}
+
+const SPATIAL_SCHEMAS = {
+    spatialMap: {
+        title: "주제도 (단계구분도)",
+        intro: "변수 값을 지역별 색 단계로 표시합니다. 지도 경계(.shp)를 연결하면 행정구역 면으로, 좌표만 있으면 점으로 그립니다.",
+        spatialContext: true,
+        slots: [{ key: "vars", label: "지도에 표시할 변수", multi: true, req: true, prefer: "num" }, ...SP_SLOTS_LOC, SP_SLOT_PERIOD],
+        sections: [{ title: "지도 설정", items: [SP_PERIOD_ITEM, ...spatialMapItems(null)] }]
+    },
+    spatialWeights: {
+        title: "공간가중행렬 생성·진단",
+        intro: "공간계량모형의 핵심 가정인 이웃의 정의(공간가중행렬 W)를 만들고 이웃 수 분포, 이웃 없는 지역, 연결 구조를 점검합니다. 만든 행렬은 GeoDa·R·Stata에서 쓰도록 저장할 수 있습니다.",
+        spatialContext: true,
+        slots: [...SP_SLOTS_LOC],
         sections: [
-            {
-                title: "공간 가중치 행렬 W (Spatial Weights Matrix)",
-                items: [
-                    {
-                        type: "select", key: "weightsMethod", label: "가중치 행렬 방식 (Weights Type)",
-                        options: [
-                            ["knn", "k-최근접 이웃 행렬 (k-Nearest Neighbors - 권장)"],
-                            ["inverse_distance", "역거리 가중 행렬 (Inverse Distance Weighting)"]
-                        ],
-                        def: "knn"
-                    },
-                    { type: "number", key: "k", label: "k-NN 이웃 수 (k)", def: 4, min: 2, max: 50, step: 1 }
-                ]
-            },
-            {
-                title: "모형 명세 (Spatial Model Specification)",
-                items: [
-                    {
-                        type: "select", key: "modelType", label: "공간계량 회귀 모형 (Model Type)",
-                        options: [
-                            ["lag", "공간시차 모형 SAR (Spatial Lag: y = ρWy + Xβ + ε)"],
-                            ["error", "공간오차 모형 SEM (Spatial Error: u = λWu + ε)"],
-                            ["ols", "일반 OLS 기준 회귀 (OLS Baseline with LM Diagnostics)"]
-                        ],
-                        def: "lag"
-                    }
-                ]
-            },
-            {
-                title: "GeoDa 시각화 및 공간 통계 도표 (Visualizations)",
-                items: [
-                    { type: "check", key: "plotMoran", label: "GeoDa 모란 산점도 (Moran Scatterplot)", def: true },
-                    { type: "check", key: "plotMap", label: "국소 모란 LISA 공간 클러스터 지도 (LISA Cluster Map)", def: true }
-                ]
-            }
+            spatialWeightsSection(false),
+            { title: "출력·저장", items: [
+                { type: "check", key: "plotLinks", label: "이웃 연결 지도", def: true },
+                { type: "check", key: "plotHist", label: "이웃 수 분포 그림", def: true },
+                { type: "check", key: "showLabels", label: "지역명 표기", def: false },
+                { type: "text", key: "wExport", label: "가중행렬 파일로 저장 (선택)", def: "", span2: true, placeholder: "예: workspace/W_queen.gal  (.gal · .gwt · .csv)",
+                  help: ".gal: 이웃 목록(GeoDa·R spdep), .gwt: 가중치, .csv: Stata 'spmatrix fromdata' 형식" }
+            ] }
         ]
     },
     spatial_moran: {
-        title: "Global Moran's I & LISA Spatial Cluster (GeoDa)",
-        slots: [
-            { key: "dep", label: "종속변수 (Dependent Variable - Y)", multi: false, req: true, prefer: "num" },
-            { key: "lat", label: "위도 좌표 (Latitude - lat)", multi: false, req: true, prefer: "num" },
-            { key: "lon", label: "경도 좌표 (Longitude - lon)", multi: false, req: true, prefer: "num" },
-            { key: "region_id", label: "지역 식별자 / 명칭 (Region ID / Name)", multi: false, req: false, prefer: "any" }
-        ],
+        title: "공간자기상관 분석 (Moran's I · LISA · Gi*)",
+        intro: "값이 비슷한 지역끼리 모여 있는지(전역 Moran's I)와 어느 지역이 군집 또는 이상 지역인지(LISA, Gi*)를 검정합니다.",
+        spatialContext: true,
+        slots: [{ key: "vars", label: "분석 변수", multi: true, req: true, prefer: "num" }, ...SP_SLOTS_LOC, SP_SLOT_PERIOD],
         sections: [
-            {
-                title: "공간 가중치 행렬 W (Spatial Weights Matrix)",
-                items: [
-                    {
-                        type: "select", key: "weightsMethod", label: "가중치 행렬 방식 (Weights Type)",
-                        options: [
-                            ["knn", "k-최근접 이웃 행렬 (k-Nearest Neighbors - 권장)"],
-                            ["inverse_distance", "역거리 가중 행렬 (Inverse Distance Weighting)"]
-                        ],
-                        def: "knn"
-                    },
-                    { type: "number", key: "k", label: "k-NN 이웃 수 (k)", def: 4, min: 2, max: 50, step: 1 }
-                ]
-            },
-            {
-                title: "GeoDa 시각화 및 공간 통계 도표 (Visualizations)",
-                items: [
-                    { type: "check", key: "plotMoran", label: "GeoDa 모란 산점도 (Moran Scatterplot)", def: true },
-                    { type: "check", key: "plotMap", label: "국소 모란 LISA 공간 클러스터 지도 (LISA Cluster Map)", def: true }
-                ]
-            }
+            { title: "검정 설정", items: [
+                SP_PERIOD_ITEM,
+                { type: "check", key: "lisa", label: "국지 Moran's I (LISA)", def: true },
+                { type: "check", key: "gi", label: "열점·냉점 (Getis–Ord Gi*)", def: false },
+                { type: "select", key: "permutations", label: "순열 횟수", def: "999", options: [["99", "99"], ["499", "499"], ["999", "999"], ["9999", "9,999"]],
+                  help: "무작위 재배치로 유의확률 계산. 횟수가 클수록 정밀하나 시간 증가" },
+                { type: "select", key: "alpha", label: "유의수준", def: "0.05", options: [["0.1", "0.10"], ["0.05", "0.05"], ["0.01", "0.01"]] },
+                { type: "select", key: "adjust", label: "다중검정 보정 (LISA)", def: "none", showIf: { lisa: true }, options: [
+                    ["none", "보정 없음 (GeoDa 기본)"], ["fdr", "FDR (Benjamini–Hochberg)"], ["bonferroni", "Bonferroni"]] },
+                { type: "number", key: "seed", label: "난수 시드", def: 42, min: 0, step: 1 }
+            ] },
+            spatialWeightsSection(false),
+            { title: "그림", items: [
+                { type: "check", key: "plotScatter", label: "Moran 산점도", def: true, showIf: { lisa: true } },
+                { type: "check", key: "plotLisa", label: "LISA 군집 지도", def: true, showIf: { lisa: true } },
+                { type: "check", key: "plotGi", label: "열점·냉점 지도", def: true, showIf: { gi: true } },
+                { type: "check", key: "plotValue", label: "변수 주제도", def: false },
+                ...spatialMapItems({ plotValue: true }).filter(it => it.key !== "showLabels"),
+                { type: "check", key: "showLabels", label: "지역명 표기", def: false }
+            ] }
         ]
     },
+    spatial: {
+        title: "공간회귀분석 (횡단면 · Stata spregress)",
+        intro: "지역 단위 자료에서 공간 의존성을 반영한 회귀모형을 최우추정합니다. OLS 잔차 진단(LM 검정)과 7개 모형 비교·LR 검정으로 모형 선택 근거를 제시하고, ρ가 있는 모형은 직접·간접(파급)·총효과를 계산합니다.",
+        spatialContext: true,
+        manualRun: true,
+        slots: [
+            { key: "dep", label: "종속변수", multi: false, req: true, prefer: "num" },
+            { key: "covs", label: "설명변수", multi: true, req: true, prefer: "num" },
+            ...SP_SLOTS_LOC, SP_SLOT_PERIOD
+        ],
+        sections: [
+            { title: "모형 명세", items: [
+                { type: "select", key: "model", label: "공간 모형", def: "sar", span2: true, options: SP_MODEL_OPTIONS,
+                  help: "Stata 대응: spregress y x, ml dvarlag(W) [errorlag(W)] [ivarlag(W: x)]" },
+                { type: "subset", key: "durbinVars", from: "covs", label: "W·X에 넣을 설명변수 (선택 없으면 전체)", def: [], showIf: { model: ["sdm", "sdem", "slx"] } },
+                SP_PERIOD_ITEM
+            ] },
+            spatialWeightsSection(false),
+            { title: "추정·추론", items: spatialInferenceItems(true) },
+            { title: "진단·모형 선택", items: [
+                { type: "check", key: "diagnostics", label: "OLS 진단·LM 검정 (공간시차·공간오차·강건 LM)", def: true, span2: true },
+                { type: "check", key: "compare", label: "7개 모형 비교표·LR 검정 (Elhorst 절차)", def: true, span2: true }
+            ] },
+            { title: "지도", collapsed: true, items: [
+                { type: "check", key: "plotMap", label: "종속변수 주제도", def: true },
+                { type: "check", key: "plotResid", label: "잔차 지도", def: true },
+                { type: "check", key: "plotMoran", label: "잔차 Moran 산점도", def: true },
+                ...spatialMapItems(null)
+            ] }
+        ]
+    },
+    spatialPanel: {
+        title: "공간패널회귀 (Stata xsmle · spxtregress)",
+        intro: "지역×시점 균형패널에서 공간시차·공간오차 모형을 고정효과(지역·시점·양방향) 또는 확률효과로 최우추정합니다. 고정효과에는 Lee–Yu 편의보정을 적용하고 직접·간접·총효과, Hausman 검정, 패널 LM 검정을 제공합니다.",
+        spatialContext: true,
+        manualRun: true,
+        slots: [
+            { key: "dep", label: "종속변수", multi: false, req: true, prefer: "num" },
+            { key: "covs", label: "설명변수", multi: true, req: true, prefer: "num" },
+            Object.assign({}, SP_SLOT_ID, { req: true, label: "지역 식별자 (패널 개체·경계 연결)" }),
+            { key: "timeVar", label: "시간 변수 (연도 등)", multi: false, req: true, prefer: "any" },
+            SP_SLOT_LABEL, SP_SLOT_X, SP_SLOT_Y
+        ],
+        sections: [
+            { title: "모형 명세", items: [
+                { type: "select", key: "model", label: "공간 모형", def: "sdm", span2: true, options: SP_MODEL_OPTIONS,
+                  help: "Stata 대응: xsmle y x, wmat(W) model(sdm) fe type(both, leeyu) effects" },
+                { type: "subset", key: "durbinVars", from: "covs", label: "W·X에 넣을 설명변수 (선택 없으면 전체)", def: [], showIf: { model: ["sdm", "sdem", "slx"] } }
+            ] },
+            { title: "패널 효과", items: [
+                { type: "select", key: "effectsType", label: "개체 효과", def: "fe", options: [
+                    ["fe", "고정효과"], ["re", "확률효과 (SAR·SDM·SLX·OLS)"], ["pooled", "합동 (효과 없음)"]] },
+                { type: "select", key: "feType", label: "고정효과 유형", def: "ind", showIf: { effectsType: "fe" }, options: [
+                    ["ind", "지역 고정효과 (spxtregress fe)"], ["time", "시점 고정효과"], ["both", "양방향 (지역·시점)"]] },
+                { type: "check", key: "leeyu", label: "Lee–Yu 편의보정 (변환 방식)", def: true, showIf: { effectsType: "fe" },
+                  help: "고정효과 제거로 생기는 σ²·ρ 편의 보정. 시점효과 보정은 행 표준화 W에서 적용" },
+                { type: "check", key: "hausman", label: "Hausman 검정 (지역 고정효과 대 확률효과)", def: false, span2: true, showIf: { model: ["sar", "sdm", "ols", "slx"] } },
+                { type: "check", key: "dropIncomplete", label: "일부 시점이 빠진 지역 제외 (균형패널 구성)", def: true, span2: true }
+            ] },
+            spatialWeightsSection(true),
+            { title: "추정·추론", items: spatialInferenceItems(false) },
+            { title: "진단·모형 선택", showIf: { effectsType: ["fe", "pooled"] }, items: [
+                { type: "check", key: "diagnostics", label: "패널 LM 검정 (비공간 모형 잔차, Elhorst)", def: true, span2: true },
+                { type: "check", key: "compare", label: "7개 모형 비교표·LR 검정", def: true, span2: true }
+            ] },
+            { title: "지도", collapsed: true, items: [
+                { type: "check", key: "plotMap", label: "종속변수 기간 평균 주제도", def: true },
+                { type: "check", key: "plotResid", label: "지역별 평균 잔차 지도", def: true },
+                ...spatialMapItems(null)
+            ] }
+        ]
+    },
+    gwr: {
+        title: "지리가중회귀 (GWR)",
+        intro: "회귀계수가 지역마다 다를 수 있다고 보고, 각 지역 주변 자료에 거리 가중치를 주어 지역별 계수를 추정합니다. 계수의 공간적 변이를 지도로 확인합니다.",
+        spatialContext: true,
+        manualRun: true,
+        slots: [
+            { key: "dep", label: "종속변수", multi: false, req: true, prefer: "num" },
+            { key: "covs", label: "설명변수", multi: true, req: true, prefer: "num" },
+            ...SP_SLOTS_LOC, SP_SLOT_PERIOD
+        ],
+        sections: [
+            { title: "커널·대역폭", items: [
+                SP_PERIOD_ITEM,
+                { type: "select", key: "kernel", label: "커널", def: "bisquare", options: [["bisquare", "이중제곱 (bisquare)"], ["gaussian", "가우시안"], ["exponential", "지수"]] },
+                { type: "select", key: "bwType", label: "대역폭 유형", def: "adaptive", options: [["adaptive", "적응형 — 최근접 이웃 수"], ["fixed", "고정 — 거리 (km)"]] },
+                { type: "select", key: "criterion", label: "대역폭 선택 기준", def: "AICc", options: [["AICc", "AICc (권장)"], ["AIC", "AIC"], ["BIC", "BIC"], ["CV", "교차타당화 CV"]] },
+                { type: "number", key: "bandwidth", label: "대역폭 직접 지정 (0 = 자동 탐색)", def: 0, min: 0, step: 1 },
+                { type: "check", key: "standardize", label: "변수 표준화 (계수 크기 비교용)", def: false, span2: true }
+            ] },
+            { title: "추론", items: [
+                { type: "select", key: "alpha", label: "국지 계수 유의수준", def: "0.05", options: [["0.1", "0.10"], ["0.05", "0.05"], ["0.01", "0.01"]],
+                  help: "유효 모수 수로 보정한 다중검정 기준 적용" },
+                { type: "check", key: "mcTest", label: "계수 공간 변이 검정 (몬테카를로, 시간 소요)", def: false, span2: true },
+                { type: "number", key: "mcIters", label: "반복 횟수", def: 50, min: 20, max: 500, step: 10, showIf: { mcTest: true } }
+            ] },
+            { title: "지도", items: [
+                { type: "check", key: "plotCoef", label: "국지 계수 지도", def: true },
+                { type: "check", key: "maskInsig", label: "유의하지 않은 지역 빗금 표시", def: true, showIf: { plotCoef: true } },
+                { type: "check", key: "plotIntercept", label: "절편 지도 포함", def: false, showIf: { plotCoef: true } },
+                { type: "check", key: "plotR2", label: "국지 R² 지도", def: true },
+                { type: "check", key: "showLabels", label: "지역명 표기", def: false }
+            ] }
+        ]
+    }
+};
+
+function renderSpatialContextBox() {
+    const b = APP.boundary;
+    if (b && b.boundary) {
+        const m = b.matched ? ` · ${b.matched}/${b.dataUnits}곳 일치` : "";
+        return `<div class="sp-ctx"><div><b>🗺️ 지도 경계 연결됨</b> — ${escapeHtml(b.name || b.boundary)}</div>
+            <div class="sp-ctx-sub">데이터 '${escapeHtml(b.idVar)}' ↔ 경계 '${escapeHtml(b.boundaryKey)}'${m}</div>
+            <div class="sp-ctx-btns"><button onclick="openBoundaryModal()">경계 변경</button><button onclick="detachBoundary()">연결 해제 (좌표로 분석)</button></div></div>`;
+    }
+    return `<div class="sp-ctx warn"><div><b>지도 경계 미연결</b></div>
+        <div class="sp-ctx-sub">행정구역 경계(.shp)를 연결하면 인접 기준 가중행렬과 면 지도를 사용할 수 있음. 연결하지 않으면 아래 x·y 좌표 변수로 분석(위경도는 km 단위로 변환).</div>
+        <div class="sp-ctx-btns"><button onclick="openBoundaryModal()">지도 경계 연결 (.shp)</button></div></div>`;
+}
+
+function withSpatialContext(type, params) {
+    if (!SPATIAL_TYPES.has(type)) return params;
+    const b = APP.boundary;
+    if (b && b.boundary) {
+        params.boundary = b.boundary;
+        params.boundaryKey = b.boundaryKey;
+        if (!params.idVar) params.idVar = b.idVar;
+        if (!params.labelVar && b.labelVar) params.labelVar = b.labelVar;
+        delete params.coordX;
+        delete params.coordY;
+    } else {
+        delete params.boundary;
+        delete params.boundaryKey;
+    }
+    return params;
+}
+
+function toggleSubsetParam(key, v, on) {
+    const cur = Array.isArray(APP.currentParams[key]) ? APP.currentParams[key].slice() : [];
+    const i = cur.indexOf(v);
+    if (on && i < 0) cur.push(v);
+    if (!on && i >= 0) cur.splice(i, 1);
+    updateOptionParam(key, cur);
+}
+
+function onBoundaryChanged() {
+    if (!APP.currentType || !SPATIAL_TYPES.has(APP.currentType)) return;
+    const b = APP.boundary;
+    if (b && b.boundary) {
+        if (b.idVar && APP.columns.some(c => c.name === b.idVar)) APP.currentParams.idVar = b.idVar;
+        if (b.labelVar && APP.columns.some(c => c.name === b.labelVar)) APP.currentParams.labelVar = b.labelVar;
+        delete APP.currentParams.coordX;
+        delete APP.currentParams.coordY;
+    } else {
+        const names = APP.columns.map(c => c.name);
+        APP.currentParams.coordX = names.find(n => /^(lon|long|longitude|경도|x|x_?coord)$/i.test(n)) || "";
+        APP.currentParams.coordY = names.find(n => /^(lat|latitude|위도|y|y_?coord)$/i.test(n)) || "";
+    }
+    renderOptionsPanel();
+    scheduleAutoRun(false, 150);
+}
+
+/* ---------------- boundary modal ---------------- */
+function openBoundaryModal() {
+    APP.bdFiles = APP.bdFiles || [];
+    document.getElementById("bd-msg").innerHTML = "";
+    bdRenderCurrent();
+    bdRenderParts();
+    document.getElementById("bd-step2").style.display = APP.bdInfo ? "block" : "none";
+    if (APP.bdInfo) bdRenderInfo();
+    document.getElementById("boundary-modal").classList.add("open");
+}
+
+function closeBoundaryModal() {
+    document.getElementById("boundary-modal").classList.remove("open");
+}
+
+function bdRenderCurrent() {
+    const el = document.getElementById("bd-current");
+    const b = APP.boundary;
+    el.innerHTML = (b && b.boundary) ? `<div class="sp-ctx"><b>현재 연결:</b> ${escapeHtml(b.name || b.boundary)} — 데이터 '${escapeHtml(b.idVar)}' ↔ 경계 '${escapeHtml(b.boundaryKey)}'${b.matched ? ` (${b.matched}/${b.dataUnits}곳 일치)` : ""}
+        <div class="sp-ctx-btns"><button onclick="detachBoundary()">연결 해제</button></div></div>` : "";
+}
+
+function bdAddFiles(list) {
+    APP.bdFiles = APP.bdFiles || [];
+    for (const f of list) {
+        if (!APP.bdFiles.some(g => g.name === f.name && g.size === f.size)) APP.bdFiles.push(f);
+    }
+    bdRenderParts();
+}
+
+function bdHandleDrop(ev) {
+    ev.preventDefault();
+    document.getElementById("bd-drop").classList.remove("drag");
+    bdAddFiles(Array.from(ev.dataTransfer.files || []));
+}
+
+function bdRenderParts() {
+    const files = APP.bdFiles || [];
+    const names = files.map(f => f.name.toLowerCase());
+    const has = ext => names.some(n => n.endsWith(ext));
+    const single = has(".zip") || has(".geojson") || has(".json") || has(".gpkg");
+    let html;
+    if (!files.length) {
+        html = `<span>선택된 파일 없음</span>`;
+    } else if (single && !has(".shp")) {
+        html = files.map(f => `<span class="ok">✓ ${escapeHtml(f.name)}</span>`).join("");
+    } else {
+        html = [[".shp", "도형", true], [".shx", "색인", true], [".dbf", "속성표", true], [".prj", "좌표계", false], [".cpg", "인코딩", false]]
+            .map(([e, l, req]) => `<span class="${has(e) ? "ok" : (req ? "miss" : "")}">${has(e) ? "✓" : (req ? "✕" : "○")} ${e} ${l}${req ? "" : " (선택)"}</span>`).join("");
+    }
+    document.getElementById("bd-parts").innerHTML = html;
+    const ok = single || (has(".shp") && has(".shx") && has(".dbf"));
+    document.getElementById("bd-upload").disabled = !ok;
+}
+
+async function bdUpload() {
+    const btn = document.getElementById("bd-upload");
+    const msg = document.getElementById("bd-msg");
+    const fd = new FormData();
+    (APP.bdFiles || []).forEach(f => fd.append("files", f, f.name));
+    btn.disabled = true;
+    btn.textContent = "읽는 중…";
+    msg.innerHTML = "";
+    try {
+        const res = await fetch("/api/geo/upload", { method: "POST", body: fd });
+        const j = await res.json();
+        if (!res.ok) {
+            msg.innerHTML = `<span style="color:#B91C1C;">${escapeHtml(j.detail || "경계 파일을 읽지 못함")}</span>`;
+            return;
+        }
+        APP.bdInfo = j;
+        document.getElementById("bd-step2").style.display = "block";
+        bdRenderInfo();
+    } catch (e) {
+        msg.innerHTML = `<span style="color:#B91C1C;">${escapeHtml(e.message)}</span>`;
+    } finally {
+        btn.textContent = "경계 파일 읽기";
+        bdRenderParts();
+    }
+}
+
+function bdRenderInfo() {
+    const j = APP.bdInfo;
+    if (!j) return;
+    document.getElementById("bd-preview").src = j.preview || "";
+    const prjWarn = j.hasPrj ? "" : `<div style="color:#B45309;">좌표계(.prj) 없음 — 위경도 범위의 좌표는 WGS84로, 그 밖은 평면 좌표로 간주</div>`;
+    document.getElementById("bd-info").innerHTML = `<div><b>${escapeHtml((j.path || "").split("/").pop())}</b></div>
+        <div>도형 ${Number(j.n).toLocaleString()}개 · ${escapeHtml(j.geomType || "")}</div>
+        <div>좌표계: ${escapeHtml(j.crsName || j.crs || "")}</div>
+        <div>속성 열: ${j.columns.map(c => escapeHtml(c.name)).join(", ")}</div>${prjWarn}`;
+    const dataCols = APP.columns.map(c => c.name);
+    const opt = (arr, cur, blank) => (blank ? `<option value="">${blank}</option>` : "") + arr.map(v => `<option value="${escapeHtml(v)}" ${v === cur ? "selected" : ""}>${escapeHtml(v)}</option>`).join("");
+    const sug = j.suggestions || [];
+    const top = sug[0] || {};
+    const b = APP.boundary;
+    document.getElementById("bd-idvar").innerHTML = opt(dataCols, top.idVar || (b && b.idVar) || "", "(선택)");
+    document.getElementById("bd-bkey").innerHTML = j.columns.map(c => `<option value="${escapeHtml(c.name)}" ${c.name === (top.boundaryKey || "") ? "selected" : ""}>${escapeHtml(c.name)}${c.isKey ? " (고유)" : ""}</option>`).join("");
+    const lab = dataCols.find(n => n !== top.idVar && /(명|이름|name|nm)$/i.test(n)) || "";
+    document.getElementById("bd-label").innerHTML = opt(dataCols, lab, "(없음)");
+    document.getElementById("bd-sugg").innerHTML = sug.length
+        ? `<span style="font-size:11px;color:#475569;align-self:center;">추천 연결:</span>` + sug.map((r, i) => `<button onclick="bdPickSuggestion(${i})">${escapeHtml(r.idVar)} ↔ ${escapeHtml(r.boundaryKey)} · ${r.matched}/${r.dataUnits}곳 (${Math.round(r.share * 100)}%)</button>`).join("")
+        : `<span style="font-size:11px;color:#B45309;">현재 데이터와 값이 겹치는 열을 찾지 못함 — 연결 변수를 직접 선택하거나 '경계 속성표를 데이터로 열기' 사용</span>`;
+    bdPreviewMatch();
+}
+
+function bdPickSuggestion(i) {
+    const r = (APP.bdInfo.suggestions || [])[i];
+    if (!r) return;
+    document.getElementById("bd-idvar").value = r.idVar;
+    document.getElementById("bd-bkey").value = r.boundaryKey;
+    bdPreviewMatch();
+}
+
+function bdPreviewMatch() {
+    const j = APP.bdInfo;
+    const idv = document.getElementById("bd-idvar").value;
+    const bk = document.getElementById("bd-bkey").value;
+    const r = (j && j.suggestions || []).find(x => x.idVar === idv && x.boundaryKey === bk);
+    document.getElementById("bd-match").innerHTML = !idv ? "" : (r
+        ? `예상 일치: 데이터 지역 ${r.dataUnits}곳 중 <b>${r.matched}곳</b> (${Math.round(r.share * 100)}%), 경계 도형 ${r.boundaryUnits}개`
+        : `선택한 조합의 일치 여부는 연결 후 확인`);
+    document.getElementById("bd-attach").disabled = !idv || !bk;
+}
+
+async function bdAttach() {
+    const j = APP.bdInfo;
+    const body = { path: j.path, boundaryKey: document.getElementById("bd-bkey").value,
+                   idVar: document.getElementById("bd-idvar").value, labelVar: document.getElementById("bd-label").value || null };
+    const res = await fetch("/api/geo/attach", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const p = await res.json();
+    if (!res.ok) {
+        document.getElementById("bd-match").innerHTML = `<span style="color:#B91C1C;">${escapeHtml(p.detail || "연결 실패")}</span>`;
+        return;
+    }
+    applyDatasetPayload(p);
+    const m = p.match || {};
+    if (p.preview) document.getElementById("bd-preview").src = p.preview;
+    const ex = (arr) => (arr && arr.length ? ` (예: ${arr.slice(0, 6).map(escapeHtml).join(", ")})` : "");
+    document.getElementById("bd-match").innerHTML = `<div style="color:#0F766E;"><b>연결 완료</b> — 데이터 지역 ${m.dataUnits}곳 중 ${m.matched}곳 일치</div>`
+        + (m.unmatchedDataCount ? `<div style="color:#B45309;">경계에서 찾지 못한 데이터 지역 ${m.unmatchedDataCount}곳: 공간분석에서 제외${ex(m.unmatchedData)}</div>` : "")
+        + (m.unmatchedBoundaryCount ? `<div>자료가 없는 경계 도형 ${m.unmatchedBoundaryCount}개${ex(m.unmatchedBoundary)}</div>` : "")
+        + (m.duplicateBoundaryKeys && m.duplicateBoundaryKeys.length ? `<div>같은 코드의 도형이 여러 개인 지역은 하나로 합쳐 사용${ex(m.duplicateBoundaryKeys)}</div>` : "");
+    bdRenderCurrent();
+    showToast(`지도 경계 연결: ${m.matched}/${m.dataUnits}곳 일치`);
+    onBoundaryChanged();
+}
+
+async function bdOpenAsData() {
+    const j = APP.bdInfo;
+    if (!j) return;
+    const res = await fetch("/api/geo/open_as_data", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ path: j.path }) });
+    const p = await res.json();
+    if (!res.ok) {
+        document.getElementById("bd-match").innerHTML = `<span style="color:#B91C1C;">${escapeHtml(p.detail || "열기 실패")}</span>`;
+        return;
+    }
+    applyDatasetPayload(p);
+    closeBoundaryModal();
+    showToast(`경계 속성표를 데이터로 열고 경계를 연결함 (지역 ${p.rowCount}곳)`);
+    onBoundaryChanged();
+}
+
+async function detachBoundary() {
+    const res = await fetch("/api/geo/detach", { method: "POST" });
+    const p = await res.json();
+    if (res.ok) {
+        applyDatasetPayload(p);
+        bdRenderCurrent();
+        showToast("지도 경계 연결 해제");
+        onBoundaryChanged();
+    }
+}
+
+/* Complete Declarative UI Schema for All 28 Statistical Analyses */
+const ANALYSIS_SCHEMAS = {
+    ...TEXT_NETWORK_SCHEMAS,
+    ...SPATIAL_SCHEMAS,
     summaryTTest: {
         title: "Summary Statistics T-Test (JASP)",
         slots: [],
@@ -4068,6 +4566,11 @@ async function loadDatasetByName(name) {
 }
 
 function applyDatasetPayload(data) {
+    const prevBoundary = JSON.stringify(APP.boundary || null);
+    APP.boundary = data.boundary || null;
+    if (prevBoundary !== JSON.stringify(APP.boundary) && document.getElementById("boundary-modal")) {
+        setTimeout(() => { if (APP.currentType && SPATIAL_TYPES.has(APP.currentType)) renderOptionsPanel(); }, 0);
+    }
     APP.datasetName = data.name;
     APP.columns = data.columns || [];
     APP.rows = data.rows || [];
@@ -4606,14 +5109,26 @@ function autoAssignVariablesIntoParams(type, params) {
     const binCols = cols.filter(c => c.unique === 2).map(c => c.name);
     const allNames = cols.map(c => c.name);
 
-    if (type === "spatial" || type === "spatial_moran") {
-        params.lat = allNames.find(n => /latitude|lat|위도/i.test(n)) || numCols[0] || allNames[0];
-        params.lon = allNames.find(n => /longitude|lon|경도/i.test(n)) || numCols[1] || allNames[1];
-        params.region_id = allNames.find(n => /name|region|시군구|지역|code|id/i.test(n)) || catCols[0] || "";
-        const remNum = numCols.filter(n => n !== params.lat && n !== params.lon);
-        params.dep = remNum[0] || allNames[0];
-        if (type === "spatial") {
-            params.covs = remNum.slice(1, 4).length ? remNum.slice(1, 4) : remNum.slice(0, 1);
+    if (SPATIAL_TYPES.has(type)) {
+        const b = APP.boundary && APP.boundary.boundary ? APP.boundary : null;
+        const isIdLike = n => /(^|_)(id|code|cd|gid)$|코드|식별/i.test(n);
+        const isTime = n => /^(year|yr|time|period|t|wave)$|연도|년도|시점|year/i.test(n);
+        const isCoord = n => /^(lon|long|longitude|lat|latitude|경도|위도|x|y|x_?coord|y_?coord)$/i.test(n);
+        params.idVar = (b && allNames.includes(b.idVar)) ? b.idVar : (allNames.find(isIdLike) || "");
+        params.labelVar = (b && b.labelVar && allNames.includes(b.labelVar)) ? b.labelVar
+            : (allNames.find(n => n !== params.idVar && /(명|이름|name|nm)$/i.test(n)) || "");
+        if (!b) {
+            params.coordX = allNames.find(n => /^(lon|long|longitude|경도|x|x_?coord)$/i.test(n)) || "";
+            params.coordY = allNames.find(n => /^(lat|latitude|위도|y|y_?coord)$/i.test(n)) || "";
+        }
+        if (type === "spatialPanel" || type === "spatialMap" || type === "spatial_moran" || type === "spatial" || type === "gwr") params.timeVar = allNames.find(isTime) || "";
+        const used = new Set([params.idVar, params.labelVar, params.coordX, params.coordY, params.timeVar]);
+        const pool = numCols.filter(n => !used.has(n) && !isIdLike(n) && !isTime(n) && !isCoord(n));
+        if (type === "spatialMap" || type === "spatial_moran") {
+            params.vars = pool.slice(0, 1);
+        } else if (type !== "spatialWeights") {
+            params.dep = pool[0] || "";
+            params.covs = pool.slice(1, 4);
         }
         return;
     }
@@ -4756,6 +5271,9 @@ function renderOptionsPanel() {
     if (schema.manualRun) {
         html += renderRunBar();
     }
+    if (schema.spatialContext) {
+        html += renderSpatialContextBox();
+    }
 
     if (APP.currentType === "sem") {
         html += `<div style="margin-bottom:12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:6px;padding:10px;">
@@ -4778,6 +5296,7 @@ function renderOptionsPanel() {
         html += `</div><div class="slots-stack">`;
 
         for (const sl of schema.slots) {
+            if (sl.showIf && !optionVisible(sl.showIf)) continue;
             const isAct = APP.activeSlotKey === sl.key ? " active-slot" : "";
             const multiCls = sl.multi ? " multi" : "";
             const val = APP.currentParams[sl.key];
@@ -4864,6 +5383,13 @@ function renderOptionsPanel() {
                 </div>`;
             } else if (it.type === "info") {
                 html += `<div class="silky-info span-2">${escapeHtml(it.text || "")}</div>`;
+            } else if (it.type === "subset") {
+                const pool = Array.isArray(APP.currentParams[it.from]) ? APP.currentParams[it.from] : [];
+                const sel = Array.isArray(cur) ? cur : [];
+                const boxes = pool.length
+                    ? pool.map(v => `<label class="silky-chk"><input type="checkbox" ${sel.includes(v) ? "checked" : ""} onchange="toggleSubsetParam('${it.key}', '${String(v).replace(/'/g, "\\'")}', this.checked)"><span>${escapeHtml(v)}</span></label>`).join("")
+                    : `<span class="silky-help">설명변수를 먼저 지정</span>`;
+                html += `<div class="silky-field span-2"><label>${escapeHtml(L(it.label))}</label><div class="subset-box">${boxes}</div>${help}</div>`;
             }
         }
         html += `</div></div>`;
@@ -4875,6 +5401,10 @@ function renderOptionsPanel() {
 /* Conditional options: {key: value | [values] | "__filled__"} — every condition must hold. */
 function optionVisible(cond) {
     for (const [k, v] of Object.entries(cond || {})) {
+        if (k === "__boundary__") {
+            if (!!(APP.boundary && APP.boundary.boundary) !== !!v) return false;
+            continue;
+        }
         const cur = APP.currentParams[k];
         if (v === "__filled__") {
             const filled = Array.isArray(cur) ? cur.length > 0 : !!(cur !== undefined && cur !== null && String(cur).trim() !== "");
@@ -5058,6 +5588,7 @@ function hasRequiredSlotsFilled() {
     }
     for (const sl of schema.slots) {
         if (!sl.req) continue;
+        if (sl.showIf && !optionVisible(sl.showIf)) continue;
         const v = APP.currentParams[sl.key];
         if (sl.multi && (!Array.isArray(v) || v.length === 0)) return false;
         if (!sl.multi && (!v || String(v).trim() === "")) return false;
@@ -5093,7 +5624,7 @@ async function executeCurrentAnalysis(force = false) {
     statusEl.textContent = "Computing...";
     const reqType = APP.currentType;
     const reqToken = APP.panelToken;
-    const reqParams = JSON.parse(JSON.stringify(APP.currentParams));
+    const reqParams = withSpatialContext(reqType, JSON.parse(JSON.stringify(APP.currentParams)));
     APP.running = true;
     APP.runningType = reqType;
     APP.runStarted = Date.now();
@@ -5834,10 +6365,10 @@ function tiRenderList() {
     ok.forEach(f => { const e = tiExt(f.path); byExt[e] = (byExt[e] || 0) + 1; });
     summary.innerHTML = `불러올 파일 <b>${ok.length}개</b> (${(bytes / 1048576).toFixed(1)} MB) · ` +
         Object.entries(byExt).map(([e, n]) => `${e} ${n}`).join(", ") +
-        (files.length > ok.length ? ` · <span style="color:#B91C1C;">제외 ${files.length - ok.length}개 (지원하지 않는 형식)</span>` : "") +
+        (files.length > ok.length ? ` · <span style="color:#B91C1C;">제외 ${files.length - ok.length}개 (지원하지 않는 형식${files.some(f => !f.ok && tiExt(f.path) === ".hwp") ? " — 구형 .hwp는 한글에서 '다른 이름으로 저장 → HWPX'로 바꾼 뒤 선택" : ""})</span>` : "") +
         (ok.length > 1000 ? ` · <span style="color:#B91C1C;">한 번에 최대 1,000개</span>` : "");
     list.style.display = "block";
-    list.innerHTML = files.slice(0, 400).map(f => `<div class="${f.ok ? "" : "bad"}"><span>${escapeHtml(f.path)}</span><span>${f.ok ? (f.file.size < 1024 ? f.file.size + " B" : (f.file.size / 1024).toFixed(0) + " KB") : "제외"}</span></div>`).join("") +
+    list.innerHTML = files.slice(0, 400).map(f => `<div class="${f.ok ? "" : "bad"}"><span>${escapeHtml(f.path)}</span><span>${f.ok ? (f.file.size < 1024 ? f.file.size + " B" : (f.file.size / 1024).toFixed(0) + " KB") : (tiExt(f.path) === ".hwp" ? "제외 (HWPX로 저장 필요)" : "제외")}</span></div>`).join("") +
         (files.length > 400 ? `<div><span>... 외 ${files.length - 400}개</span><span></span></div>` : "");
 }
 
@@ -6232,7 +6763,11 @@ function generateCodeCallForCurrentState(type, params) {
     else if (type === "anovaFactorial") funcName = "factorial_anova";
     else if (type === "anovaRM") funcName = "rm_anova";
     else if (type === "corrMatrix") funcName = "correlation";
-    else if (type === "spatial" || type === "spatial_moran") funcName = "spatial_regression";
+    else if (type === "spatial") funcName = "spatial_regression";
+    else if (type === "spatial_moran") funcName = "spatial_autocorrelation";
+    else if (type === "spatialWeights") funcName = "spatial_weights";
+    else if (type === "spatialPanel") funcName = "spatial_panel";
+    else if (type === "spatialMap") funcName = "spatial_map";
     else if (type === "summaryTTest") funcName = "summary_ttest";
     else if (type === "networkAnalysis") funcName = "network";
     else if (type === "textKeywords") funcName = "text_keywords";
@@ -6396,7 +6931,7 @@ function insertSyntaxSnippet(type) {
     else if (type === "anova") snippet = `sess.anova(dep='${c1}', factors=['${c2}'])`;
     else if (type === "reg") snippet = `sess.regression(dep='${c1}', covs=['${c2}', '${c3}'])`;
     else if (type === "corr") snippet = `sess.correlation(vars=['${c1}', '${c2}', '${c3}'])`;
-    else if (type === "spatial") snippet = `sess.spatial_regression(dep='${c1}', covs=['${c2}'], lat='latitude', lon='longitude', model_type='lag')`;
+    else if (type === "spatial") snippet = `sess.spatial_regression(dep='${c1}', covs=['${c2}'], model='sar')  # 경계: sess.attach_boundary('경계.shp', key='SIG_CD', data_key='지역코드')`;
     else if (type === "sem") snippet = `sess.sem(model="F1 =~ ${c1} + ${c2} + ${c3}")`;
     else if (type === "panel") snippet = `sess.panel(dep='${c1}', entity='firm_id', time='year', covs=['${c2}'])`;
     else if (type === "survival") snippet = `sess.survival(time='time', event='status', covs=['${c1}'])`;

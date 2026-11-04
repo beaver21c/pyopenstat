@@ -580,16 +580,81 @@ class JamoviSession:
         e_col = event_col or event or kwargs.pop("event", "")
         return self.run("survival", time=t_col, event=e_col, group=group, covs=covs or [], **kwargs)
 
-    def spatial_regression(self, dep: str = "", covs: Optional[List[str]] = None, lat: Optional[str] = None, lon: Optional[str] = None, model_type: Optional[str] = None, modelType: Optional[str] = None, k: int = 4, **kwargs):
-        """GeoDa / Stata spregress GIS Spatial Econometric Regression & Autocorrelation."""
-        mtype = model_type or modelType or kwargs.pop("modelType", "lag")
-        return self.run("spatial", dep=dep, covs=covs or [], lat=lat, lon=lon, modelType=mtype, k=k, **kwargs)
+    # ---------------- GIS spatial analysis ----------------
+    def attach_boundary(self, path: str, key: str, data_key: Optional[str] = None) -> Dict[str, Any]:
+        """Link a boundary file (.shp/.zip/.geojson/.gpkg) to the data: `key` = boundary attribute, `data_key` = data column.
+        Later spatial calls use it unless they pass `boundary=` explicitly."""
+        from .spatial_io import match_keys, read_boundary
+        gdf = read_boundary(path)
+        data_key = data_key or key
+        if key not in gdf.columns:
+            raise ValueError(f"경계 파일에 '{key}' 속성 없음")
+        if self.df is None or data_key not in self.df.columns:
+            raise ValueError(f"데이터에 '{data_key}' 변수 없음")
+        self.boundary = {"boundary": path, "boundaryKey": key, "idVar": data_key}
+        return match_keys(self.df[data_key], gdf[key])
+
+    def xtset(self, panel_id: str, time_var: Optional[str] = None):
+        """Declare the panel structure (Stata xtset) used as default idVar/timeVar by spatial panel models."""
+        self.panel_spec = {"idVar": panel_id, "timeVar": time_var}
+        return None
+
+    def _spatial(self, analysis_type: str, params: Dict[str, Any]):
+        ps = getattr(self, "panel_spec", None)
+        if ps and analysis_type == "spatialPanel":
+            for k_, v_ in ps.items():
+                if v_ and not params.get(k_):
+                    params[k_] = v_
+        b = getattr(self, "boundary", None)
+        if b and not params.get("boundary") and not (params.get("coordX") or params.get("lon") or params.get("lat")):
+            for k_, v_ in b.items():
+                params.setdefault(k_, v_)
+        return self.run(analysis_type, **params)
+
+    def spatial_weights(self, **kwargs):
+        """Spatial weights matrix W: contiguity / kNN / distance / inverse distance / file; summary, link map, export."""
+        return self._spatial("spatialWeights", kwargs)
+
+    def spatial_autocorrelation(self, vars: Union[str, List[str], None] = None, **kwargs):
+        """Global Moran's I, LISA clusters and Getis-Ord Gi* hot spots."""
+        return self._spatial("spatial_moran", {"vars": vars or kwargs.pop("dep", None), **kwargs})
+
+    def moran(self, dep: Optional[str] = None, lat: Optional[str] = None, lon: Optional[str] = None, k: int = 4, **kwargs):
+        """Global Moran's I & LISA spatial clustering."""
+        if lat:
+            kwargs.setdefault("coordY", lat)
+        if lon:
+            kwargs.setdefault("coordX", lon)
+        return self._spatial("spatial_moran", {"vars": kwargs.pop("vars", None) or [dep], "k": k, **kwargs})
+
+    def spatial_regression(self, dep: str = "", covs: Optional[List[str]] = None, lat: Optional[str] = None, lon: Optional[str] = None,
+                           model_type: Optional[str] = None, modelType: Optional[str] = None, **kwargs):
+        """Cross-sectional spatial regression (OLS diagnostics, SLX, SAR, SEM, SDM, SDEM, SAC; Stata spregress)."""
+        model = kwargs.pop("model", None) or model_type or modelType or "sar"
+        if lat:
+            kwargs.setdefault("coordY", lat)
+        if lon:
+            kwargs.setdefault("coordX", lon)
+        return self._spatial("spatial", {"dep": dep, "covs": covs or [], "model": model, **kwargs})
 
     spatial = spatial_regression
 
-    def moran(self, dep: str, lat: Optional[str] = None, lon: Optional[str] = None, k: int = 4, **kwargs):
-        """Global Moran's I & LISA Spatial Clustering."""
-        return self.run("spatial", dep=dep, covs=[], lat=lat, lon=lon, modelType="moran_only", k=k, **kwargs)
+    def spatial_panel(self, dep: str = "", covs: Optional[List[str]] = None, idVar: Optional[str] = None, timeVar: Optional[str] = None, **kwargs):
+        """Spatial panel regression: FE (ind/time/both, Lee-Yu) or RE; SAR/SEM/SDM/SDEM/SLX/SAC (Stata xsmle, spxtregress)."""
+        params = {"dep": dep, "covs": covs or [], "timeVar": timeVar or kwargs.pop("time", None), **kwargs}
+        if idVar:
+            params["idVar"] = idVar
+        return self._spatial("spatialPanel", params)
+
+    xsmle = spatial_panel
+
+    def gwr(self, dep: str = "", covs: Optional[List[str]] = None, **kwargs):
+        """Geographically weighted regression (mgwr): bandwidth selection, local coefficient maps."""
+        return self._spatial("gwr", {"dep": dep, "covs": covs or [], **kwargs})
+
+    def spatial_map(self, vars: Union[str, List[str], None] = None, **kwargs):
+        """Thematic (choropleth) map of one or more variables."""
+        return self._spatial("spatialMap", {"vars": vars, **kwargs})
 
     def restyle_plots(self, plot_style: Dict[str, Any]) -> "JamoviSession":
         """Re-execute all analyses in session history using an updated `PlotStyle` dictionary."""

@@ -154,6 +154,16 @@ docs.text_network(text="본문", unit="sentence", topNodes=60)
 docs.text_cluster(text="본문", docLabel="파일명", embedding="tfidf")   # embedding="sbert" + requirements-embedding.txt for BAAI/bge-m3
 edges = ost.Session("sample_data/Network_Collaboration.csv")
 edges.graph_network(source="출발기관", target="도착기관", weight="협력횟수")
+
+# 9. GIS spatial analysis (boundary .shp/.zip/.geojson/.gpkg or lon/lat columns)
+geo = ost.Session("sample_data/Spatial_Panel_Welfare.csv")
+geo.attach_boundary("sample_data/geo/Synthetic_Regions.shp", key="SIG_CD", data_key="지역코드")
+geo.spatial_weights(wType="queen", wNorm="row", wIslands="nearest", wExport="workspace/W_queen.gal")
+geo.spatial_autocorrelation(vars=["돌봄이용률"], timeVar="연도", period="2023", gi=True)
+geo.spatial_regression(dep="돌봄이용률", covs=["고령인구비율", "재정자립도"], timeVar="연도", model="sdm")   # OLS-LM, SAR, SEM, SDM, SDEM, SLX, SAC
+geo.spatial_panel(dep="돌봄이용률", covs=["고령인구비율", "1인가구비율"], timeVar="연도",
+                  model="sdm", effectsType="fe", feType="both", leeyu=True)                     # Stata: xsmle ..., model(sdm) fe type(both, leeyu)
+geo.gwr(dep="돌봄이용률", covs=["고령인구비율"], timeVar="연도", kernel="bisquare", bwType="adaptive")
 ```
 
 ---
