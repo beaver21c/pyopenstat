@@ -9,6 +9,25 @@ import argparse
 import os
 import socket
 import sys
+
+# The Windows launcher (START_OPENSTAT.bat) sets OPENSTAT_SERVER_LOG so that all
+# server output goes to a log file and a fatal error leaves a marker line it can detect.
+_LOG_PATH = os.environ.get("OPENSTAT_SERVER_LOG")
+if _LOG_PATH:
+    _log_file = open(_LOG_PATH, "w", encoding="utf-8", buffering=1)
+    try:
+        os.dup2(_log_file.fileno(), 1)
+        os.dup2(_log_file.fileno(), 2)
+    except OSError:
+        pass
+    sys.stdout = sys.stderr = _log_file
+
+    def _fatal_hook(exc_type, exc, tb):
+        sys.__excepthook__(exc_type, exc, tb)
+        print("OPENSTAT_SERVER_FATAL", flush=True)
+
+    sys.excepthook = _fatal_hook
+
 import uvicorn
 
 WORKSPACE_ROOT = os.path.dirname(os.path.abspath(__file__))

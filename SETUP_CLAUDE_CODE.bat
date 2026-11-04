@@ -1,38 +1,21 @@
 @echo off
 chcp 65001 >nul
-setlocal enabledelayedexpansion
+setlocal
+REM ================================================================
+REM  OpenStat Studio Claude Code 연동 설정 (Windows)
+REM  - 공유 폴더에서 실행 시 로컬 폴더로 복사 후 로컬 사본에서 설정
+REM  - 가상환경 준비 후 .mcp.json 생성 및 claude mcp add 등록
+REM ================================================================
+call "%~dp0scripts\win_share_to_local.bat" "%~dp0." "%~nx0"
+if "%OPENSTAT_HANDOFF%"=="1" exit /b %OPENSTAT_HANDOFF_RC%
 cd /d "%~dp0"
 
 echo ================================================================
-echo   OpenStat Studio v3.0 — Claude Code & AI Agent 1-Click Setup
+echo   OpenStat Studio v3.0 - Claude Code 연동 설정
 echo ================================================================
-
-REM 1. 파이썬 설치 여부 확인
-set "PYTHON_EXE="
-where python >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    for /f "tokens=*" %%i in ('where python') do (
-        if not defined PYTHON_EXE set "PYTHON_EXE=%%i"
-    )
-)
-if not defined PYTHON_EXE (
-    where py >nul 2>&1
-    if %ERRORLEVEL% EQU 0 set "PYTHON_EXE=py"
-)
-
-if not defined PYTHON_EXE (
-    echo.
-    echo [오류] 시스템에 Python이 설치되어 있지 않거나 PATH에 등록되지 않았습니다.
-    echo Python 3.10 이상을 설치하신 후 다시 실행해 주세요.
-    echo   👉 https://www.python.org/downloads/
-    echo.
-    pause
-    exit /b 1
-)
-
-REM 2. 설정 스크립트 실행
-"%PYTHON_EXE%" "%~dp0scripts\setup_claude_code.py"
-
+call "%~dp0scripts\win_install_env.bat" "%~dp0."
+if errorlevel 1 exit /b 1
+"%VENV_PY%" "%~dp0scripts\setup_claude_code.py"
 echo.
 pause
 exit /b 0

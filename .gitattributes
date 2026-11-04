@@ -1,0 +1,5 @@
+# Windows batch files must use CRLF: cmd.exe can mis-parse LF-only files (goto/call label lookup).
+*.bat text eol=crlf
+*.cmd text eol=crlf
+# Shell scripts must use LF.
+*.sh text eol=lf

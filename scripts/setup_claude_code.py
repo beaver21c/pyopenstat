@@ -51,14 +51,17 @@ def main():
         cmd = venv_python
         args = ["-m", "openstat.mcp_server"]
 
+    env = {"PYTHONPATH": RECONSTRUCTED_DIR}
+    if is_win:
+        # Korean Windows defaults to cp949; force UTF-8 so Korean files and labels load correctly.
+        env["PYTHONUTF8"] = "1"
+
     mcp_config = {
         "mcpServers": {
             "openstat": {
                 "command": cmd,
                 "args": args,
-                "env": {
-                    "PYTHONPATH": RECONSTRUCTED_DIR
-                }
+                "env": env,
             }
         }
     }

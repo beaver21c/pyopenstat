@@ -25,7 +25,8 @@ OpenStat Studio는 일반 사용자, AI 에이전트 사용자, 파이썬 연구
 3. **자동 환경 구성 및 앱 실행**:
    - 시스템에 Python이 설치되어 있으면, 최초 1회 필요한 가상환경(`.venv`)과 패키지를 자동으로 설치한 뒤 브라우저 독립 앱 창(`http://localhost:8500`)을 자동으로 띄웁니다.
    - 2회차 실행부터는 1초 만에 즉시 실행됩니다.
-   - *종료 방법*: 검은색 콘솔 창을 닫거나 콘솔에서 아무 키나 누르면 백그라운드 서버가 안전하게 자동 종료됩니다.
+   - *종료 방법*: 검은색 콘솔 창을 닫거나 콘솔에서 아무 키나 누르면 서버 종료.
+   - *공유 폴더 실행*: 네트워크 공유 폴더에서 실행하면 이 PC의 `%USERPROFILE%\OpenStatStudio`로 복사한 뒤 실행.
 
 ---
 
@@ -81,6 +82,8 @@ sess.save_py("reports/analysis_script.py")       # 100% 재현 가능한 파이�
   - Python이 설치되어 있지 않다면 [python.org/downloads](https://www.python.org/downloads/) 에서 다운로드하여 설치하세요.
   - **★ 설치 창 맨 아래의 `[Add python.exe to PATH]` 체크박스를 반드시 체크해야 합니다.**
   - `OPENSTAT_실행.bat` 실행 시 Python이 없으면 자동으로 다운로드 링크를 열어 안내합니다.
+  - 공유 폴더(네트워크 드라이브)에서 실행 시 `%USERPROFILE%\OpenStatStudio`로 자동 복사·갱신 후 로컬 사본 실행 (위치 변경: 환경변수 `OPENSTAT_LOCAL_DIR`). PC2 등 원본 PC에서 바뀐 파일은 다음 실행 때 자동 반영.
+  - 서버는 `127.0.0.1:8500`에만 연결되며, 서버 기록은 `workspace\server.log`에 저장.
 
 ---
 
