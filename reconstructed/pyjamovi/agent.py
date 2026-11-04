@@ -389,15 +389,17 @@ class JamoviSession:
 
     def graph(
         self,
-        chart_type: str = "bar",
+        chart_type: Optional[str] = None,
         x: Optional[str] = None,
         y: Optional[str] = None,
         vars: Optional[List[str]] = None,
         group: Optional[str] = None,
+        chartType: Optional[str] = None,
         **kwargs,
     ):
         """Draw any of 15 standalone chart types and append directly to the Analysis Results Sheet."""
-        return self.run("graph", chartType=chart_type, x=x, y=y, vars=vars, group=group, **kwargs)
+        ctype = chart_type or chartType or kwargs.pop("chartType", "bar")
+        return self.run("graph", chartType=ctype, x=x, y=y, vars=vars, group=group, **kwargs)
 
     def add_figure(
         self,
@@ -432,24 +434,30 @@ class JamoviSession:
         self._sync_workspace_if_enabled()
         return card
 
-    def ttest(self, dep: Union[str, List[str]], group: str, welchs: bool = False, **kwargs):
-        return self.run("ttestIS", vars=dep, group=group, welchs=welchs, **kwargs)
+    def ttest(self, dep: Optional[Union[str, List[str]]] = None, group: str = "", welchs: bool = False, vars: Optional[Union[str, List[str]]] = None, **kwargs):
+        target = dep if dep is not None else (vars if vars is not None else kwargs.pop("vars", None))
+        return self.run("ttestIS", vars=target, group=group, welchs=welchs, **kwargs)
 
-    def paired_ttest(self, pairs: List[Tuple[str, str]], **kwargs):
-        return self.run("ttestPS", pairs=pairs, **kwargs)
+    def paired_ttest(self, pairs: Optional[Any] = None, var1: Optional[str] = None, var2: Optional[str] = None, **kwargs):
+        if pairs and isinstance(pairs, list):
+            pairs = [tuple(p) if isinstance(p, (list, tuple)) else p for p in pairs]
+        return self.run("ttestPS", pairs=pairs, var1=var1, var2=var2, **kwargs)
 
-    def onesample_ttest(self, vars: Union[str, List[str]], test_value: float = 0.0, **kwargs):
-        return self.run("ttestOneS", vars=vars, testValue=test_value, **kwargs)
+    def onesample_ttest(self, vars: Optional[Union[str, List[str]]] = None, test_value: Optional[float] = None, testValue: Optional[float] = None, **kwargs):
+        tv = test_value if test_value is not None else (testValue if testValue is not None else kwargs.pop("testValue", 0.0))
+        return self.run("ttestOneS", vars=vars, testValue=tv, **kwargs)
 
-    def bayes_ttest(self, dep: Union[str, List[str]], group: str, **kwargs):
-        return self.run("bayesTTestIS", vars=dep, group=group, **kwargs)
+    def bayes_ttest(self, dep: Optional[Union[str, List[str]]] = None, group: str = "", vars: Optional[Union[str, List[str]]] = None, **kwargs):
+        target = dep if dep is not None else (vars if vars is not None else kwargs.pop("vars", None))
+        return self.run("bayesTTestIS", vars=target, group=group, **kwargs)
 
     def summary_ttest(self, m1: float, s1: float, n1: int, m2: float, s2: float, n2: int, **kwargs):
         """JASP-style summary statistics independent samples t-test without raw microdata."""
         return self.run("summaryTTest", m1=m1, s1=s1, n1=n1, m2=m2, s2=s2, n2=n2, **kwargs)
 
-    def anova(self, dep: Union[str, List[str]], group: str, welchs: bool = True, **kwargs):
-        return self.run("anovaOneW", deps=dep, group=group, welchs=welchs, **kwargs)
+    def anova(self, dep: Optional[Union[str, List[str]]] = None, group: str = "", welchs: bool = True, deps: Optional[Union[str, List[str]]] = None, **kwargs):
+        target = dep if dep is not None else (deps if deps is not None else kwargs.pop("deps", None))
+        return self.run("anovaOneW", deps=target, group=group, welchs=welchs, **kwargs)
 
     def anova_oneway(self, deps: Optional[Union[str, List[str]]] = None, dep: Optional[Union[str, List[str]]] = None, group: str = "", welchs: bool = True, **kwargs):
         target = deps if deps is not None else dep
@@ -461,17 +469,22 @@ class JamoviSession:
     def ancova(self, dep: str, factors: Union[str, List[str]], covs: Union[str, List[str]], **kwargs):
         return self.run("ancova", dep=dep, factors=factors, covs=covs, **kwargs)
 
-    def rm_anova(self, rm_vars: List[str], between: Optional[str] = None, **kwargs):
-        return self.run("anovaRM", rmVars=rm_vars, between=between, **kwargs)
+    def rm_anova(self, rm_vars: Optional[List[str]] = None, between: Optional[str] = None, rmVars: Optional[List[str]] = None, **kwargs):
+        target = rm_vars if rm_vars is not None else (rmVars if rmVars is not None else kwargs.pop("rmVars", None))
+        return self.run("anovaRM", rmVars=target, between=between, **kwargs)
 
-    def kruskal(self, dep: Union[str, List[str]], group: str, **kwargs):
-        return self.run("kruskal", deps=dep, group=group, **kwargs)
+    def kruskal(self, dep: Optional[Union[str, List[str]]] = None, group: str = "", deps: Optional[Union[str, List[str]]] = None, **kwargs):
+        target = dep if dep is not None else (deps if deps is not None else kwargs.pop("deps", None))
+        return self.run("kruskal", deps=target, group=group, **kwargs)
 
     def bayes_anova(self, dep: str, factors: Union[str, List[str]], **kwargs):
         return self.run("bayesANOVA", dep=dep, factors=factors, **kwargs)
 
     def corrmatrix(self, vars: List[str], **kwargs):
         return self.run("corrMatrix", vars=vars, **kwargs)
+
+    correlation = corrmatrix
+    corr_matrix = corrmatrix
 
     def partial_corr(self, vars: List[str], controls: Union[str, List[str]], **kwargs):
         return self.run("partCorr", vars=vars, controls=controls, **kwargs)
@@ -482,11 +495,20 @@ class JamoviSession:
     def regression(self, dep: str, covs: List[str], **kwargs):
         return self.run("linReg", dep=dep, covs=covs, **kwargs)
 
+    linreg = regression
+    lin_reg = regression
+
     def logistic(self, dep: str, covs: List[str], **kwargs):
         return self.run("logRegBin", dep=dep, covs=covs, **kwargs)
 
+    logreg = logistic
+    log_reg = logistic
+
     def crosstab(self, rows: str, cols: str, **kwargs):
         return self.run("contTables", rows=rows, cols=cols, **kwargs)
+
+    conttables = crosstab
+    cont_tables = crosstab
 
     def reliability(self, vars: List[str], **kwargs):
         return self.run("reliability", vars=vars, **kwargs)
@@ -501,14 +523,17 @@ class JamoviSession:
         """JASP-style Network Analysis (EBICglasso partial correlations & centrality measures)."""
         return self.run("networkAnalysis", vars=vars, method=method, gamma=gamma, **kwargs)
 
+    network = network_analysis
+
     def synthetic_data(self, n_samples: Optional[int] = None, cols: Optional[List[str]] = None, epsilon: Optional[float] = None, **kwargs) -> pd.DataFrame:
         """Generates privacy-preserving synthetic microdata preserving multivariate correlations and empirical marginals."""
         from .synthetic_data import generate_synthetic_dataset
         self._require_df()
         return generate_synthetic_dataset(self.df, n_samples=n_samples, cols=cols, epsilon=epsilon, **kwargs)
 
-    def sem(self, model_syntax: str, **kwargs):
-        return self.run("sem", model=model_syntax, **kwargs)
+    def sem(self, model_syntax: Optional[str] = None, model: Optional[str] = None, **kwargs):
+        ms = model_syntax or model or kwargs.pop("model", "")
+        return self.run("sem", model=ms, **kwargs)
 
     def mediation(self, dep: str, pred: str, med: str, **kwargs):
         return self.run("mediation", dep=dep, pred=pred, med=med, **kwargs)
@@ -516,18 +541,26 @@ class JamoviSession:
     def moderation(self, dep: str, pred: str, mod: str, **kwargs):
         return self.run("moderation", dep=dep, pred=pred, mod=mod, **kwargs)
 
-    def panel(self, entity_col: str, time_col: str, dep: str, covs: List[str], model_type: str = "fixed", **kwargs):
-        return self.run("panel", entity=entity_col, time=time_col, dep=dep, covs=covs, modelType=model_type, **kwargs)
+    def panel(self, entity_col: Optional[str] = None, time_col: Optional[str] = None, dep: str = "", covs: Optional[List[str]] = None, model_type: Optional[str] = None, modelType: Optional[str] = None, entity: Optional[str] = None, time: Optional[str] = None, **kwargs):
+        ent = entity_col or entity or kwargs.pop("entity", "")
+        tm = time_col or time or kwargs.pop("time", "")
+        mtype = model_type or modelType or kwargs.pop("modelType", "fixed")
+        return self.run("panel", entity=ent, time=tm, dep=dep, covs=covs or [], modelType=mtype, **kwargs)
 
     def mixed_model(self, dep: str, cluster: str, covs: Optional[List[str]] = None, **kwargs):
         return self.run("mixedModel", dep=dep, cluster=cluster, covs=covs or [], **kwargs)
 
-    def survival(self, time_col: str, event_col: str, group: Optional[str] = None, covs: Optional[List[str]] = None, **kwargs):
-        return self.run("survival", time=time_col, event=event_col, group=group, covs=covs or [], **kwargs)
+    def survival(self, time_col: Optional[str] = None, event_col: Optional[str] = None, time: Optional[str] = None, event: Optional[str] = None, group: Optional[str] = None, covs: Optional[List[str]] = None, **kwargs):
+        t_col = time_col or time or kwargs.pop("time", "")
+        e_col = event_col or event or kwargs.pop("event", "")
+        return self.run("survival", time=t_col, event=e_col, group=group, covs=covs or [], **kwargs)
 
-    def spatial_regression(self, dep: str, covs: Optional[List[str]] = None, lat: Optional[str] = None, lon: Optional[str] = None, model_type: str = "lag", k: int = 4, **kwargs):
+    def spatial_regression(self, dep: str = "", covs: Optional[List[str]] = None, lat: Optional[str] = None, lon: Optional[str] = None, model_type: Optional[str] = None, modelType: Optional[str] = None, k: int = 4, **kwargs):
         """GeoDa / Stata spregress GIS Spatial Econometric Regression & Autocorrelation."""
-        return self.run("spatial", dep=dep, covs=covs or [], lat=lat, lon=lon, modelType=model_type, k=k, **kwargs)
+        mtype = model_type or modelType or kwargs.pop("modelType", "lag")
+        return self.run("spatial", dep=dep, covs=covs or [], lat=lat, lon=lon, modelType=mtype, k=k, **kwargs)
+
+    spatial = spatial_regression
 
     def moran(self, dep: str, lat: Optional[str] = None, lon: Optional[str] = None, k: int = 4, **kwargs):
         """Global Moran's I & LISA Spatial Clustering."""
@@ -695,3 +728,12 @@ class JamoviSession:
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(html_content)
         return output_path
+
+    def __getattr__(self, name: str):
+        from .registry import ANALYSIS_CATALOG
+        clean = name.lower().replace("_", "")
+        for item in ANALYSIS_CATALOG:
+            cid = item.get("id", "")
+            if cid == name or cid.lower().replace("_", "") == clean:
+                return lambda **kwargs: self.run(cid, **kwargs)
+        raise AttributeError(f"'JamoviSession' object has no attribute '{name}'")

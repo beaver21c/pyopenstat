@@ -146,6 +146,7 @@ def use_plot_style(style: Optional[Dict[str, Any]] = None):
         "ytick.color": fg,
         "axes.edgecolor": edge,
         "axes.linewidth": 1.1 if norm["theme"] == "apa_classic" else 0.9,
+        "font.family": DEFAULT_FONT_STACK,  # list form enables per-glyph fallback (e.g. em-dash, subscripts)
         "font.sans-serif": DEFAULT_FONT_STACK,
         "axes.unicode_minus": False,
         "font.size": 10.0 * fs,

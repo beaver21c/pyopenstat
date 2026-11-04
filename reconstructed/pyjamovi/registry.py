@@ -58,6 +58,20 @@ def _as_single(val: Any) -> Any:
     return val
 
 
+def _require_columns(df: pd.DataFrame, label: str, required: Dict[str, Any], optional: Dict[str, Any]) -> None:
+    """Fail with a clear message instead of guessing when a variable is missing or misspelled."""
+    absent = [role for role, col in required.items() if not col]
+    if absent:
+        raise ValueError(f"{label} requires: {', '.join(absent)}. Available columns: {list(df.columns)}")
+    not_found = []
+    for role, col in list(required.items()) + list(optional.items()):
+        for c in (col if isinstance(col, list) else [col]):
+            if c and c not in df.columns:
+                not_found.append(f"{role}='{c}'")
+    if not_found:
+        raise ValueError(f"{label}: column(s) not found: {', '.join(not_found)}. Available columns: {list(df.columns)}")
+
+
 ANALYSIS_CATALOG: List[Dict[str, Any]] = [
     {"id": "descriptives", "group": "Exploration", "title": "Descriptives", "module": "jmv", "icon": "analysis-descriptives.svg"},
     {"id": "scatr", "group": "Exploration", "title": "Scatterplot", "module": "scatr", "icon": "analysis-scatr-jmvscatter.svg"},
@@ -534,22 +548,40 @@ def _dispatch_inner(analysis_type: str, df: pd.DataFrame, p: Dict[str, Any]) -> 
         )
 
     elif t == "mixedModel":
+        dep_val = _as_single(p.get("dep"))
+        cluster_val = _as_single(p.get("cluster") or p.get("random") or p.get("group"))
+        covs_val = _as_list(p.get("covs"))
+        factors_val = _as_list(p.get("factors"))
+        _require_columns(
+            df, "Linear mixed model",
+            required={"dep": dep_val, "cluster": cluster_val},
+            optional={"covs": covs_val, "factors": factors_val},
+        )
         return MixedLinearModel(
             df,
-            dep=_as_single(p.get("dep")),
-            cluster=_as_single(p.get("cluster")),
-            covs=_as_list(p.get("covs")),
-            factors=_as_list(p.get("factors")),
+            dep=dep_val,
+            cluster=cluster_val,
+            covs=covs_val,
+            factors=factors_val,
             reml=bool(p.get("reml", True))
         )
 
     elif t == "survival":
+        time_c = _as_single(p.get("time") or p.get("time_col"))
+        event_c = _as_single(p.get("event") or p.get("event_col"))
+        group_c = _as_single(p.get("group"))
+        covs_c = _as_list(p.get("covs"))
+        _require_columns(
+            df, "Survival analysis",
+            required={"time": time_c, "event": event_c},
+            optional={"group": group_c, "covs": covs_c},
+        )
         return SurvivalAnalysis(
             df,
-            time_col=_as_single(p.get("time") or p.get("time_col")),
-            event_col=_as_single(p.get("event") or p.get("event_col")),
-            group=_as_single(p.get("group")),
-            covs=_as_list(p.get("covs")),
+            time_col=time_c,
+            event_col=event_c,
+            group=group_c,
+            covs=covs_c,
             km_plot=bool(p.get("kmPlot", True))
         )
 

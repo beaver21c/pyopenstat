@@ -508,7 +508,7 @@ def export_to_pdf(analyses: List[BaseAnalysis], output_path: str) -> str:
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="Glyph .* missing from font")
-        with plt.rc_context({"font.family": "sans-serif", "font.sans-serif": DEFAULT_FONT_STACK}):
+        with plt.rc_context({"font.family": DEFAULT_FONT_STACK, "font.sans-serif": DEFAULT_FONT_STACK}):
             with PdfPages(output_path) as pdf:
                 if not analyses:
                     fig = plt.figure(figsize=(8.27, 11.69), facecolor="white")

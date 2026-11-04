@@ -388,8 +388,8 @@ def execute_python_syntax(
     _real_import = _builtins.__import__
 
     def _recording_import(name, globals=None, locals=None, fromlist=(), level=0):
-        # `import openstat as ost` / `import pyjamovi` inside a script must resolve to the recording proxy
-        if level == 0 and name in ("openstat", "pyjamovi") and not fromlist:
+        # `import openstat as ost` / `from pyjamovi import Session` inside a script must resolve to the recording proxy
+        if level == 0 and name in ("openstat", "pyjamovi"):
             return proxy
         return _real_import(name, globals, locals, fromlist, level)
 
@@ -413,13 +413,16 @@ def execute_python_syntax(
         "session": active_sess,
         "Session": proxy.Session,
         "JamoviSession": proxy.Session,
+        "true": True,
+        "false": False,
+        "null": None,
     }
 
     stdout_buf = io.StringIO()
     with contextlib.redirect_stdout(stdout_buf):
         exec(compile(code, "<openstat_live_script.py>", "exec"), exec_globals)
 
-    for val in exec_globals.values():
+    for val in list(exec_globals.values()):
         if isinstance(val, BaseAnalysis) and val not in collected:
             collected.append(val)
             collected_specs.append({
@@ -427,6 +430,15 @@ def execute_python_syntax(
                 "title": val.title,
                 "params": val.options
             })
+        elif hasattr(val, "history") and isinstance(val.history, list):
+            for a in val.history:
+                if isinstance(a, BaseAnalysis) and a not in collected:
+                    collected.append(a)
+                    collected_specs.append({
+                        "analysis_type": a.name,
+                        "title": a.title,
+                        "params": a.options
+                    })
 
     # Auto-capture any unclosed user-drawn Matplotlib figures directly into Analysis Results
     open_fignums = list(plt.get_fignums())

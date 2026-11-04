@@ -40,6 +40,7 @@ plt.rcParams.update({
     "axes.grid": False,
     "axes.spines.top": False,
     "axes.spines.right": False,
+    "font.family": DEFAULT_FONT_STACK,  # list form enables per-glyph fallback (e.g. em-dash, subscripts)
     "font.sans-serif": DEFAULT_FONT_STACK,
     "axes.unicode_minus": False,
     "font.size": 10,

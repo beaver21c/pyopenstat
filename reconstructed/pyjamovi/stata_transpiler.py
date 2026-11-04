@@ -8,6 +8,42 @@ import re
 from typing import Optional, Tuple
 
 
+def _stata_recode_rules(rule_text: str) -> Tuple[str, Optional[str]]:
+    """
+    Converts Stata recode rules into OpenStat `recode_variable` rules.
+
+    `(1/3=1) (4 5=2) (.=9) (else=0)` -> (`"1..3=1; 4=2; 5=2; missing=9"`, `"0"`)
+    Supports `#/#` ranges (with min/max), several values per rule, `missing`/`.`,
+    `nonmissing`, and `else`/`*`. Value labels (`(1/3=1 "Low")`) are dropped.
+    """
+    bodies = re.findall(r"\(([^()]*)\)", rule_text)
+    if not bodies:
+        raise ValueError(f"No recode rules found in: {rule_text}")
+    clauses = []
+    else_value: Optional[str] = None
+    for body in bodies:
+        body = re.sub(r'"[^"]*"', "", body).strip()
+        if "=" not in body:
+            raise ValueError(f"Invalid Stata recode rule: ({body})")
+        lhs, rhs = (x.strip() for x in body.split("=", 1))
+        if not lhs or not rhs or len(rhs.split()) != 1:
+            raise ValueError(f"Invalid Stata recode rule: ({body})")
+        for tok in lhs.split():
+            low = tok.lower()
+            if low in ("else", "*"):
+                else_value = rhs
+            elif low in (".", "missing") or re.fullmatch(r"\.[a-z]", low):
+                clauses.append(f"missing={rhs}")
+            elif low == "nonmissing":
+                clauses.append(f"min..max={rhs}")
+            elif "/" in tok:
+                lo, hi = tok.split("/", 1)
+                clauses.append(f"{lo}..{hi}={rhs}")
+            else:
+                clauses.append(f"{tok}={rhs}")
+    return "; ".join(clauses), else_value
+
+
 def transpile_stata_line(line: str) -> Optional[str]:
     """
     Translates a single Stata command line into an OpenStat Python session expression.
@@ -105,6 +141,24 @@ def transpile_stata_line(line: str) -> Optional[str]:
     m = re.match(r"^rename\s+([A-Za-z0-9_]+)\s+([A-Za-z0-9_]+)", s, re.IGNORECASE)
     if m:
         return f"sess.rename_var({m.group(1)!r}, {m.group(2)!r})"
+
+    # 10.5 recode var (rule) [(rule) ...] [, gen(newvar)]
+    m = re.match(r"^recode\s+([A-Za-z0-9_]+)\s+(\([^,]*\))\s*(?:,\s*(.*))?$", s, re.IGNORECASE)
+    if m:
+        src = m.group(1)
+        opts = m.group(3) or ""
+        m_gen = re.search(r"\bgen(?:erate)?\s*\(\s*([A-Za-z0-9_]+)\s*\)", opts, re.IGNORECASE)
+        tgt = m_gen.group(1) if m_gen else src
+        try:
+            rules, else_value = _stata_recode_rules(m.group(2))
+        except ValueError as e:
+            return f"raise ValueError({str(e)!r})"
+        call = f"sess.recode(source_col={src!r}, rules={rules!r}, target_col={tgt!r}"
+        if else_value is not None:
+            call += f", else_value={else_value!r}"
+        return call + ")"
+    if re.match(r"^recode\s", s, re.IGNORECASE):
+        return f"raise ValueError({('Unsupported Stata recode syntax (one variable per line): ' + s)!r})"
 
     # 11. xtreg dep indep1 ..., fe / re
     m = re.match(r"^xtreg\s+([A-Za-z0-9_]+)\s+([^,]+)(?:,\s*(fe|re))?", s, re.IGNORECASE)

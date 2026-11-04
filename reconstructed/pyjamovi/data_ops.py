@@ -102,6 +102,20 @@ def compute_variable(df: pd.DataFrame, col_name: str, formula: str) -> pd.DataFr
         "MIN": _row_min,
         "MAX": _row_max,
         "IFELSE": _ifelse,
+        # Lowercase aliases for developer / interactive convenience
+        "log": lambda s: np.log(pd.to_numeric(s, errors="coerce")),
+        "log10": lambda s: np.log10(pd.to_numeric(s, errors="coerce")),
+        "ln": lambda s: np.log(pd.to_numeric(s, errors="coerce")),
+        "exp": lambda s: np.exp(pd.to_numeric(s, errors="coerce")),
+        "sqrt": lambda s: np.sqrt(pd.to_numeric(s, errors="coerce")),
+        "abs": lambda s: np.abs(pd.to_numeric(s, errors="coerce")),
+        "round": lambda s, d=2: np.round(pd.to_numeric(s, errors="coerce"), int(d)),
+        "z": _zscore,
+        "mean": _row_mean,
+        "sum": _row_sum,
+        "min": _row_min,
+        "max": _row_max,
+        "ifelse": _ifelse,
     }
     for c in out.columns:
         env[str(c)] = out[c]
@@ -172,7 +186,11 @@ def _parse_recode_rules(rules: Union[str, Dict[Any, Any], Sequence[Dict[str, Any
             continue
 
         # Range syntax: `min..29`, `30..49`, `50..max`, or `10:20`
-        m_rng = re.match(r"^([^\.:]+)(?:\.\.|:)([^\.:]+)$", lhs)
+        m_rng = re.match(
+            r"^([-+]?(?:\d+\.?\d*|\.\d+)|min|lo|lowest|-inf)\s*(?:\.\.|:)\s*([-+]?(?:\d+\.?\d*|\.\d+)|max|hi|highest|inf|\+inf)$",
+            lhs,
+            re.IGNORECASE,
+        )
         if m_rng:
             lo_raw, hi_raw = m_rng.group(1).strip().lower(), m_rng.group(2).strip().lower()
             lo = -np.inf if lo_raw in ("min", "lo", "lowest", "-inf") else float(lo_raw)

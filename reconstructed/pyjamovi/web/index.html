@@ -4584,15 +4584,17 @@ function assignSelectedToSlot(slotKey) {
 
 function popFromSlot(slotKey) {
     const val = APP.currentParams[slotKey];
+    let removed = "";
     if (Array.isArray(val) && val.length > 0) {
-        val.pop();
+        removed = val.pop();
     } else {
+        removed = val;
         APP.currentParams[slotKey] = "";
     }
     renderOptionsPanel();
     scheduleAutoRun();
     const curCode = generateCodeCallForCurrentState(APP.currentType, APP.currentParams);
-    if (curCode) logToSyntaxConsole("변수 설정", curCode, `${slotKey}: ${v}`);
+    if (curCode) logToSyntaxConsole("변수 설정", curCode, `${slotKey}에서 변수 제거: ${removed}`);
 }
 
 function removeVarFromSlot(slotKey, vName) {
@@ -4605,7 +4607,7 @@ function removeVarFromSlot(slotKey, vName) {
     renderOptionsPanel();
     scheduleAutoRun();
     const curCode = generateCodeCallForCurrentState(APP.currentType, APP.currentParams);
-    if (curCode) logToSyntaxConsole("변수 설정", curCode, `${slotKey}: ${v}`);
+    if (curCode) logToSyntaxConsole("변수 설정", curCode, `${slotKey}에서 변수 제거: ${vName}`);
 }
 
 function updateOptionParam(key, val, debounceMs = 120) {
@@ -4614,6 +4616,8 @@ function updateOptionParam(key, val, debounceMs = 120) {
         autoAssignVariablesIntoParams("graph", APP.currentParams);
         renderOptionsPanel();
     }
+    // Option changes are logged once by executeCurrentAnalysis ("분석 실행 완료") after the
+    // auto-run finishes; logging here as well duplicated every click and every keystroke.
     scheduleAutoRun(false, debounceMs);
 }
 
@@ -5583,6 +5587,29 @@ function logToSyntaxConsole(actionTitle, codeStr, comment = "") {
 }
 
 function generateCodeCallForCurrentState(type, params) {
+    /* Serialize a UI parameter value as a Python literal (True/False/None, quoted strings,
+       triple-quoted multi-line text such as SEM models, [(a, b)] for variable pairs, dicts). */
+    function toPythonLiteral(v) {
+        if (v === null || v === undefined) return "None";
+        if (typeof v === "boolean") return v ? "True" : "False";
+        if (typeof v === "number") return Number.isFinite(v) ? String(v) : "None";
+        if (typeof v === "string") {
+            const esc = v.replace(/\\/g, "\\\\");
+            if (v.includes("\n")) return `"""${esc.replace(/"/g, '\\"')}"""`;
+            return `'${esc.replace(/'/g, "\\'")}'`;
+        }
+        if (Array.isArray(v)) {
+            if (v.length > 0 && v.every(Array.isArray)) {
+                return `[${v.map(sub => `(${sub.map(toPythonLiteral).join(", ")}${sub.length === 1 ? "," : ""})`).join(", ")}]`;
+            }
+            return `[${v.map(toPythonLiteral).join(", ")}]`;
+        }
+        if (typeof v === "object") {
+            return `{${Object.entries(v).map(([kk, vv]) => `${toPythonLiteral(kk)}: ${toPythonLiteral(vv)}`).join(", ")}}`;
+        }
+        return toPythonLiteral(String(v));
+    }
+
     if (!type || !params) return "";
     const cleanParams = Object.assign({}, params);
     delete cleanParams.plotStyle;
@@ -5590,19 +5617,18 @@ function generateCodeCallForCurrentState(type, params) {
     const args = [];
     for (const [k, v] of Object.entries(cleanParams)) {
         if (v === undefined || v === null || v === "" || (Array.isArray(v) && v.length === 0)) continue;
-        if (typeof v === "string") {
-            args.push(`${k}='${v.replace(/'/g, "\\'")}'`);
-        } else if (Array.isArray(v)) {
-            args.push(`${k}=[${v.map(x => `'${String(x).replace(/'/g, "\\'")}'`).join(", ")}]`);
-        } else {
-            args.push(`${k}=${v}`);
-        }
+        if (typeof v === "number" && !Number.isFinite(v)) continue;
+        args.push(`${k}=${toPythonLiteral(v)}`);
     }
 
     let funcName = type;
     if (type === "ttestIS") funcName = "ttest";
+    else if (type === "ttestPS") funcName = "paired_ttest";
+    else if (type === "ttestOneS") funcName = "onesample_ttest";
     else if (type === "linReg") funcName = "regression";
-    else if (type === "anovaOneW" || type === "anovaFactorial") funcName = "anova";
+    else if (type === "anovaOneW") funcName = "anova";
+    else if (type === "anovaFactorial") funcName = "factorial_anova";
+    else if (type === "anovaRM") funcName = "rm_anova";
     else if (type === "corrMatrix") funcName = "correlation";
     else if (type === "spatial" || type === "spatial_moran") funcName = "spatial_regression";
     else if (type === "summaryTTest") funcName = "summary_ttest";
