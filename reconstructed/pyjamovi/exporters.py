@@ -3,7 +3,7 @@ OpenStat Studio — Multi-Format Publication Results, Table & Graph Exporter
 License: MIT
 Exports full Analysis Results (statistical APA tables, narratives, AND standalone/analysis graphs) into 11 researcher-ready formats:
 - .pdf  (Multi-page Publication PDF Report with APA 3-line tables, interpretations & high-res figures)
-- .hwpx (Hancom Office Hangul OWPML package with editable native Hangul tables & embedded BinData/*.png `<hp:pic>` graphs)
+- .hwpx (Hancom Office Hangul OWPML package with editable native Hangul tables, merged header cells & embedded BinData/*.png `<hp:pic>` graphs)
 - .docx (MS Word Document with genuine OOXML APA 3-line tables, headings, notes & embedded charts)
 - .xlsx (Excel Workbook with APA 3-line borders, formatted cells, notes & embedded PNG charts)
 - .tex  (LaTeX booktabs academic manuscript tables + companion vector .pdf figures & `\\includegraphics`)
@@ -24,25 +24,43 @@ import re
 import struct
 import textwrap
 import warnings
-import zipfile
-from typing import List, Optional, Any, Tuple
-from xml.sax.saxutils import escape as xml_escape
+from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 
 from .analyses.base import BaseAnalysis, ResultsTable
 from .renderers.html_renderer import render_jamovi_html_report
 from .omv.writer import write_omv
+from .report_format import (ReportFormat, RenderedTable, render_table, raw_matrix, resolve_report_format,
+                            table_numbering)
 
 
 SUPPORTED_TABLE_FORMATS = ("xlsx", "docx", "hwpx", "pdf", "tex", "csv", "tsv", "md", "html", "json", "omv")
 
 
-def _formatted_matrix(tbl: ResultsTable):
-    headers = [tbl.display_title(c) for c in tbl.columns]
-    rows = [[tbl._format_cell(r.get(c["name"]), c) for c in tbl.columns] for r in tbl.rows]
-    col_types = [c.get("type", "text") for c in tbl.columns]
-    return headers, rows, col_types
+def _rendered_tables(analysis: BaseAnalysis, rf: Optional[ReportFormat], numbers: Optional[Dict[int, int]] = None) -> List[RenderedTable]:
+    out = []
+    for tbl in analysis.tables:
+        if not tbl.columns:
+            continue
+        out.append(render_table(tbl, rf, (numbers or {}).get(id(tbl))))
+    return out
+
+
+def _formatted_matrix(tbl: ResultsTable, rf: Optional[ReportFormat] = None):
+    rt = render_table(tbl, rf)
+    col_types = ["number" if t == "number" else "text" for t in rt.col_types]
+    return rt.flat_headers, rt.body, col_types
+
+
+def _note_lines(rt: RenderedTable, rf: Optional[ReportFormat], default_prefix: str) -> List[str]:
+    """Note paragraphs: default mode prefixes every note; social mode prefixes the first only."""
+    if not rt.notes:
+        return []
+    if rf is None:
+        return [f"{default_prefix}{n}" for n in rt.notes]
+    head = "주: " if rf.lang == "ko" else "Note. "
+    return [head + rt.notes[0]] + [("    " if rf.lang == "ko" else "") + n for n in rt.notes[1:]]
 
 
 def _decode_plot_png(plot_dict: dict) -> Optional[bytes]:
@@ -67,18 +85,21 @@ def _png_dimensions(png_bytes: bytes) -> Tuple[int, int]:
     return 930, 600
 
 
-def export_to_xlsx(analyses: List[BaseAnalysis], output_path: str) -> str:
+def export_to_xlsx(analyses: List[BaseAnalysis], output_path: str, report_format: Optional[ReportFormat] = None) -> str:
     from openpyxl import Workbook
     from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
     from openpyxl.drawing.image import Image as XLImage
     from openpyxl.utils import get_column_letter
 
+    rf = report_format
     wb = Workbook()
     wb.remove(wb.active)
 
     thin_dark = Side(border_style="thin", color="334155")
     medium_dark = Side(border_style="medium", color="0F172A")
     hdr_fill = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
+    numbers = table_numbering(analyses) if rf else {}
+    h_align = {"left": "left", "right": "right", "center": "center"}
 
     used_titles = set()
     for idx, analysis in enumerate(analyses, start=1):
@@ -96,37 +117,47 @@ def export_to_xlsx(analyses: List[BaseAnalysis], output_path: str) -> str:
         ws.cell(row=row_cursor, column=1, value=analysis.title).font = Font(name="Calibri", size=14, bold=True, color="1E3A5F")
         row_cursor += 2
 
-        for tbl in analysis.tables:
-            ws.cell(row=row_cursor, column=1, value=tbl.title).font = Font(name="Calibri", size=11, bold=True, color="1E293B")
+        for rt in _rendered_tables(analysis, rf, numbers):
+            ws.cell(row=row_cursor, column=1, value=rt.caption).font = Font(name="Calibri", size=11, bold=True, color="1E293B")
             row_cursor += 1
-
-            headers, rows, col_types = _formatted_matrix(tbl)
-            if not headers:
+            if not rt.flat_headers:
                 continue
+            n_head = len(rt.header_rows)
+            for ri, hrow in enumerate(rt.header_rows):
+                for hc in hrow:
+                    cell = ws.cell(row=row_cursor + ri, column=hc.col + 1, value=hc.text)
+                    cell.font = Font(name="Calibri", size=10, bold=True, color="0F172A")
+                    cell.fill = hdr_fill
+                    al = "center" if (rf or hc.colspan > 1) else h_align[rt.aligns[hc.col]]
+                    cell.alignment = Alignment(horizontal=al, vertical="center")
+                    if hc.colspan > 1 or hc.rowspan > 1:
+                        ws.merge_cells(start_row=row_cursor + ri, start_column=hc.col + 1,
+                                       end_row=row_cursor + ri + hc.rowspan - 1, end_column=hc.col + hc.colspan)
+            for c_idx in range(1, rt.n_cols + 1):
+                ws.cell(row=row_cursor, column=c_idx).border = Border(top=medium_dark, bottom=thin_dark if n_head == 1 else None)
+                ws.cell(row=row_cursor + n_head - 1, column=c_idx).border = Border(
+                    top=medium_dark if n_head == 1 else None, bottom=thin_dark)
+            if n_head == 2:
+                for hc in rt.header_rows[0]:
+                    if hc.rowspan == 1:
+                        for k in range(hc.col, hc.col + hc.colspan):
+                            ws.cell(row=row_cursor, column=k + 1).border = Border(top=medium_dark, bottom=thin_dark)
+            row_cursor += n_head
 
-            # Header Row (APA top medium border + bottom thin border)
-            for c_idx, h_text in enumerate(headers, start=1):
-                cell = ws.cell(row=row_cursor, column=c_idx, value=h_text)
-                cell.font = Font(name="Calibri", size=10, bold=True, color="0F172A")
-                cell.fill = hdr_fill
-                cell.alignment = Alignment(horizontal="right" if col_types[c_idx - 1] in ("number", "integer") else "left", vertical="center")
-                cell.border = Border(top=medium_dark, bottom=thin_dark)
-            row_cursor += 1
-
-            # Data Rows
-            for r_i, r_vals in enumerate(rows):
-                is_last = (r_i == len(rows) - 1)
+            rules = set(rt.rules_above)
+            for r_i, r_vals in enumerate(rt.body):
+                is_last = (r_i == len(rt.body) - 1)
                 for c_idx, val in enumerate(r_vals, start=1):
                     cell = ws.cell(row=row_cursor, column=c_idx, value=val)
                     cell.font = Font(name="Calibri", size=10, color="1E293B")
-                    cell.alignment = Alignment(horizontal="right" if col_types[c_idx - 1] in ("number", "integer") else "left", vertical="center")
-                    if is_last:
-                        cell.border = Border(bottom=medium_dark)
+                    cell.alignment = Alignment(horizontal=h_align[rt.aligns[c_idx - 1]], vertical="center")
+                    if is_last or r_i in rules:
+                        cell.border = Border(top=thin_dark if r_i in rules else None, bottom=medium_dark if is_last else None)
                 row_cursor += 1
 
-            for note in tbl.notes:
-                ncell = ws.cell(row_cursor, 1, value=f"Note. {note}")
-                ncell.font = Font(name="Calibri", size=9, italic=True, color="475569")
+            for line in _note_lines(rt, rf, "Note. "):
+                ncell = ws.cell(row_cursor, 1, value=line)
+                ncell.font = Font(name="Calibri", size=9, italic=rf is None, color="475569")
                 row_cursor += 1
 
             row_cursor += 1
@@ -161,6 +192,30 @@ def export_to_xlsx(analyses: List[BaseAnalysis], output_path: str) -> str:
                 ws.add_image(xl_img, f"A{row_cursor}")
                 row_cursor += max(15, int(xl_img.height / 18) + 2)
 
+    if rf is not None and rf.raw_sheet and analyses:
+        # Stars and parentheses turn numbers into text: keep the unformatted values on their own sheet.
+        ws = wb.create_sheet(title="원자료(숫자)" if rf.lang == "ko" else "Raw values")
+        r = 1
+        ws.cell(row=r, column=1, value="보고 양식 적용 전 수치(계산용)" if rf.lang == "ko" else "Unformatted numeric values").font = Font(bold=True, size=12)
+        r += 2
+        for analysis in analyses:
+            for tbl in analysis.tables:
+                if not tbl.columns:
+                    continue
+                cap = f"{analysis.title} — {tbl.title}"
+                n = numbers.get(id(tbl))
+                ws.cell(row=r, column=1, value=(f"<표 {n}> " if (n and rf.lang == "ko") else (f"Table {n}. " if n else "")) + cap).font = Font(bold=True)
+                r += 1
+                headers, rows = raw_matrix(tbl)
+                for c, h in enumerate(headers, start=1):
+                    ws.cell(row=r, column=c, value=h).font = Font(bold=True)
+                r += 1
+                for vals in rows:
+                    for c, v in enumerate(vals, start=1):
+                        ws.cell(row=r, column=c, value=v)
+                    r += 1
+                r += 1
+
     if not wb.sheetnames:
         ws = wb.create_sheet("Summary")
         ws["A1"] = "No analyses in session."
@@ -169,7 +224,8 @@ def export_to_xlsx(analyses: List[BaseAnalysis], output_path: str) -> str:
     return output_path
 
 
-def _set_docx_apa_borders(table):
+def _set_docx_borders(table, rt: RenderedTable):
+    """APA three-line borders: thick top/bottom, thin under the header (and under spanning heads), thin section rules."""
     from docx.oxml import OxmlElement
     from docx.oxml.ns import qn
 
@@ -191,26 +247,60 @@ def _set_docx_apa_borders(table):
         borders.append(el)
     tblPr.append(borders)
 
-    # Bottom border on header row
-    if len(table.rows) > 0:
-        for cell in table.rows[0].cells:
-            tcPr = cell._tc.get_or_add_tcPr()
+    def _edge(cell, edge, sz="6"):
+        tcPr = cell._tc.get_or_add_tcPr()
+        tcBorders = tcPr.find(qn("w:tcBorders"))
+        if tcBorders is None:
             tcBorders = OxmlElement("w:tcBorders")
-            b_bot = OxmlElement("w:bottom")
-            b_bot.set(qn("w:val"), "single")
-            b_bot.set(qn("w:sz"), "6")
-            b_bot.set(qn("w:space"), "0")
-            b_bot.set(qn("w:color"), "334155")
-            tcBorders.append(b_bot)
             tcPr.append(tcBorders)
+        b = OxmlElement(f"w:{edge}")
+        b.set(qn("w:val"), "single")
+        b.set(qn("w:sz"), sz)
+        b.set(qn("w:space"), "0")
+        b.set(qn("w:color"), "334155")
+        tcBorders.append(b)
+
+    n_head = len(rt.header_rows)
+    if len(table.rows) >= n_head:
+        for cell in table.rows[n_head - 1].cells:
+            _edge(cell, "bottom")
+        if n_head == 2:
+            for hc in rt.header_rows[0]:
+                # spanning heads get their own rule; vertically merged heads carry the header rule on the first cell
+                _edge(table.rows[0].cells[hc.col], "bottom")
+    for bi in rt.rules_above:
+        ri = n_head + bi
+        if ri < len(table.rows):
+            for cell in table.rows[ri].cells:
+                _edge(cell, "top")
 
 
-def export_to_docx(analyses: List[BaseAnalysis], output_path: str) -> str:
+def export_to_docx(analyses: List[BaseAnalysis], output_path: str, report_format: Optional[ReportFormat] = None) -> str:
     from docx import Document
     from docx.shared import Inches, Pt, RGBColor
     from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.enum.table import WD_ALIGN_VERTICAL
+
+    rf = report_format
+
+    def _tight(cell, para):
+        cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+        pf = para.paragraph_format
+        pf.space_before = Pt(0)
+        pf.space_after = Pt(0)
+        pf.line_spacing = Pt(13)                    # exact: equal row heights for Latin, Hangul and empty cells
+    numbers = table_numbering(analyses) if rf else {}
+    align_map = {"left": WD_ALIGN_PARAGRAPH.LEFT, "right": WD_ALIGN_PARAGRAPH.RIGHT, "center": WD_ALIGN_PARAGRAPH.CENTER}
 
     doc = Document()
+    normal = doc.styles["Normal"]
+    normal.font.size = Pt(9.5)                      # also sizes empty table cells (paragraph marks)
+    normal.paragraph_format.space_after = Pt(2)
+    try:
+        from docx.oxml.ns import qn
+        normal.element.get_or_add_rPr().get_or_add_rFonts().set(qn("w:eastAsia"), "맑은 고딕")
+    except Exception:
+        pass
     title_h = doc.add_heading("OpenStat Studio — Statistical Analysis & Graph Report", level=1)
     title_h.runs[0].font.color.rgb = RGBColor(0x1E, 0x3A, 0x5F)
 
@@ -220,43 +310,48 @@ def export_to_docx(analyses: List[BaseAnalysis], output_path: str) -> str:
         if h2.runs:
             h2.runs[0].font.color.rgb = RGBColor(0x0D, 0x94, 0x88)
 
-        for tbl in analysis.tables:
+        for rt in _rendered_tables(analysis, rf, numbers):
             p_title = doc.add_paragraph()
-            run_t = p_title.add_run(tbl.title)
+            run_t = p_title.add_run(rt.caption)
             run_t.bold = True
             run_t.font.size = Pt(10.5)
-
-            headers, rows, col_types = _formatted_matrix(tbl)
-            if not headers:
+            if not rt.flat_headers:
                 continue
 
-            w_tbl = doc.add_table(rows=1 + len(rows), cols=len(headers))
-            for c_i, h_txt in enumerate(headers):
-                cell = w_tbl.rows[0].cells[c_i]
-                cell.text = h_txt
-                p = cell.paragraphs[0]
-                p.alignment = WD_ALIGN_PARAGRAPH.RIGHT if col_types[c_i] in ("number", "integer") else WD_ALIGN_PARAGRAPH.LEFT
-                for r in p.runs:
-                    r.bold = True
-                    r.font.size = Pt(9.5)
+            n_head = len(rt.header_rows)
+            w_tbl = doc.add_table(rows=n_head + len(rt.body), cols=rt.n_cols)
+            for ri, hrow in enumerate(rt.header_rows):
+                for hc in hrow:
+                    cell = w_tbl.rows[ri].cells[hc.col]
+                    if hc.colspan > 1 or hc.rowspan > 1:
+                        cell = cell.merge(w_tbl.rows[ri + hc.rowspan - 1].cells[hc.col + hc.colspan - 1])
+                    cell.text = hc.text
+                    p = cell.paragraphs[0]
+                    _tight(cell, p)
+                    p.alignment = WD_ALIGN_PARAGRAPH.CENTER if (rf or hc.colspan > 1) else align_map[rt.aligns[hc.col]]
+                    for r in p.runs:
+                        r.bold = True
+                        r.font.size = Pt(9.5)
 
-            for r_i, r_vals in enumerate(rows):
+            for r_i, r_vals in enumerate(rt.body):
                 for c_i, val in enumerate(r_vals):
-                    cell = w_tbl.rows[r_i + 1].cells[c_i]
+                    cell = w_tbl.rows[n_head + r_i].cells[c_i]
                     cell.text = str(val)
                     p = cell.paragraphs[0]
-                    p.alignment = WD_ALIGN_PARAGRAPH.RIGHT if col_types[c_i] in ("number", "integer") else WD_ALIGN_PARAGRAPH.LEFT
+                    _tight(cell, p)
+                    p.alignment = align_map[rt.aligns[c_i]]
                     for r in p.runs:
                         r.font.size = Pt(9.5)
 
-            _set_docx_apa_borders(w_tbl)
+            _set_docx_borders(w_tbl, rt)
 
-            for note in tbl.notes:
+            for i, line in enumerate(_note_lines(rt, rf, "")):
                 pn = doc.add_paragraph()
-                r1 = pn.add_run("Note. ")
-                r1.italic = True
-                r1.font.size = Pt(8.5)
-                r2 = pn.add_run(note)
+                if rf is None:
+                    r1 = pn.add_run("Note. ")
+                    r1.italic = True
+                    r1.font.size = Pt(8.5)
+                r2 = pn.add_run(line)
                 r2.font.size = Pt(8.5)
 
         if analysis.apa_narrative:
@@ -272,7 +367,8 @@ def export_to_docx(analyses: List[BaseAnalysis], output_path: str) -> str:
             if img_bytes:
                 fig_num += 1
                 p_cap = doc.add_paragraph()
-                rc = p_cap.add_run(f"Figure {fig_num}. {p.get('title', 'Statistical Visualization')}")
+                cap = (f"[그림 {fig_num}] " if (rf and rf.lang == "ko") else f"Figure {fig_num}. ") + p.get("title", "Statistical Visualization")
+                rc = p_cap.add_run(cap)
                 rc.bold = True
                 rc.font.size = Pt(9.5)
                 doc.add_picture(io.BytesIO(img_bytes), width=Inches(5.5))
@@ -281,221 +377,46 @@ def export_to_docx(analyses: List[BaseAnalysis], output_path: str) -> str:
     return output_path
 
 
-def export_to_hwpx(analyses: List[BaseAnalysis], output_path: str) -> str:
+def export_to_hwpx(analyses: List[BaseAnalysis], output_path: str, report_format: Optional[ReportFormat] = None) -> str:
     """
-    Generates a valid Hancom Office OWPML (.hwpx) document containing:
-    - Editable native Hangul APA 3-line tables (`<hp:tbl>`)
-    - Embedded high-resolution statistical & standalone graphs (`BinData/BIN*.png` + `<hp:pic>`)
-    - APA narrative interpretations
+    Writes a Hancom Office Hangul (.hwpx) report: editable native tables (merged header cells,
+    numbered captions under the social format), notes, APA interpretations and embedded figures.
     """
-    version_xml = (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>\n'
-        '<hv:HCFVersion xmlns:hv="http://www.hancom.co.kr/hwpml/2011/version" '
-        'tagetApplication="WORDPROCESSOR" major="5" minor="1" micro="0" buildNumber="1" '
-        'os="1" xmlVersion="1.4" application="OpenStat Studio" appVersion="3.0"/>'
-    )
+    from .hwpx_writer import HwpxBuilder
 
-    container_xml = (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>\n'
-        '<ocf:container xmlns:ocf="urn:oasis:names:tc:opendocument:xmlns:container" xmlns:hpf="http://www.hancom.co.kr/schema/2011/hpf">'
-        '<ocf:rootfiles><ocf:rootfile full-path="Contents/content.hpf" media-type="application/hwpml-package+xml"/></ocf:rootfiles>'
-        '</ocf:container>'
-    )
-
-    header_xml = (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>\n'
-        '<hh:head xmlns:hh="http://www.hancom.co.kr/hwpml/2011/head" version="1.4" secCnt="1">'
-        '<hh:beginNum page="1" footnote="1" endnote="1" pic="1" tbl="1" equation="1"/>'
-        '<hh:refList>'
-        '<hh:fontfaces itemCnt="1"><hh:fontface lang="HANGUL" fontCnt="1"><hh:font id="0" face="함초롬돋움" type="TTF" isEmbedded="0"/></hh:fontface></hh:fontfaces>'
-        '<hh:borderFills itemCnt="3">'
-        '<hh:borderFill id="1" threeD="0" shadow="0" centerLine="NONE"><hh:leftBorder type="NONE" width="0.1 mm" color="#000000"/><hh:rightBorder type="NONE" width="0.1 mm" color="#000000"/><hh:topBorder type="NONE" width="0.1 mm" color="#000000"/><hh:bottomBorder type="NONE" width="0.1 mm" color="#000000"/></hh:borderFill>'
-        '<hh:borderFill id="2" threeD="0" shadow="0" centerLine="NONE"><hh:leftBorder type="NONE" width="0.1 mm" color="#000000"/><hh:rightBorder type="NONE" width="0.1 mm" color="#000000"/><hh:topBorder type="SOLID" width="0.4 mm" color="#1E293B"/><hh:bottomBorder type="SOLID" width="0.25 mm" color="#334155"/></hh:borderFill>'
-        '<hh:borderFill id="3" threeD="0" shadow="0" centerLine="NONE"><hh:leftBorder type="NONE" width="0.1 mm" color="#000000"/><hh:rightBorder type="NONE" width="0.1 mm" color="#000000"/><hh:topBorder type="NONE" width="0.1 mm" color="#000000"/><hh:bottomBorder type="SOLID" width="0.4 mm" color="#1E293B"/></hh:borderFill>'
-        '</hh:borderFills>'
-        '<hh:charProperties itemCnt="2">'
-        '<hh:charPr id="0" height="1000" textColor="#1E293B" shadeColor="none" useFontSpace="0" useKerning="0" symMark="NONE" borderFillIDRef="1"/>'
-        '<hh:charPr id="1" height="1100" textColor="#0F172A" shadeColor="none" useFontSpace="0" useKerning="0" symMark="NONE" borderFillIDRef="1"><hh:bold/></hh:charPr>'
-        '</hh:charProperties>'
-        '<hh:paraProperties itemCnt="2">'
-        '<hh:paraPr id="0" tabPrIDRef="0" condense="0" fontLineHeight="0" snapToGrid="1"><hh:align horizontal="LEFT" vertical="BASELINE"/></hh:paraPr>'
-        '<hh:paraPr id="1" tabPrIDRef="0" condense="0" fontLineHeight="0" snapToGrid="1"><hh:align horizontal="RIGHT" vertical="BASELINE"/></hh:paraPr>'
-        '</hh:paraProperties>'
-        '</hh:refList>'
-        '</hh:head>'
-    )
-
-    paras: List[str] = []
-    embedded_images: List[Dict[str, Any]] = []
-
-    def _p(text: str, bold: bool = False, right: bool = False) -> str:
-        c_id = "1" if bold else "0"
-        p_id = "1" if right else "0"
-        return f'<hp:p paraPrIDRef="{p_id}" styleIDRef="0"><hp:run charPrIDRef="{c_id}"><hp:t>{xml_escape(str(text))}</hp:t></hp:run></hp:p>'
-
-    paras.append(_p("OpenStat Studio — 통계 분석 및 시각화 결과 보고서", bold=True))
-
-    tbl_id = 100
+    rf = report_format
+    numbers = table_numbering(analyses) if rf else {}
+    doc = HwpxBuilder(title="OpenStat Studio — 통계 분석 및 시각화 결과 보고서")
     pic_seq = 0
     for analysis in analyses:
-        paras.append(_p(f"■ {analysis.title}", bold=True))
-        for tbl in analysis.tables:
-            paras.append(_p(f"[{tbl.title}]", bold=True))
-            headers, rows, col_types = _formatted_matrix(tbl)
-            if not headers:
+        doc.paragraph(f"■ {analysis.title}", kind="heading")
+        for rt in _rendered_tables(analysis, rf, numbers):
+            doc.paragraph(rt.caption if rf else f"[{rt.caption}]", kind="caption")
+            if not rt.flat_headers:
                 continue
-            r_cnt = 1 + len(rows)
-            c_cnt = len(headers)
-            col_w = max(3500, 42520 // max(1, c_cnt))
-            tbl_id += 1
-            tr_xml = []
-
-            # Header row
-            th_cells = []
-            for c_i, h_txt in enumerate(headers):
-                is_num = col_types[c_i] in ("number", "integer")
-                th_cells.append(
-                    f'<hp:tc borderFillIDRef="2"><hp:subList id="" textDirection="HORIZONTAL" lineWrap="BREAK" vertAlign="CENTER">'
-                    f'{_p(h_txt, bold=True, right=is_num)}</hp:subList>'
-                    f'<hp:cellAddr colAddr="{c_i}" rowAddr="0"/><hp:cellSpan colSpan="1" rowSpan="1"/>'
-                    f'<hp:cellSz width="{col_w}" height="1800"/><hp:cellMargin left="280" right="280" top="140" bottom="140"/></hp:tc>'
-                )
-            tr_xml.append(f"<hp:tr>{''.join(th_cells)}</hp:tr>")
-
-            # Body rows
-            for r_i, r_vals in enumerate(rows):
-                bf_id = "3" if r_i == len(rows) - 1 else "1"
-                td_cells = []
-                for c_i, val in enumerate(r_vals):
-                    is_num = col_types[c_i] in ("number", "integer")
-                    td_cells.append(
-                        f'<hp:tc borderFillIDRef="{bf_id}"><hp:subList id="" textDirection="HORIZONTAL" lineWrap="BREAK" vertAlign="CENTER">'
-                        f'{_p(val, bold=False, right=is_num)}</hp:subList>'
-                        f'<hp:cellAddr colAddr="{c_i}" rowAddr="{r_i + 1}"/><hp:cellSpan colSpan="1" rowSpan="1"/>'
-                        f'<hp:cellSz width="{col_w}" height="1650"/><hp:cellMargin left="280" right="280" top="120" bottom="120"/></hp:tc>'
-                    )
-                tr_xml.append(f"<hp:tr>{''.join(td_cells)}</hp:tr>")
-
-            tbl_xml = (
-                f'<hp:p paraPrIDRef="0" styleIDRef="0"><hp:run charPrIDRef="0">'
-                f'<hp:tbl id="{tbl_id}" zOrder="0" numberingType="TABLE" textWrap="TOP_AND_BOTTOM" rowCnt="{r_cnt}" colCnt="{c_cnt}" cellSpacing="0" borderFillIDRef="1">'
-                f'{"".join(tr_xml)}</hp:tbl></hp:run></hp:p>'
-            )
-            paras.append(tbl_xml)
-
-            for note in tbl.notes:
-                paras.append(_p(f"주: {note}"))
+            doc.table(rt, social=rf is not None)
+            for line in _note_lines(rt, rf, "주: "):
+                doc.paragraph(line, kind="note")
 
         if analysis.apa_narrative:
-            paras.append(_p(f"해석(APA): {analysis.apa_narrative}"))
+            doc.paragraph(f"해석(APA): {analysis.apa_narrative}")
 
-        # Embed all figures as native OWPML <hp:pic> + BinData/*.png
         for p in analysis.plots:
             png_bytes = _decode_plot_png(p)
             if not png_bytes:
                 continue
             pic_seq += 1
-            img_id = f"BIN{pic_seq:04d}"
-            img_fname = f"{img_id}.png"
-            px_w, px_h = _png_dimensions(png_bytes)
-            w_hwp = 40000
-            h_hwp = max(12000, min(48000, int(w_hwp * (px_h / max(1, px_w)))))
-            embedded_images.append({
-                "id": img_id,
-                "filename": img_fname,
-                "data": png_bytes,
-            })
-            p_title = p.get("title") or f"시각화 그래프 {pic_seq}"
-            paras.append(_p(f"[그림 {pic_seq}] {p_title}", bold=True))
-            pic_xml = (
-                f'<hp:p paraPrIDRef="0" styleIDRef="0"><hp:run charPrIDRef="0">'
-                f'<hp:pic id="{200000000 + pic_seq}" zOrder="{pic_seq}" '
-                f'numberingType="PICTURE" textWrap="TOP_AND_BOTTOM" textFlow="BOTH_SIDES" '
-                f'lock="0" dropcapstyle="None" href="" groupLevel="0" instid="{30000000 + pic_seq}" reverse="0">'
-                f'<hp:offset x="0" y="0"/>'
-                f'<hp:orgSz width="{w_hwp}" height="{h_hwp}"/>'
-                f'<hp:curSz width="{w_hwp}" height="{h_hwp}"/>'
-                f'<hp:flip horizontal="0" vertical="0"/>'
-                f'<hp:rotationInfo angle="0" centerX="0" centerY="0" rotateimage="1"/>'
-                f'<hp:renderingInfo>'
-                f'<hc:transMatrix e1="1" e2="0" e3="0" e4="0" e5="1" e6="0"/>'
-                f'<hc:scaMatrix e1="1" e2="0" e3="0" e4="0" e5="1" e6="0"/>'
-                f'<hc:rotMatrix e1="1" e2="0" e3="0" e4="0" e5="1" e6="0"/>'
-                f'</hp:renderingInfo>'
-                f'<hp:imgRect><hc:pt0 x="0" y="0"/><hc:pt1 x="{w_hwp}" y="0"/>'
-                f'<hc:pt2 x="{w_hwp}" y="{h_hwp}"/><hc:pt3 x="0" y="{h_hwp}"/></hp:imgRect>'
-                f'<hp:imgClip left="0" right="0" top="0" bottom="0"/>'
-                f'<hp:inMargin left="0" right="0" top="0" bottom="0"/>'
-                f'<hc:img binaryItemIDRef="{img_id}" bright="0" contrast="0" effect="REAL_PIC" alpha="0"/>'
-                f'<hp:effects/>'
-                f'<hp:sz width="{w_hwp}" widthRelTo="ABSOLUTE" height="{h_hwp}" heightRelTo="ABSOLUTE" protect="0"/>'
-                f'<hp:pos treatAsChar="1" affectLSpacing="0" flowWithText="1" allowOverlap="1" '
-                f'holdAnchorAndSO="0" vertRelTo="PARA" horzRelTo="COLUMN" vertAlign="TOP" horzAlign="LEFT" '
-                f'vertOffset="0" horzOffset="0"/>'
-                f'<hp:outMargin left="0" right="0" top="140" bottom="280"/>'
-                f'</hp:pic></hp:run></hp:p>'
-            )
-            paras.append(pic_xml)
+            doc.paragraph(f"[그림 {pic_seq}] {p.get('title') or f'시각화 그래프 {pic_seq}'}", kind="caption")
+            doc.picture(png_bytes)
 
-    manifest_img_entries = "".join(
-        f'<odf:file-entry full-path="BinData/{img["filename"]}" media-type="image/png"/>'
-        for img in embedded_images
-    )
-    manifest_xml = (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>\n'
-        '<odf:manifest xmlns:odf="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0">'
-        '<odf:file-entry full-path="/" media-type="application/hwp+zip"/>'
-        '<odf:file-entry full-path="Contents/header.xml" media-type="application/xml"/>'
-        '<odf:file-entry full-path="Contents/section0.xml" media-type="application/xml"/>'
-        f'{manifest_img_entries}'
-        '</odf:manifest>'
-    )
-
-    hpf_img_items = "".join(
-        f'<opf:item id="{img["id"]}" href="BinData/{img["filename"]}" media-type="image/png" isEmbeded="1"/>'
-        for img in embedded_images
-    )
-    content_hpf = (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>\n'
-        '<opf:package xmlns:opf="http://www.idpf.org/2007/opf/" version="2.0" unique-identifier="openstat-hwpx">'
-        '<opf:metadata><opf:title>OpenStat Studio Statistical Report</opf:title><opf:language>ko</opf:language></opf:metadata>'
-        '<opf:manifest>'
-        '<opf:item id="header" href="header.xml" media-type="application/xml"/>'
-        '<opf:item id="section0" href="section0.xml" media-type="application/xml"/>'
-        f'{hpf_img_items}'
-        '</opf:manifest>'
-        '<opf:spine><opf:itemref idref="header" linear="no"/><opf:itemref idref="section0" linear="yes"/></opf:spine>'
-        '</opf:package>'
-    )
-
-    section_xml = (
-        '<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>\n'
-        '<hs:sec xmlns:hs="http://www.hancom.co.kr/hwpml/2011/section" '
-        'xmlns:hp="http://www.hancom.co.kr/hwpml/2011/paragraph" '
-        'xmlns:hc="http://www.hancom.co.kr/hwpml/2011/core">'
-        + "".join(paras)
-        + "</hs:sec>"
-    )
-
-    with zipfile.ZipFile(output_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
-        zf.writestr("mimetype", "application/hwp+zip", compress_type=zipfile.ZIP_STORED)
-        zf.writestr("version.xml", version_xml)
-        zf.writestr("META-INF/container.xml", container_xml)
-        zf.writestr("META-INF/manifest.xml", manifest_xml)
-        zf.writestr("Contents/content.hpf", content_hpf)
-        zf.writestr("Contents/header.xml", header_xml)
-        zf.writestr("Contents/section0.xml", section_xml)
-        for img in embedded_images:
-            zf.writestr(f'BinData/{img["filename"]}', img["data"])
-
-    return output_path
+    return doc.save(output_path)
 
 
-def export_to_pdf(analyses: List[BaseAnalysis], output_path: str) -> str:
+def export_to_pdf(analyses: List[BaseAnalysis], output_path: str, report_format: Optional[ReportFormat] = None) -> str:
     """
     Renders a multi-page publication PDF report containing:
     - Report title header
-    - APA 3-line statistical tables & footnotes
+    - APA 3-line statistical tables & footnotes (grouped column heads, numbered captions under the social format)
     - APA interpretations
     - All statistical & standalone visualizations embedded at crisp publication quality
     """
@@ -505,6 +426,16 @@ def export_to_pdf(analyses: List[BaseAnalysis], output_path: str) -> str:
     import matplotlib.image as mpimg
     from matplotlib.backends.backend_pdf import PdfPages
     from .analyses.plot_style import DEFAULT_FONT_STACK
+
+    rf = report_format
+    numbers = table_numbering(analyses) if rf else {}
+
+    def _x(c_i, n_cols, x0, col_w, align):
+        if align == "right":
+            return x0 + (c_i + 0.94) * col_w, "right"
+        if align == "center":
+            return x0 + (c_i + 0.5) * col_w, "center"
+        return x0 + (c_i + 0.04) * col_w, "left"
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="Glyph .* missing from font")
@@ -520,11 +451,13 @@ def export_to_pdf(analyses: List[BaseAnalysis], output_path: str) -> str:
 
                 fig_counter = 0
                 for a_idx, analysis in enumerate(analyses, start=1):
-                    # Page(s) for tables + APA summary (when present, or title card when no plots either)
                     if analysis.tables or analysis.apa_narrative or not analysis.plots:
                         fig = plt.figure(figsize=(8.27, 11.69), facecolor="white")
                         ax = fig.add_axes([0, 0, 1, 1])
                         ax.axis("off")
+                        ax.set_xlim(0, 1)
+                        ax.set_ylim(0, 1)
+                        ax.autoscale(False)
 
                         y = 0.94
                         if a_idx == 1:
@@ -535,44 +468,60 @@ def export_to_pdf(analyses: List[BaseAnalysis], output_path: str) -> str:
                         ax.text(0.07, y, f"{a_idx}. {analysis.title}", fontsize=12, fontweight="bold", color="#0F172A")
                         y -= 0.032
 
-                        for tbl in analysis.tables:
-                            headers, rows, col_types = _formatted_matrix(tbl)
-                            if not headers:
+                        for rt in _rendered_tables(analysis, rf, numbers):
+                            if not rt.flat_headers:
                                 continue
-                            display_rows = rows[:28]
-                            needed_h = 0.035 + 0.024 * (1 + len(display_rows)) + 0.02 * len(tbl.notes)
+                            display_rows = rt.body[:28]
+                            notes = _note_lines(rt, rf, "Note. ")
+                            n_head = len(rt.header_rows)
+                            needed_h = 0.035 + 0.022 * n_head + 0.020 * len(display_rows) + 0.018 * len(notes)
                             if y - needed_h < 0.08:
                                 pdf.savefig(fig)
                                 plt.close(fig)
                                 fig = plt.figure(figsize=(8.27, 11.69), facecolor="white")
                                 ax = fig.add_axes([0, 0, 1, 1])
                                 ax.axis("off")
+                                ax.set_xlim(0, 1)
+                                ax.set_ylim(0, 1)
+                                ax.autoscale(False)
                                 y = 0.94
 
-                            ax.text(0.07, y, tbl.title, fontsize=10, fontweight="bold", color="#1E293B")
+                            ax.text(0.07, y, rt.caption, fontsize=10, fontweight="bold", color="#1E293B")
                             y -= 0.016
 
-                            n_cols = len(headers)
+                            n_cols = rt.n_cols
                             x0, x1 = 0.07, 0.93
                             col_w = (x1 - x0) / n_cols
 
                             # APA Top Rule
                             ax.plot([x0, x1], [y, y], color="#0F172A", lw=1.2)
                             y -= 0.020
-                            for c_i, h_txt in enumerate(headers):
-                                is_num = col_types[c_i] in ("number", "integer")
-                                tx = (x0 + (c_i + 0.94) * col_w) if is_num else (x0 + (c_i + 0.04) * col_w)
-                                ha = "right" if is_num else "left"
-                                ax.text(tx, y + 0.004, str(h_txt)[:24], fontsize=8.5, fontweight="bold", color="#0F172A", ha=ha, va="bottom")
+                            if n_head == 2:
+                                for hc in rt.header_rows[0]:
+                                    if hc.rowspan == 1:
+                                        cx = x0 + (hc.col + hc.colspan / 2) * col_w
+                                        ax.text(cx, y + 0.004, str(hc.text)[:40], fontsize=8.5, fontweight="bold", color="#0F172A", ha="center", va="bottom")
+                                        ax.plot([x0 + (hc.col + 0.04) * col_w, x0 + (hc.col + hc.colspan - 0.04) * col_w],
+                                                [y - 0.003, y - 0.003], color="#334155", lw=0.6)
+                                y -= 0.020
+                            sub = {hc.col: hc.text for hc in rt.header_rows[-1]}
+                            for hc in rt.header_rows[0]:
+                                if hc.rowspan > 1 or n_head == 1:
+                                    sub[hc.col] = hc.text
+                            for c_i in range(n_cols):
+                                al = "center" if rf else rt.aligns[c_i]
+                                tx, ha = _x(c_i, n_cols, x0, col_w, al)
+                                ax.text(tx, y + 0.004, str(sub.get(c_i, ""))[:24], fontsize=8.5, fontweight="bold", color="#0F172A", ha=ha, va="bottom")
                             # APA Header Rule
                             ax.plot([x0, x1], [y - 0.003, y - 0.003], color="#334155", lw=0.7)
                             y -= 0.022
 
-                            for r_vals in display_rows:
+                            rules = set(rt.rules_above)
+                            for r_i, r_vals in enumerate(display_rows):
+                                if r_i in rules:
+                                    ax.plot([x0, x1], [y + 0.016, y + 0.016], color="#334155", lw=0.6)
                                 for c_i, val in enumerate(r_vals):
-                                    is_num = col_types[c_i] in ("number", "integer")
-                                    tx = (x0 + (c_i + 0.94) * col_w) if is_num else (x0 + (c_i + 0.04) * col_w)
-                                    ha = "right" if is_num else "left"
+                                    tx, ha = _x(c_i, n_cols, x0, col_w, rt.aligns[c_i])
                                     ax.text(tx, y + 0.004, str(val)[:26], fontsize=8.3, color="#1E293B", ha=ha, va="bottom")
                                 y -= 0.020
 
@@ -580,8 +529,8 @@ def export_to_pdf(analyses: List[BaseAnalysis], output_path: str) -> str:
                             ax.plot([x0, x1], [y + 0.015, y + 0.015], color="#0F172A", lw=1.2)
                             y -= 0.006
 
-                            for note in tbl.notes:
-                                ax.text(0.07, y, f"Note. {note}"[:110], fontsize=7.8, style="italic", color="#475569")
+                            for note in notes:
+                                ax.text(0.07, y, note[:110], fontsize=7.8, style="italic" if rf is None else "normal", color="#475569")
                                 y -= 0.018
                             y -= 0.016
 
@@ -593,6 +542,9 @@ def export_to_pdf(analyses: List[BaseAnalysis], output_path: str) -> str:
                                 fig = plt.figure(figsize=(8.27, 11.69), facecolor="white")
                                 ax = fig.add_axes([0, 0, 1, 1])
                                 ax.axis("off")
+                                ax.set_xlim(0, 1)
+                                ax.set_ylim(0, 1)
+                                ax.autoscale(False)
                                 y = 0.94
                             for line in wrapped:
                                 ax.text(0.07, y, line, fontsize=9.0, color="#0F172A")
@@ -611,7 +563,8 @@ def export_to_pdf(analyses: List[BaseAnalysis], output_path: str) -> str:
                         fig_p = plt.figure(figsize=(8.27, 11.69), facecolor="white")
                         fig_p.text(0.07, 0.93, f"{a_idx}. {analysis.title}", fontsize=11.5, fontweight="bold", color="#1E3A5F")
                         p_title = p.get("title") or f"Figure {fig_counter}"
-                        fig_p.text(0.07, 0.90, f"Figure {fig_counter}. {p_title}", fontsize=10.5, fontweight="bold", color="#0D9488")
+                        cap = f"[그림 {fig_counter}] {p_title}" if (rf and rf.lang == "ko") else f"Figure {fig_counter}. {p_title}"
+                        fig_p.text(0.07, 0.90, cap, fontsize=10.5, fontweight="bold", color="#0D9488")
 
                         px_w, px_h = _png_dimensions(png_bytes)
                         aspect = px_h / max(1, px_w)
@@ -654,16 +607,18 @@ def _tex_escape(s: str) -> str:
         "α": r"$\alpha$",
         "ω": r"$\omega$",
         "β": r"$\beta$",
+        "†": r"$\dagger$",
         "< .001": r"$< .001$",
     }
     out = str(s)
-    for k in ("χ²", "η²p", "η²G", "η²", "ω²", "ε²", "ε", "α", "ω", "β"):
+    for k in ("χ²", "η²p", "η²G", "η²", "ω²", "ε²", "ε", "α", "ω", "β", "†"):
         out = out.replace(k, rep[k])
     out = out.replace("&", r"\&").replace("%", r"\%").replace("#", r"\#").replace("_", r"\_")
     return out
 
 
-def export_to_latex(analyses: List[BaseAnalysis], output_path: str) -> str:
+def export_to_latex(analyses: List[BaseAnalysis], output_path: str, report_format: Optional[ReportFormat] = None) -> str:
+    rf = report_format
     lines = [
         r"% OpenStat Studio — Publication LaTeX Tables & Figures (Requires \usepackage{booktabs, graphicx})",
         ""
@@ -674,24 +629,42 @@ def export_to_latex(analyses: List[BaseAnalysis], output_path: str) -> str:
 
     for analysis in analyses:
         lines.append(f"% === {analysis.title} ===")
-        for tbl in analysis.tables:
-            headers, rows, col_types = _formatted_matrix(tbl)
-            if not headers:
+        for rt in _rendered_tables(analysis, rf):
+            if not rt.flat_headers:
                 continue
-            align = "".join("r" if t in ("number", "integer") else "l" for t in col_types)
+            align = "".join({"right": "r", "center": "c"}.get(a, "l") for a in rt.aligns)
             lines.append(r"\begin{table}[htbp]")
             lines.append(r"\centering")
-            lines.append(f"\\caption{{{_tex_escape(tbl.title)}}}")
+            lines.append(f"\\caption{{{_tex_escape(rt.title)}}}")
             lines.append(f"\\begin{{tabular}}{{{align}}}")
             lines.append(r"\toprule")
-            lines.append(" & ".join(_tex_escape(h) for h in headers) + r" \\")
+            if len(rt.header_rows) == 2:
+                top, rules = [], []
+                for hc in rt.header_rows[0]:
+                    if hc.rowspan == 1:
+                        top.append(f"\\multicolumn{{{hc.colspan}}}{{c}}{{{_tex_escape(hc.text)}}}")
+                        rules.append(f"\\cmidrule(lr){{{hc.col + 1}-{hc.col + hc.colspan}}}")
+                    else:
+                        top.append("")
+                lines.append(" & ".join(top) + r" \\")
+                lines.append(" ".join(rules))
+                sub = {hc.col: hc.text for hc in rt.header_rows[1]}
+                for hc in rt.header_rows[0]:
+                    if hc.rowspan > 1:
+                        sub[hc.col] = hc.text
+                lines.append(" & ".join(_tex_escape(sub.get(i, "")) for i in range(rt.n_cols)) + r" \\")
+            else:
+                lines.append(" & ".join(_tex_escape(h.text) for h in rt.header_rows[0]) + r" \\")
             lines.append(r"\midrule")
-            for r_vals in rows:
+            rules_above = set(rt.rules_above)
+            for r_i, r_vals in enumerate(rt.body):
+                if r_i in rules_above:
+                    lines.append(r"\midrule")
                 lines.append(" & ".join(_tex_escape(v) for v in r_vals) + r" \\")
             lines.append(r"\bottomrule")
             lines.append(r"\end{tabular}")
-            if tbl.notes:
-                note_joined = " ".join(_tex_escape(n) for n in tbl.notes)
+            if rt.notes:
+                note_joined = " ".join(_tex_escape(n) for n in rt.notes)
                 lines.append(f"\\\\[4pt]\\footnotesize\\emph{{Note.}} {note_joined}")
             lines.append(r"\end{table}")
             lines.append("")
@@ -722,13 +695,33 @@ def export_to_latex(analyses: List[BaseAnalysis], output_path: str) -> str:
     return output_path
 
 
-def export_to_markdown(analyses: List[BaseAnalysis], output_path: str) -> str:
+def _markdown_tables(analysis: BaseAnalysis, rf: ReportFormat, numbers: Dict[int, int]) -> str:
+    from tabulate import tabulate
+    parts = [f"## {analysis.title}\n"]
+    if analysis.syntax_python:
+        parts.append(f"```python\n{analysis.syntax_python}\n```\n")
+    for rt in _rendered_tables(analysis, rf, numbers):
+        parts.append(f"**{rt.caption}**\n")
+        parts.append(tabulate(rt.body, headers=[h or " " for h in rt.flat_headers], tablefmt="github"))
+        lines = _note_lines(rt, rf, "")
+        if lines:
+            parts.append("")
+            parts.extend(f"> {ln.strip()}" for ln in lines)
+        parts.append("")
+    if analysis.apa_narrative:
+        parts.append(f"**APA Style Narrative:**\n> {analysis.apa_narrative}\n")
+    return "\n".join(parts)
+
+
+def export_to_markdown(analyses: List[BaseAnalysis], output_path: str, report_format: Optional[ReportFormat] = None) -> str:
+    rf = report_format
+    numbers = table_numbering(analyses) if rf else {}
     out_dir = os.path.dirname(os.path.abspath(output_path))
     stem = os.path.splitext(os.path.basename(output_path))[0]
     blocks = []
     fig_idx = 0
     for analysis in analyses:
-        md_part = analysis.to_markdown()
+        md_part = analysis.to_markdown() if rf is None else _markdown_tables(analysis, rf, numbers)
         if analysis.plots:
             img_links = []
             for p in analysis.plots:
@@ -748,19 +741,21 @@ def export_to_markdown(analyses: List[BaseAnalysis], output_path: str) -> str:
     return output_path
 
 
-def export_to_delimited(analyses: List[BaseAnalysis], output_path: str, delimiter: str = ",") -> str:
+def export_to_delimited(analyses: List[BaseAnalysis], output_path: str, delimiter: str = ",",
+                        report_format: Optional[ReportFormat] = None) -> str:
+    rf = report_format
+    numbers = table_numbering(analyses) if rf else {}
     buf = io.StringIO()
     writer = csv.writer(buf, delimiter=delimiter)
     for analysis in analyses:
         writer.writerow([f"=== {analysis.title} ==="])
-        for tbl in analysis.tables:
-            writer.writerow([f"[{tbl.title}]"])
-            headers, rows, _ = _formatted_matrix(tbl)
-            writer.writerow(headers)
-            for r_vals in rows:
+        for rt in _rendered_tables(analysis, rf, numbers):
+            writer.writerow([f"[{rt.caption}]"])
+            writer.writerow(rt.flat_headers)
+            for r_vals in rt.body:
                 writer.writerow(r_vals)
-            for n in tbl.notes:
-                writer.writerow([f"Note. {n}"])
+            for n in _note_lines(rt, rf, "Note. "):
+                writer.writerow([n.strip()])
             writer.writerow([])
         if analysis.plots:
             writer.writerow(["Charts Included", "; ".join(p.get("title", "Plot") for p in analysis.plots)])
@@ -777,29 +772,41 @@ def export_analyses(
     analyses: List[BaseAnalysis],
     output_path: str,
     fmt: Optional[str] = None,
-    dataset: Optional[pd.DataFrame] = None
+    dataset: Optional[pd.DataFrame] = None,
+    report_style: Any = None,
+    report_options: Optional[Dict[str, Any]] = None,
 ) -> str:
+    """Export analysis results to one of 11 formats.
+
+    report_style: None/"default" (APA, every statistic in its own column) or "social"
+    (stars, SE in parentheses, numbered captions; see `report_format.ReportFormat` for `report_options`).
+    The social format applies to .hwpx, .docx, .xlsx, .pdf, .tex, .html, .md, .csv and .tsv;
+    .json and .omv always carry the unformatted values.
+    """
     ext = (fmt or (output_path.rsplit(".", 1)[-1] if "." in output_path else "md")).lower().lstrip(".")
+    rf = resolve_report_format(report_style, report_options)
+    if ext not in SUPPORTED_TABLE_FORMATS and ext not in ("latex", "markdown"):
+        raise ValueError(f"Unsupported export format '{ext}'. Supported: {', '.join(SUPPORTED_TABLE_FORMATS)}")
     os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
 
     if ext == "xlsx":
-        return export_to_xlsx(analyses, output_path)
+        return export_to_xlsx(analyses, output_path, report_format=rf)
     elif ext == "docx":
-        return export_to_docx(analyses, output_path)
+        return export_to_docx(analyses, output_path, report_format=rf)
     elif ext == "hwpx":
-        return export_to_hwpx(analyses, output_path)
+        return export_to_hwpx(analyses, output_path, report_format=rf)
     elif ext == "pdf":
-        return export_to_pdf(analyses, output_path)
+        return export_to_pdf(analyses, output_path, report_format=rf)
     elif ext in ("tex", "latex"):
-        return export_to_latex(analyses, output_path)
+        return export_to_latex(analyses, output_path, report_format=rf)
     elif ext == "csv":
-        return export_to_delimited(analyses, output_path, delimiter=",")
+        return export_to_delimited(analyses, output_path, delimiter=",", report_format=rf)
     elif ext == "tsv":
-        return export_to_delimited(analyses, output_path, delimiter="\t")
+        return export_to_delimited(analyses, output_path, delimiter="\t", report_format=rf)
     elif ext in ("md", "markdown"):
-        return export_to_markdown(analyses, output_path)
+        return export_to_markdown(analyses, output_path, report_format=rf)
     elif ext == "html":
-        html_doc = render_jamovi_html_report(analyses, title="OpenStat Studio Statistical & Visualization Report")
+        html_doc = render_jamovi_html_report(analyses, title="OpenStat Studio Statistical & Visualization Report", report_format=rf)
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(html_doc)
         return output_path

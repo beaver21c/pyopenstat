@@ -536,6 +536,7 @@ def _aux_tables(an: BaseAnalysis, post: np.ndarray, frame: pd.DataFrame, covs: L
                    f"분석 사례 {r['n']}명" + (f", 공변량 결측 {r['n_dropped']}명 제외" if r["n_dropped"] else "") + ".")
         if r["singular"] or not r["converged"]:
             t.add_note("3단계 추정에서 정보행렬 특이 또는 수렴 미달 — 표준오차 해석 주의.")
+        t.mark_coefficients(estimate="est", se="se", p="p", stat="z", exp_estimate="or", label=["cmp", "var"])
         an.add_table(t)
     if dcont:
         t = ResultsTable(name="bchDistal", title="연속형 원격 결과의 계층별 평균 (BCH)")
@@ -1145,6 +1146,7 @@ class LatentClassGrowthAnalysis(BaseAnalysis):
                             "est": float(beta[k, f_]), "se": float(beta_se[k, f_]), "z": float(z[k, f_]), "p": float(pv[k, f_])})
         t0 = [labels[i] for i in range(len(ts)) if ts[i] == 0]
         tg.add_note("절편은 시간 점수 0" + (f"({t0[0]})" if t0 else "") + " 시점의 기대값. 기울기 단위는 시간 점수 1. 성장요인 분산은 0으로 고정.")
+        tg.mark_coefficients(estimate="est", se="se", p="p", stat="z", label=["cls", "factor"])
         self.add_table(tg)
 
         var, var_se = mm.delta(lambda th: model.unpack(th)["meas"]["var"].ravel(), inf)

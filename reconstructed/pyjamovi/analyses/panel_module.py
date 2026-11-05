@@ -144,7 +144,12 @@ class PanelAnalysis(BaseAnalysis):
                 "ciu": float(ci_df.loc[param_name, "upper"])
             })
         coef_table.add_note(f"Standard errors: {self.cov_type}.")
+        coef_table.mark_coefficients(estimate="b", se="se", p="p", stat="t", ci=("cil", "ciu"), label="var")
         self.add_table(coef_table)
+        self.model_stats = {"N": int(res.nobs), "Groups": int(n_entities), "Periods": int(n_periods),
+                            "R2_within": float(res.rsquared_within), "R2_between": float(res.rsquared_between),
+                            "R2_overall": float(res.rsquared_overall),
+                            "F": (float(res.f_statistic.stat), float(res.f_statistic.pval))}
 
         # 3. Hausman Specification Test (FE vs RE)
         hausman_note = ""

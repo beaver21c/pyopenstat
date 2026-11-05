@@ -135,7 +135,10 @@ class LogisticBinomial(BaseAnalysis):
                 "or": or_v, "or_l": or_l, "or_u": or_u
             })
         coef_tbl.add_note(f"Estimates represent the log odds of '{self.dep} = {target_lvl}' vs. '{self.dep} = {ref_lvl}'.")
+        coef_tbl.mark_coefficients(estimate="b", se="se", p="p", stat="z", exp_estimate="or", label="pred")
         self.add_table(coef_tbl)
+        self.model_stats = {"N": n, "LL": ll_full, "Deviance": dev, "AIC": float(res.aic), "BIC": float(res.bic),
+                            "R2_McF": float(r2_mcf), "R2_N": float(r2_nag), "Chi2": (chi2_lr, p_lr), "df": df_lr}
 
         # 3. Predictive Measures & Confusion Matrix + ROC
         probs = res.predict(X).values

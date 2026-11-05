@@ -944,19 +944,92 @@ class JamoviSession:
             })
         return analyses
 
-    def export_tables(self, output_path: str, fmt: Optional[str] = None) -> str:
-        """Export all analyzed tables & embedded graphs in session to `.xlsx`, `.docx`, `.hwpx`, `.pdf`, `.tex`, `.csv`, `.tsv`, `.md`, `.html`, `.json`, or `.omv`."""
+    def export_tables(self, output_path: str, fmt: Optional[str] = None, report_style: Optional[str] = None,
+                      report_options: Optional[Dict[str, Any]] = None) -> str:
+        """Export all analyzed tables & embedded graphs in session to `.xlsx`, `.docx`, `.hwpx`, `.pdf`, `.tex`, `.csv`, `.tsv`, `.md`, `.html`, `.json`, or `.omv`.
+
+        report_style="social" applies the social-science table format to coefficient tables (significance stars,
+        SE in parentheses, p column dropped) and numbered captions to all tables; see `report_options`
+        (stars, star_target, se_position, keep_p, keep_stat, keep_ci, decimals, leading_zero, star_note,
+        table_numbers, lang, raw_sheet).
+        """
         from .exporters import export_analyses
-        out = export_analyses(self.history, output_path=output_path, fmt=fmt, dataset=self.df)
+        from .report_format import resolve_report_format
+        rf = resolve_report_format(report_style, report_options)
+        out = export_analyses(self.history, output_path=output_path, fmt=fmt, dataset=self.df, report_style=rf)
         op: Dict[str, Any] = {"op": "export_results", "output_path": output_path}
         if fmt:
             op["fmt"] = fmt
+        if rf is not None:
+            op["report_style"] = "social"
+            if rf.options():
+                op["report_options"] = rf.options()
         self._record_export(op)
         return out
 
-    def export_results(self, output_path: str, fmt: Optional[str] = None) -> str:
+    def export_results(self, output_path: str, fmt: Optional[str] = None, report_style: Optional[str] = None,
+                       report_options: Optional[Dict[str, Any]] = None) -> str:
         """Export full Analysis Results (all statistical tables + standalone/analysis graphs + APA summaries) to 11 formats."""
-        return self.export_tables(output_path=output_path, fmt=fmt)
+        return self.export_tables(output_path=output_path, fmt=fmt, report_style=report_style, report_options=report_options)
+
+    def compare_models(
+        self,
+        *models: Any,
+        names: Optional[List[str]] = None,
+        stats: Any = "auto",
+        estimate: str = "b",
+        labels: Optional[Dict[str, str]] = None,
+        terms: Optional[List[str]] = None,
+        table: Optional[str] = None,
+        title: Optional[str] = None,
+        lang: str = "ko",
+    ):
+        """Side-by-side model comparison table (Stata esttab layout) appended to the results.
+
+        models: results of this session (objects or 1-based result numbers) or specs
+        {"analysis": "linReg", "dep": ..., ...}. A hierarchical linear regression (blocks) contributes one
+        model per block. stats: "auto", "none" or keys such as ["N", "R2", "R2_adj", "AIC"];
+        estimate: "b" (B, SE, p), "beta" (β), "both" (B, SE, β) or "exp" (odds/hazard ratios).
+        The specs are recorded, so the reproducible script re-estimates the models.
+        """
+        from .analyses.model_compare import compare_results, normalize_model_spec
+        if len(models) == 1 and isinstance(models[0], (list, tuple)):
+            models = tuple(models[0])
+        if not models:
+            raise ValueError("compare_models: 비교할 모형 1개 이상 필요")
+        results, specs = [], []
+        for m in models:
+            if isinstance(m, dict):
+                sp = normalize_model_spec(m)
+                q = dict(sp)
+                a_type = q.pop("analysis")
+                results.append(dispatch_analysis(a_type, self.df, q))
+                specs.append(sp)
+                continue
+            if isinstance(m, (int, np.integer)) and not isinstance(m, bool):
+                if not (1 <= int(m) <= len(self.history)):
+                    raise ValueError(f"compare_models: 결과 번호 {m} 없음 (1~{len(self.history)})")
+                m = self.history[int(m) - 1]
+            idx = next((i for i, h in enumerate(self.history) if h is m), None)
+            if idx is None or idx >= len(self.specs):
+                raise ValueError("compare_models: 이 세션에서 실행한 결과만 지정 가능(재현 스크립트에 모형 지정을 기록하기 위함)")
+            sp = self.specs[idx]
+            if sp.get("analysis_type") in ("customFigure", "compareModels"):
+                raise ValueError(f"compare_models: '{sp.get('title')}'는 계수표가 있는 분석이 아님")
+            results.append(m)
+            specs.append({"analysis": sp["analysis_type"], **dict(sp.get("params") or {})})
+        params: Dict[str, Any] = {"models": specs}
+        for k, v, d in (("names", names, None), ("stats", stats, "auto"), ("estimate", estimate, "b"),
+                        ("labels", labels, None), ("terms", terms, None), ("table", table, None),
+                        ("title", title, None), ("lang", lang, "ko")):
+            if v is not None and v != d:
+                params[k] = list(v) if isinstance(v, tuple) else v
+        res = compare_results(results, names=names, stats=stats, estimate=estimate, labels=labels, terms=terms,
+                              table=table, title=title, lang=lang, options=params)
+        self.history.append(res)
+        self.specs.append({"analysis_type": "compareModels", "title": res.title, "params": params})
+        self._sync_workspace_if_enabled()
+        return res
 
     def save_plots(self, out_dir: str, fmt: str = "svg") -> List[str]:
         """Export all figures from session analyses as `.svg` (vector), `.pdf` (vector), or `.png`."""

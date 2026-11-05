@@ -420,7 +420,135 @@ def _transpile_extended(s: str):
     return None
 
 
-def transpile_stata_line(line: str) -> Optional[str]:
+
+# ---------------------------------------------------------------- regression + eststo / esttab
+_REG_OPT_OK = {"beta"}
+_ESTTAB_STATS = {"n": "N", "r2": "R2", "r2_a": "R2_adj", "ar2": "R2_adj", "r2_p": "R2_McF", "pr2": "R2_McF", "ll": "LL",
+                 "aic": "AIC", "bic": "BIC", "f": "F", "chi2": "Chi2", "df_m": "df"}
+_ESTTAB_EXT = {"docx": "docx", "rtf": "docx", "tex": "tex", "csv": "csv", "html": "html", "htm": "html", "md": "md",
+               "xlsx": "xlsx", "hwpx": "hwpx", "pdf": "pdf", "txt": "md"}
+
+
+def _translate_regression(s: str):
+    """regress / logit / logistic with options checked (unsupported options stop with a message)."""
+    m = re.match(r"^(regress|reg|logit|logistic)\s+([^,]+?)\s*(?:,\s*(.*))?$", s, re.IGNORECASE)
+    if not m:
+        return None
+    cmd, varlist, opt_txt = m.group(1).lower(), _names(m.group(2)), m.group(3) or ""
+    if len(varlist) < 2:
+        return f"raise NotImplementedError({('Stata ' + cmd + ': 종속변수와 독립변수 필요 — ' + s)!r})"
+    if any(re.search(r"[.#]", v) for v in varlist):
+        return f"raise NotImplementedError({('요인변수 표기(i.·c.·#) 미지원: 더미변수를 만든 뒤 지정 — ' + s)!r})"
+    opts = _parse_options(opt_txt)
+    dep, covs = varlist[0], varlist[1:]
+    if cmd in ("regress", "reg"):
+        bad = [k for k in opts if k not in _REG_OPT_OK]
+        if bad:
+            return f"raise NotImplementedError({('regress 옵션 미지원: ' + ', '.join(bad) + ' — ' + s)!r})"
+        extra = ", std_est=True" if "beta" in opts else ""
+        return f"sess.regression(dep={dep!r}, covs={covs!r}{extra})"
+    bad = [k for k in opts if k not in ("or",)]
+    if bad:
+        return f"raise NotImplementedError({('logit 옵션 미지원: ' + ', '.join(bad) + ' — ' + s)!r})"
+    return f"sess.logistic(dep={dep!r}, covs={covs!r})"
+
+
+def _translate_estimates(s: str, ctx: dict):
+    """eststo / estimates store / esttab -> named results and sess.compare_models(...) (+ social-format export)."""
+    stored = ctx.setdefault("stored", [])
+    low = s.lower()
+    if re.match(r"^(eststo|estimates|est)\s+clear\s*$", low) or re.match(r"^eststo\s*,\s*clear\s*$", low):
+        stored.clear()
+        return f"# [Stata] {s}  → 저장한 추정 결과 목록 초기화"
+    m = re.match(r"^(?:estimates|est)\s+sto(?:re)?\s+([A-Za-z_][A-Za-z0-9_]*)\s*$", s, re.IGNORECASE)
+    if m:
+        stored.append(m.group(1))
+        return f"{m.group(1)} = sess.history[-1]"
+    m = re.match(r"^eststo(?:\s+([A-Za-z_][A-Za-z0-9_]*))?\s*(?::\s*(.+))?$", s, re.IGNORECASE)
+    if m and (m.group(1) or m.group(2)):
+        name = m.group(1) or f"est{len(stored) + 1}"
+        inner = (m.group(2) or "").strip()
+        if inner:
+            expr = transpile_stata_line(inner)
+            if expr is None or expr.startswith("raise ") or expr.startswith("#"):
+                return expr or f"raise NotImplementedError({('Stata 명령 변환 미지원: ' + inner)!r})"
+            stored.append(name)
+            return f"{name} = {expr}"
+        stored.append(name)
+        return f"{name} = sess.history[-1]"
+    m = re.match(r"^esttab\b\s*(.*?)\s*(?:using\s+(\"[^\"]+\"|\S+))?\s*(?:,\s*(.*))?$", s, re.IGNORECASE)
+    if not m:
+        return None
+    names = _names(m.group(1))
+    if not names:
+        names = list(stored)
+    if not names:
+        return f"raise NotImplementedError({('esttab: 저장된 추정 결과 없음(eststo로 저장 후 지정) — ' + s)!r})"
+    opts = _parse_options(m.group(3) or "")
+    comments, kw, rep = [], [], {}
+    stats = ["N"]
+    if "se" in opts:
+        rep["se_position"] = "below"
+    else:
+        rep["se_position"] = "below"
+        comments.append("esttab 기본(괄호 안 t 통계량)은 지원하지 않아 괄호 안에 표준오차를 표시")
+    if "p" in opts:
+        rep["keep_p"] = True
+        comments.append("esttab p 옵션: 괄호 대신 p 열로 표시")
+    if "nostar" in opts:
+        rep["stars"] = "none"
+    elif opts.get("star"):
+        toks = _names(opts["star"])
+        pairs = [[float(toks[i + 1]), toks[i]] for i in range(0, len(toks) - 1, 2)]
+        if pairs != [[0.05, "*"], [0.01, "**"], [0.001, "***"]]:
+            rep["stars"] = pairs
+    fmt_val = opts.get("b") or ""
+    dm = re.fullmatch(r"%?-?0?\d*\.(\d+)[fg]c?|(\d+)", fmt_val.strip()) if fmt_val else None
+    if dm:
+        rep["decimals"] = int(dm.group(1) or dm.group(2))
+    for o in ("r2", "ar2", "pr2", "aic", "bic"):
+        if o in opts:
+            stats.append(_ESTTAB_STATS[o])
+    sc = opts.get("scalars") or opts.get("stats") or ""
+    if sc:
+        stats = []
+        for t in _names(sc.replace('"', " ")):
+            key = _ESTTAB_STATS.get(t.lower())
+            if key is None:
+                return f"raise NotImplementedError({('esttab stats/scalars 미지원 항목: ' + t)!r})"
+            stats.append(key)
+    if "beta" in opts:
+        kw.append("estimate='beta'")
+    elif "eform" in opts:
+        kw.append("estimate='exp'")
+    if opts.get("mtitles"):
+        kw.append(f"names={re.findall(r'\"([^\"]*)\"', opts['mtitles']) or _names(opts['mtitles'])!r}")
+    if opts.get("title"):
+        kw.append(f"title={opts['title'].strip().strip(chr(34))!r}")
+    ignored = [k for k in opts if k not in ("se", "p", "nostar", "star", "b", "r2", "ar2", "pr2", "aic", "bic", "scalars", "stats",
+                                            "beta", "eform", "mtitles", "title", "label", "replace", "nogaps", "compress",
+                                            "nonumbers", "nomtitles", "noobslast", "obslast", "append", "booktabs", "plain")]
+    if ignored:
+        return f"raise NotImplementedError({('esttab 옵션 미지원: ' + ', '.join(ignored))!r})"
+    kw.insert(0, f"stats={stats!r}")
+    lines = [f"# [Stata] {c}" for c in comments]
+    lines.append(f"_esttab = sess.compare_models({', '.join(names)}, {', '.join(kw)})")
+    target = m.group(2)
+    if target:
+        path = target.strip().strip('"')
+        ext = path.rsplit(".", 1)[-1].lower() if "." in path else ""
+        if ext not in _ESTTAB_EXT:
+            return f"raise NotImplementedError({('esttab using 파일 형식 미지원: ' + path)!r})"
+        if _ESTTAB_EXT[ext] != ext:
+            new_path = path[: -len(ext)] + _ESTTAB_EXT[ext]
+            lines.insert(0, f"# [Stata] esttab .{ext} 출력은 .{_ESTTAB_EXT[ext]}로 저장")
+            path = new_path
+        lines.append(f"_esttab.export_results({path!r}, report_style='social', report_options={rep!r})")
+    else:
+        lines.append("print(_esttab.to_markdown())")
+    return "\n".join(lines)
+
+def transpile_stata_line(line: str, ctx: Optional[dict] = None) -> Optional[str]:
     """
     Translates a single Stata command line into an OpenStat Python session expression.
     If the line is already valid Python or comments, returns it unchanged or None.
@@ -432,6 +560,13 @@ def transpile_stata_line(line: str) -> Optional[str]:
     # Already Python?
     if s.startswith("sess.") or s.startswith("ost.") or s.startswith("jmv.") or s.startswith("df[") or s.startswith("import "):
         return s
+
+    est = _translate_estimates(s, ctx if ctx is not None else {})
+    if est is not None:
+        return est
+    reg = _translate_regression(s)
+    if reg is not None:
+        return reg
 
     ext = _transpile_extended(s)
     if ext is not None:
@@ -610,11 +745,12 @@ def transpile_stata_line(line: str) -> Optional[str]:
 def transpile_stata_script(script_text: str) -> str:
     """Translates a full multi-line Stata .do script into Python syntax."""
     py_lines = []
+    ctx: dict = {"stored": []}                                         # eststo names across lines
     text = re.sub(r"/\*.*?\*/", " ", script_text, flags=re.S)          # /* block comments */
     text = re.sub(r"[ \t]*///[^\n]*\n[ \t]*", " ", text)                 # /// line continuation
     for line in text.splitlines():
         line = re.sub(r"\s+//\s.*$", "", line)                           # trailing // comments
-        transpiled = transpile_stata_line(line)
+        transpiled = transpile_stata_line(line, ctx)
         if transpiled is not None:
             py_lines.append(transpiled)
         else:

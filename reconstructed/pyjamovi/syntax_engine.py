@@ -89,7 +89,7 @@ _DATA_OP_ARG_ORDER = {
     "set_value": ["row_idx", "col_name", "value"],
     "add_rows": ["n"],
     "drop_rows": ["rows"],
-    "export_results": ["output_path", "fmt"],
+    "export_results": ["output_path", "fmt", "report_style", "report_options"],
     "save_plots": ["out_dir", "fmt"],
     "save_data": ["output_path"],
 }
@@ -260,6 +260,7 @@ def generate_python_script(
         lines.extend([
             "# [STEP 4] Optional: Export full Analysis Results (tables + embedded graphs) & vector figures",
             "# sess.export_results('reports/analysis_results.pdf')  # .pdf, .hwpx, .docx, .xlsx, .tex, .csv, .md, .html, .omv",
+            "# sess.export_results('reports/analysis_results.hwpx', report_style='social')  # 별표·괄호 표준오차·<표 n> 번호",
             "# sess.save_plots('reports/plots', fmt='svg')          # .svg, .pdf, .png",
             "# sess.save_data('reports/analysis_data.csv')          # transformed dataset (.csv, .xlsx, .omv)",
             "",

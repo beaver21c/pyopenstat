@@ -126,6 +126,7 @@ class Mediation(BaseAnalysis):
         })
         if self.bootstrap >= 50:
             med_tbl.add_note(f"Indirect effect 95% CI computed via {self.bootstrap} percentile bootstrap resamples.")
+        med_tbl.mark_coefficients(estimate="est", se="se", p="p", stat="z", ci=("cil", "ciu"), label=["effect", "label"])
         self.add_table(med_tbl)
 
         # 2. Path Estimates Table
@@ -142,6 +143,7 @@ class Mediation(BaseAnalysis):
             pt.add_row({"p1": self.pred, "arrow": "→", "p2": self.med, "lbl": "a", "est": a, "se": se_a, "z": z_a, "p": p_a})
             pt.add_row({"p1": self.med, "arrow": "→", "p2": self.dep, "lbl": "b", "est": b, "se": se_b, "z": z_b, "p": p_b})
             pt.add_row({"p1": self.pred, "arrow": "→", "p2": self.dep, "lbl": "c'", "est": c_prime, "se": se_cp, "z": z_cp, "p": p_cp})
+            pt.mark_coefficients(estimate="est", se="se", p="p", stat="z", label=["p1", "arrow", "p2"])
             self.add_table(pt)
 
         if self.options.get("diagram", True):
@@ -219,7 +221,10 @@ class Moderation(BaseAnalysis):
                 "p": float(ols_res.pvalues[key])
             })
         mod_tbl.add_note("Predictor and moderator were mean-centered prior to computing the interaction term.")
+        mod_tbl.mark_coefficients(estimate="est", se="se", p="p", stat="z", ci=("cil", "ciu"), label="term")
         self.add_table(mod_tbl)
+        self.model_stats = {"N": int(ols_res.nobs), "R2": float(ols_res.rsquared), "R2_adj": float(ols_res.rsquared_adj),
+                            "F": (float(ols_res.fvalue), float(ols_res.f_pvalue)), "AIC": float(ols_res.aic), "BIC": float(ols_res.bic)}
 
         # 2. Simple Slope Estimates (-1SD, Mean, +1SD)
         b1 = float(ols_res.params["X"])
@@ -251,6 +256,7 @@ class Moderation(BaseAnalysis):
                     "cil": slp - 1.96 * se_slp, "ciu": slp + 1.96 * se_slp,
                     "t": t_slp, "p": p_slp
                 })
+            ss_tbl.mark_coefficients(estimate="est", se="se", p="p", stat="t", ci=("cil", "ciu"), label="level")
             self.add_table(ss_tbl)
 
         if self.options.get("slopePlot", True):

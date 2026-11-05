@@ -577,6 +577,7 @@ def _coef_table(fit: sm.FitResult, title: str, level: float = 0.95) -> ResultsTa
         z = b / s if s > 0 else np.nan
         t.add_row({"term": nm, "est": float(b), "se": float(s), "z": float(z),
                    "p": float(2 * stats.norm.sf(abs(z))) if np.isfinite(z) else np.nan, "lo": float(b - zc * s), "hi": float(b + zc * s)})
+    t.mark_coefficients(estimate="est", se="se", p="p", stat="z", ci=("lo", "hi"), label="term")
     return t
 
 
@@ -593,6 +594,7 @@ def _ols_table(fit: sm.FitResult, title: str) -> ResultsTable:
         t.add_row({"term": nm, "est": float(b), "se": float(s), "t": float(tv),
                    "p": float(2 * stats.t.sf(abs(tv), dof)) if np.isfinite(tv) else np.nan})
     t.add_note(f"R² = {fit.extra.get('r2', np.nan):.3f}, 오차 자유도 = {dof}.")
+    t.mark_coefficients(estimate="est", se="se", p="p", stat="t", label="term")
     return t
 
 
@@ -613,6 +615,7 @@ def _effects_table(rows: List[Dict], method: str, nsim: int, level: float) -> Re
     t.add_note("직접효과: 자기 지역 설명변수 변화가 자기 지역 종속변수에 미치는 평균 효과(공간 되먹임 포함). "
                "간접효과(파급효과): 다른 지역 설명변수 변화의 평균 영향. 총효과 = 직접효과 + 간접효과.")
     t.add_note("표준오차: " + ("델타 방법(Stata estat impact 방식)." if method != "sim" else f"모수 분포 모의추출 {nsim:,}회(xsmle nsim 방식)."))
+    t.mark_coefficients(estimate="est", se="se", p="p", stat="z", ci=("lo", "hi"), label=["effect", "var"])
     return t
 
 
@@ -682,6 +685,16 @@ def _compare(models: Sequence[str], fitter, alpha: float = 0.05) -> Tuple[Result
                         "decision": "귀무가설 기각(일반모형 지지)" if pv < alpha else "기각 못함(제약모형 유지 가능)"})
     tr.add_note("SDM 대 SAR·SEM 검정이 모두 기각되면 SDM이 지지됨(Elhorst 2010; LeSage & Pace 2009).")
     return tc, tr, fits
+
+
+def _spatial_model_stats(fit: sm.FitResult) -> Dict[str, Any]:
+    out = {"N": int(fit.n_obs), "LL": float(fit.loglik), "AIC": float(fit.aic), "BIC": float(fit.bic),
+           "R2_pseudo": float(fit.pseudo_r2)}
+    if getattr(fit, "rho", None) is not None:
+        out["rho"] = float(fit.rho)
+    if getattr(fit, "lam", None) is not None:
+        out["lambda"] = float(fit.lam)
+    return out
 
 
 def _fit_summary_rows(fit: sm.FitResult, extra: List[Tuple[str, Any]] = ()) -> ResultsTable:
@@ -814,6 +827,7 @@ class SpatialAnalysis(BaseAnalysis):
         ]
         self.add_table(_assumption_table(rows))
         self.add_table(_fit_summary_rows(fit))
+        self.model_stats = _spatial_model_stats(fit)
         ct = _coef_table(fit, f"{sm.MODEL_LABELS[model]} 계수 — 종속변수: {dep}", level) if model not in ("ols", "slx") else _ols_table(fit, f"{sm.MODEL_LABELS[model]} 계수 — 종속변수: {dep}")
         if wx:
             ct.add_note("W·x 계수는 이웃 지역 설명변수의 평균 수준과의 관계. 한계효과 해석은 직접·간접·총효과 표 사용.")
@@ -1028,6 +1042,7 @@ class SpatialPanelAnalysis(BaseAnalysis):
         if re_:
             extra += [("개체효과 분산 σ²_μ", fit.extra.get("sigma_mu2", np.nan)), ("φ = σ²/(Tσ²_μ+σ²)", fit.extra.get("phi", np.nan))]
         self.add_table(_fit_summary_rows(fit, extra))
+        self.model_stats = _spatial_model_stats(fit)
         title = f"{sm.MODEL_LABELS[model]} · {eff_label} 계수 — 종속변수: {dep}"
         ct = _coef_table(fit, title, level) if (model not in ("ols", "slx") or re_) else _ols_table(fit, title)
         if lag:

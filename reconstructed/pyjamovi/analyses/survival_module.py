@@ -102,7 +102,10 @@ class MixedLinearModel(BaseAnalysis):
                 "z": float(res.tvalues[col_n]),
                 "p": float(res.pvalues[col_n])
             })
+        fe_tbl.mark_coefficients(estimate="est", se="se", p="p", stat="z", ci=("cil", "ciu"), label="name")
         self.add_table(fe_tbl)
+        self.model_stats = {"N": int(len(clean)), "Groups": int(groups.nunique()), "LL": float(res.llf),
+                            "ICC": float(icc), "Var_between": var_re, "Var_within": var_resid}
 
         # 3. Random Components Table
         re_tbl = ResultsTable(name="random", title="Random Components")
@@ -280,7 +283,14 @@ class SurvivalAnalysis(BaseAnalysis):
                         "z": float(row["z"]),
                         "p": float(row["p"])
                     })
+                cox_tbl.mark_coefficients(estimate="coef", se="se", p="p", stat="z", exp_estimate="hr", label="var")
                 self.add_table(cox_tbl)
+                self.model_stats = {"N": int(len(cox_df)), "Events": int(cox_df["_event"].sum()),
+                                    "LL": float(cph.log_likelihood_), "Concordance": float(cph.concordance_index_)}
+                try:
+                    self.model_stats["AIC"] = float(cph.AIC_partial_)
+                except Exception:
+                    pass
                 cox_note = f" Cox PH concordance C-index = {cph.concordance_index_:.3f}."
             except Exception:
                 pass

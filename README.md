@@ -69,6 +69,7 @@ res = sess.panel(
 # 4. 11개 포맷 결과 표 및 고해상도 벡터 그래프 내보내기
 res.export_results("reports/panel_report.hwpx")  # 한글 OWPML 네이티브 표 + 그림 삽입
 res.export_results("reports/panel_report.xlsx")  # 엑셀 APA 3선 서식 표
+res.export_results("reports/panel_social.hwpx", report_style="social")  # 사회과학 보고 양식: 0.512*** (0.103), <표 n>
 res.save_plot("reports/panel_plot.svg")          # 출판용 벡터 SVG
 sess.save_py("reports/analysis_script.py")       # 100% 재현 가능한 파이썬 스크립트
 ```
@@ -151,6 +152,8 @@ sess.save_py("reports/analysis_script.py")       # 100% 재현 가능한 파이�
 - **`.xlsx`**: 엑셀 전용 APA 테두리 서식 시트 + 차트 이미지 시트
 - **`.tex`**: LaTeX `booktabs` 표 + `\includegraphics` 벡터 PDF 그림 세트
 - **`.html`**, **`.md`**, **`.csv`**, **`.tsv`**, **`.json`**, **`.omv`**
+- **사회과학 보고 양식 (`report_style="social"`)**: 회귀 계열 계수표에만 유의수준 별표(`* p<.05, ** p<.01, *** p<.001`, 선택 시 `†`), 계수 옆·아래 괄호 표준오차, p 열 생략, 1을 넘지 않는 값의 앞자리 0 생략을 적용하고, 모든 표에 「<표 n>」 번호와 묶음 머리글 셀 병합을 붙임. 엑셀은 계산용 원자료 시트를 함께 저장
+- **모형 비교표 (`sess.compare_models`)**: 여러 모형(또는 위계적 회귀의 블록)을 열로 나란히 놓고 아래에 N·R²·AIC 등을 두는 Stata `esttab` 형식 표
 
 ---
 

@@ -499,6 +499,16 @@ class PlotRestyleRequest(BaseModel):
     plot_style: Dict[str, Any] = {}
 
 
+def _attachment(filename: str) -> str:
+    """Content-Disposition for any file name: ASCII fallback plus RFC 5987 UTF-8 name (Korean dataset names)."""
+    from urllib.parse import quote
+    ascii_name = filename.encode("ascii", "ignore").decode("ascii").strip() or "openstat_export"
+    ascii_name = ascii_name.replace('"', "").replace("\\", "")
+    if ascii_name.startswith((".", "_")):
+        ascii_name = "openstat" + ascii_name
+    return f"attachment; filename=\"{ascii_name}\"; filename*=UTF-8''{quote(filename)}"
+
+
 @app.get("/", response_class=HTMLResponse)
 def get_index():
     index_path = os.path.join(WEB_DIR, "index.html")
@@ -1172,7 +1182,7 @@ def export_python_script():
     return StreamingResponse(
         iter([code.encode("utf-8")]),
         media_type="text/x-python; charset=utf-8",
-        headers={"Content-Disposition": f"attachment; filename={base}_openstat_analysis.py"}
+        headers={"Content-Disposition": _attachment(f"{base}_openstat_analysis.py")}
     )
 
 
@@ -1238,14 +1248,14 @@ def export_plot_endpoint(
         return StreamingResponse(
             iter([vec["svg"].encode("utf-8")]),
             media_type="image/svg+xml",
-            headers={"Content-Disposition": f"attachment; filename={fname}"}
+            headers={"Content-Disposition": _attachment(f"{fname}")}
         )
     elif ext == "pdf" and vec.get("pdf_b64"):
         raw_pdf = base64.b64decode(vec["pdf_b64"])
         return StreamingResponse(
             iter([raw_pdf]),
             media_type="application/pdf",
-            headers={"Content-Disposition": f"attachment; filename={fname}"}
+            headers={"Content-Disposition": _attachment(f"{fname}")}
         )
     else:
         src = obj.plots[plot_idx]["src"]
@@ -1253,7 +1263,7 @@ def export_plot_endpoint(
         return StreamingResponse(
             iter([raw_png]),
             media_type="image/png",
-            headers={"Content-Disposition": f"attachment; filename={fname}"}
+            headers={"Content-Disposition": _attachment(f"{fname}")}
         )
 
 
@@ -1323,12 +1333,18 @@ def push_graph_to_results(req: PushFigureToResultsRequest):
 @app.get("/api/export/tables")
 def export_tables_endpoint(
     fmt: str = Query("xlsx"),
-    analysis_id: Optional[int] = Query(None)
+    analysis_id: Optional[int] = Query(None),
+    report_style: Optional[str] = Query(None),
+    report_options: Optional[str] = Query(None),
 ):
-    """Exports full Analysis Results (tables + embedded graphs) to `.pdf`, `.hwpx`, `.docx`, `.xlsx`, `.tex`, `.csv`, `.tsv`, `.md`, `.html`, `.json`, or `.omv`."""
+    """Exports full Analysis Results (tables + embedded graphs) to `.pdf`, `.hwpx`, `.docx`, `.xlsx`, `.tex`, `.csv`, `.tsv`, `.md`, `.html`, `.json`, or `.omv`.
+
+    report_style=social applies the social-science table format; report_options is a JSON object of its options.
+    """
     ext = fmt.lower().lstrip(".")
     if ext not in SUPPORTED_TABLE_FORMATS:
         raise HTTPException(status_code=400, detail=f"Unsupported format '{ext}'. Supported: {', '.join(SUPPORTED_TABLE_FORMATS)}")
+    rf = _report_format_from_query(report_style, report_options)
 
     if analysis_id is not None:
         obj = STATE.analysis_objects.get(analysis_id)
@@ -1345,7 +1361,7 @@ def export_tables_endpoint(
     os.close(tmp_fd)
 
     try:
-        export_analyses(target_analyses, output_path=tmp_path, fmt=ext, dataset=STATE.session.df)
+        export_analyses(target_analyses, output_path=tmp_path, fmt=ext, dataset=STATE.session.df, report_style=rf)
         with open(tmp_path, "rb") as f:
             file_bytes = f.read()
     finally:
@@ -1356,7 +1372,7 @@ def export_tables_endpoint(
     return StreamingResponse(
         iter([file_bytes]),
         media_type=media_type,
-        headers={"Content-Disposition": f"attachment; filename={base}_{suffix}.{ext}"}
+        headers={"Content-Disposition": _attachment(f"{base}_{suffix}.{ext}")}
     )
 
 
@@ -1383,7 +1399,7 @@ def export_omv():
     return StreamingResponse(
         iter([raw]),
         media_type="application/octet-stream",
-        headers={"Content-Disposition": f"attachment; filename={base}.omv"}
+        headers={"Content-Disposition": _attachment(f"{base}.omv")}
     )
 
 
@@ -1397,17 +1413,35 @@ def export_csv():
     return StreamingResponse(
         iter([buf.getvalue().encode("utf-8-sig")]),
         media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename={base}_raw_data.csv"}
+        headers={"Content-Disposition": _attachment(f"{base}_raw_data.csv")}
     )
 
 
+def _report_format_from_query(report_style: Optional[str], report_options: Optional[str]):
+    """ReportFormat from query parameters (options as a JSON object); invalid values -> HTTP 400."""
+    from pyjamovi.report_format import resolve_report_format
+    opts = None
+    if report_options:
+        try:
+            opts = json.loads(report_options)
+        except json.JSONDecodeError as e:
+            raise HTTPException(status_code=400, detail=f"report_options: JSON 형식 오류 ({e})")
+        if not isinstance(opts, dict):
+            raise HTTPException(status_code=400, detail="report_options: JSON 객체 필요")
+    try:
+        return resolve_report_format(report_style, opts)
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+
+
 @app.get("/api/report/export_html")
-def export_html():
+def export_html(report_style: Optional[str] = Query(None), report_options: Optional[str] = Query(None)):
+    rf = _report_format_from_query(report_style, report_options)
     analyses_list = list(STATE.analysis_objects.values())
-    html_str = render_jamovi_html_report(analyses_list, title=f"OpenStat Studio Results — {STATE.dataset_name}")
+    html_str = render_jamovi_html_report(analyses_list, title=f"OpenStat Studio Results — {STATE.dataset_name}", report_format=rf)
     base = os.path.splitext(STATE.dataset_name)[0]
     return StreamingResponse(
         iter([html_str.encode("utf-8")]),
         media_type="text/html",
-        headers={"Content-Disposition": f"attachment; filename={base}_openstat_results.html"}
+        headers={"Content-Disposition": _attachment(f"{base}_openstat_results.html")}
     )

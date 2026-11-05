@@ -21,6 +21,22 @@ from .omv.reader import read_omv
 from .omv.writer import write_omv
 
 
+def _report_kwargs(args) -> dict:
+    """report_style / report_options of an export command (options given as JSON)."""
+    style = getattr(args, "report_style", None)
+    raw = getattr(args, "report_options", None)
+    opts = None
+    if raw:
+        try:
+            opts = json.loads(raw)
+        except json.JSONDecodeError as e:
+            raise SystemExit(f"--report-options: JSON 형식 오류 ({e})")
+        if not isinstance(opts, dict):
+            raise SystemExit("--report-options: JSON 객체({...}) 필요")
+        style = style or "social"
+    return {"report_style": style, "report_options": opts}
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="OpenStat Studio v3.0 (`openstat` / `pyjamovi`): Pure-Python Statistical Engine, .py Syntax Runner, Customizable Plots & Multi-Format Exporter"
@@ -113,6 +129,13 @@ def main():
     p_exec.add_argument("--format", choices=["markdown", "json", "apa"], default="markdown")
 
     # Command: convert
+    for _sp in (p_run, p_gr, p_exec):
+        _sp.add_argument("--report-style", choices=["default", "social"], default=None,
+                         help="Table format of exported results: default (APA, every statistic in its own column) or "
+                              "social (significance stars, SE in parentheses, numbered <표 n> captions; coefficient tables only)")
+        _sp.add_argument("--report-options", default=None,
+                         help='JSON options of the social format, e.g. \'{"se_position": "below", "stars": "dagger", "keep_p": true}\'')
+
     p_conv = subparsers.add_parser("convert", help="Convert datasets between .csv/.xlsx and .omv")
     p_conv.add_argument("--input", required=True, help="Input file path")
     p_conv.add_argument("--output", required=True, help="Output file path (.omv, .csv, or .xlsx)")
@@ -266,7 +289,7 @@ def main():
                     print(a.to_markdown())
 
         for t_path in (args.export_table or []):
-            export_analyses(analyses, output_path=t_path, dataset=final_df)
+            export_analyses(analyses, output_path=t_path, dataset=final_df, **_report_kwargs(args))
             print(f"[Exported analyzed tables -> {t_path}]")
 
         if args.export_plot_dir:
@@ -347,7 +370,7 @@ def main():
             print(f"[Saved standalone graph: {args.export_plot}]")
 
         for r_out in (args.export_results or []):
-            sess.export_results(r_out)
+            sess.export_results(r_out, **_report_kwargs(args))
             print(f"[Exported Analysis Results (table + graph): {r_out}]")
         return
 
@@ -413,7 +436,7 @@ def main():
             print(f"\n[Saved Python syntax script: {args.out_py}]")
 
         for t_out in (args.export_table or []):
-            sess.export_tables(t_out)
+            sess.export_tables(t_out, **_report_kwargs(args))
             print(f"[Exported analyzed tables: {t_out}]")
 
         if args.export_plot and res.plots:

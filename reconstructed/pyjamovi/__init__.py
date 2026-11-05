@@ -72,6 +72,8 @@ from .analyses.plot_style import PALETTES, THEMES, use_plot_style, normalize_plo
 from .registry import ANALYSIS_CATALOG, dispatch_analysis, refresh_analysis_catalog, get_full_catalog
 from .renderers.html_renderer import render_jamovi_html_report
 from .exporters import export_analyses, SUPPORTED_TABLE_FORMATS
+from .report_format import ReportFormat, resolve_report_format
+from .analyses.model_compare import ModelComparison
 from .syntax_engine import (
     generate_python_script,
     execute_python_syntax,
@@ -273,8 +275,28 @@ def survival(data: pd.DataFrame, time_col: str, event_col: str, group: Optional[
     return SurvivalAnalysis(data, time_col=time_col, event_col=event_col, group=group, **kwargs)
 
 
+def compare_models(*results: BaseAnalysis, names: Optional[List[str]] = None, stats: Any = "auto", estimate: str = "b",
+                   labels: Optional[Dict[str, str]] = None, terms: Optional[List[str]] = None, table: Optional[str] = None,
+                   title: Optional[str] = None, lang: str = "ko") -> ModelComparison:
+    """Side-by-side comparison table of estimated models (Stata esttab layout).
+
+    results: coefficient-table results (linear/logistic/panel/multilevel/Cox/spatial regression, SEM …);
+    a hierarchical linReg with blocks contributes one model per block. For a reproducible script use
+    `Session.compare_models`, which records the model specifications.
+    """
+    from .analyses.model_compare import compare_results
+    if len(results) == 1 and isinstance(results[0], (list, tuple)):
+        results = tuple(results[0])
+    return compare_results(list(results), names=names, stats=stats, estimate=estimate, labels=labels, terms=terms,
+                           table=table, title=title, lang=lang)
+
+
 __all__ = [
     "__version__",
+    "compare_models",
+    "ModelComparison",
+    "ReportFormat",
+    "resolve_report_format",
     "Session",
     "JamoviSession",
     "load_texts",

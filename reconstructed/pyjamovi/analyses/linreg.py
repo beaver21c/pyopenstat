@@ -86,6 +86,12 @@ class LinReg(BaseAnalysis):
         X = pd.concat(parts, axis=1) if parts else pd.DataFrame(index=clean_df.index)
         return sm.add_constant(X, has_constant="add")
 
+    def comparison_models(self, table=None):
+        """Each block of a hierarchical regression is one model of the comparison table."""
+        if table is None and getattr(self, "_block_models", None):
+            return [dict(m) for m in self._block_models]
+        return super().comparison_models(table)
+
     def run(self):
         df = self.dataset
         opts = self.options
@@ -228,7 +234,35 @@ class LinReg(BaseAnalysis):
                 "tol": "" if col_n == "const" else vifs.get(col_n, (np.nan, np.nan))[1]
             }
             coef_table.add_row(row)
+        coef_table.mark_coefficients(estimate="b", se="se", p="p", std_estimate="beta", stat="t",
+                                     ci=("cil", "ciu"), label="pred")
         self.add_table(coef_table)
+
+        # Per-block models for side-by-side (hierarchical) comparison tables
+        self._block_models = []
+        prev = None
+        for m_id, preds_k, X_k, m_k in fitted_models:
+            coefs = []
+            for col_n in X_k.columns:
+                x_sd = X_k[col_n].std(ddof=1) if col_n != "const" else 0.0
+                coefs.append({
+                    "term": "Intercept" if col_n == "const" else col_n,
+                    "est": float(m_k.params[col_n]), "se": float(m_k.bse[col_n]), "p": float(m_k.pvalues[col_n]),
+                    "std": float(m_k.params[col_n] * x_sd / y_std) if (col_n != "const" and y_std > 0) else None,
+                    "stat": float(m_k.tvalues[col_n]), "exp": None,
+                })
+            st = {"N": int(m_k.nobs), "R2": float(m_k.rsquared), "R2_adj": float(m_k.rsquared_adj),
+                  "F": (float(m_k.fvalue), float(m_k.f_pvalue)), "AIC": float(m_k.aic), "BIC": float(m_k.bic)}
+            if prev is not None:
+                f_chg, p_chg, _ = m_k.compare_f_test(prev)
+                st["R2_change"] = (float(m_k.rsquared - prev.rsquared), float(p_chg))
+                st["F_change"] = (float(f_chg), float(p_chg))
+            elif len(fitted_models) > 1:     # first block: change from the empty model (SPSS R Square Change)
+                st["R2_change"] = (float(m_k.rsquared), float(m_k.f_pvalue))
+                st["F_change"] = (float(m_k.fvalue), float(m_k.f_pvalue))
+            self._block_models.append({"name": "", "dep": dep_var, "coefs": coefs, "stats": st, "source": self.title})
+            prev = m_k
+        self.model_stats = dict(self._block_models[-1]["stats"])
 
         # Assumption Checks
         if opts["dw"]:

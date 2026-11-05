@@ -178,6 +178,16 @@ sess.merge("lookup.csv", on="id", kind="m:1", keep=["match", "master"], keepusin
 sess.reshape("wide", id_vars=["id"], value_vars=["y"], time_col="t")       # y1 y2 ... ; errors like Stata
 sess.destring("income", ignore=",", force=True); sess.encode("sex_txt", "sex")
 sess.save_data("out.dta")                                                  # also .sav, keeps value labels
+
+# 12. Social-science report format + side-by-side model comparison (Stata esttab layout)
+ms = ost.Session("sample_data/MedMod_WorkStress.csv")
+m1 = ms.run("linReg", dep="Turnover_Intent", covs=["Stress"])
+m2 = ms.run("linReg", dep="Turnover_Intent", covs=["Stress", "Burnout", "Social_Support"])
+ms.compare_models(m1, m2, names=["모형 1", "모형 2"], stats=["N", "R2", "R2_adj", "F"])   # a linReg with blocks gives one model per block
+ms.export_results("reports/models.hwpx", report_style="social",                      # coefficient tables only: 0.512*** (0.103)
+                  report_options={"se_position": "beside", "stars": "standard", "keep_p": False})
+# report_options: stars standard|dagger|econ|none|[[0.05,"*"],...], star_target estimate|std_estimate, se_position beside|below|column,
+#                 keep_p, keep_stat, keep_ci, decimals, leading_zero, star_note, table_numbers (<표 n>), lang ko|en, raw_sheet (xlsx)
 ```
 
 ---
@@ -190,7 +200,7 @@ Claude Code automatically connects to `.mcp.json` and gains native tool calls:
 - `openstat_wrangle_data`: Performs Stata-equivalent data cleaning (`compute`, `recode`, `filter`, `merge`, `reshape`, `standardize`) with live `.py` syntax logging.
 - `openstat_run_analysis`: Runs any analysis with `plot_style`, `out_py_path`, `export_table_paths`, and `export_plot_path`.
 - `openstat_create_graph`: Draws any of 15 standalone chart types into Analysis Results and exports `.svg`/`.pdf`/`.png` or `.pdf`/`.hwpx`/`.docx`/`.xlsx` reports.
-- `openstat_export_results`: Exports all active workspace Analysis Results (tables + embedded graphs) to 11 formats.
+- `openstat_export_results`: Exports all active workspace Analysis Results (tables + embedded graphs) to 11 formats; `report_style="social"` + `report_options` give journal-style coefficient tables (stars, SE in parentheses, `<표 n>` captions). Run `compareModels` through `openstat_run_analysis` for a side-by-side model table.
 - `openstat_exec_python_syntax`: Executes raw Python (`.py`) code directly (auto-capturing any `plt.figure()` charts into Analysis Results) and exports reports.
 - `openstat_doctor`: Runs live PyPI package freshness checks + 6-subsystem syntax/API drift self-diagnostics.
 - `openstat_sync_jamovi`: Checks upstream jamovi for new features, scaffolds clean-room plugins (`reconstructed/pyjamovi/plugins/`), or rebuilds the package.

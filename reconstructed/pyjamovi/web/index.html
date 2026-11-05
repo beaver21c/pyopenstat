@@ -1128,6 +1128,11 @@ table.jmv-apa-table tbody tr:last-child {
     border-bottom: 1.8px solid #333333;
 }
 
+/* rule between row sections (e.g. coefficients | model statistics of a comparison table) */
+table.jmv-apa-table tbody tr.sec-break td {
+    border-top: 1px solid #94A3B8;
+}
+
 .jmv-table-note {
     font-size: 11px;
     color: #555555;
@@ -1189,6 +1194,7 @@ table.jmv-apa-table tbody tr:last-child {
     display: flex;
     flex-direction: column;
     padding-top: 10px;
+    overflow-y: auto;
 }
 
 .bs-back-btn {
@@ -1243,6 +1249,141 @@ table.jmv-apa-table tbody tr:last-child {
     border-color: #3E6DA9;
     background: #F5F9FF;
 }
+
+/* --- Backstage: export table style tag & settings panel (기본 APA / 사회과학 양식) --- */
+.bs-nav-section {
+    padding: 12px 22px 4px;
+    font-size: 11px;
+    color: #B6C4D6;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.bs-style-tag {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 9px;
+    font-size: 10.5px;
+    font-weight: 600;
+    background: #475569;
+    color: #FFFFFF;
+    white-space: nowrap;
+}
+.bs-style-tag.social { background: #0F766E; }
+.rs-panel h2 { margin: 0 0 4px; font-weight: 600; color: #1E3A5F; }
+.rs-lead { font-size: 12px; color: #475569; line-height: 1.55; margin: 0 0 12px; }
+.rs-choice { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.rs-card {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 4px;
+    padding: 9px 11px;
+    cursor: pointer;
+}
+.rs-card.on { border-color: #0F766E; box-shadow: inset 0 0 0 1px #0F766E; background: #F0FDFA; }
+.rs-card input { margin-top: 2px; accent-color: #0F766E; }
+.rs-card b { display: block; font-size: 13px; color: #1E3A5F; }
+.rs-card small { display: block; font-size: 11px; color: #64748B; line-height: 1.4; margin-top: 2px; }
+.rs-preview { background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 4px; padding: 10px 12px; margin-bottom: 12px; overflow-x: auto; }
+.rs-preview-label { font-size: 10.5px; color: #64748B; margin-bottom: 6px; }
+.rs-preview-cap { font-size: 12px; font-weight: 600; color: #1E293B; margin-bottom: 4px; }
+.rs-preview table { border-collapse: collapse; font-size: 12px; }
+.rs-preview thead tr { border-top: 1.5px solid #333333; border-bottom: 1px solid #555555; }
+.rs-preview tbody tr:last-child { border-bottom: 1.5px solid #333333; }
+.rs-preview th, .rs-preview td { padding: 3px 10px; white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; font-weight: 400; }
+.rs-preview th:first-child, .rs-preview td:first-child { text-align: left; }
+.rs-preview th.grp { text-align: center; border-bottom: 1px solid #94A3B8; }
+.rs-preview tr.se-row td { color: #475569; padding-top: 0; }
+.rs-preview-note { font-size: 11px; color: #555555; margin-top: 4px; line-height: 1.45; }
+.rs-opts { border: none; margin: 0; padding: 0; min-width: 0; }
+.rs-opts[disabled] { opacity: 0.5; }
+.rs-hint { font-size: 11px; color: #92400E; background: #FFFBEB; border: 1px solid #FCD34D; border-radius: 4px; padding: 6px 10px; margin-bottom: 10px; line-height: 1.45; }
+.rs-group { background: #FFFFFF; border: 1px solid #D5DCE4; border-radius: 4px; padding: 4px 12px 6px; margin-bottom: 10px; }
+.rs-group-title { font-size: 11.5px; font-weight: 700; color: #0F766E; padding: 5px 0 3px; }
+.rs-row { display: grid; grid-template-columns: 148px minmax(0, 1fr); gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid #EEF2F6; }
+.rs-group-title + .rs-row { border-top: none; }
+.rs-lab { font-size: 12px; font-weight: 600; color: #1E293B; }
+.rs-lab small, .rs-check small { display: block; font-weight: 400; font-size: 10.8px; color: #64748B; line-height: 1.35; margin-top: 1px; }
+.rs-ctl select { padding: 4px 6px; border: 1px solid #94A3B8; font-size: 12px; font-family: inherit; max-width: 100%; background: #FFFFFF; }
+.rs-seg { display: inline-flex; flex-wrap: wrap; border: 1px solid #94A3B8; border-radius: 3px; overflow: hidden; }
+.rs-seg label { padding: 4px 9px; font-size: 11.5px; cursor: pointer; background: #FFFFFF; border-left: 1px solid #CBD5E1; color: #334155; }
+.rs-seg label:first-child { border-left: none; }
+.rs-seg label.on { background: #0F766E; color: #FFFFFF; font-weight: 600; }
+.rs-seg input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+.rs-check { display: flex; gap: 7px; align-items: flex-start; font-size: 12px; padding: 5px 0; cursor: pointer; color: #1E293B; }
+.rs-check input { margin-top: 2px; accent-color: #0F766E; }
+.rs-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 11px; color: #64748B; flex-wrap: wrap; }
+
+/* --- Model comparison modal (모형 비교표) --- */
+.cmp-intro { font-size: 12px; color: #475569; line-height: 1.55; margin-bottom: 12px; }
+.cmp-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 18px; }
+@media (max-width: 760px) { .cmp-grid { grid-template-columns: minmax(0, 1fr); } }
+.cmp-step { font-size: 12.5px; font-weight: 700; color: #1E3A5F; margin: 0 0 6px; }
+.cmp-step small { font-weight: 400; color: #64748B; }
+.cmp-list { border: 1px solid #CBD5E1; border-radius: 4px; max-height: 236px; overflow-y: auto; background: #F8FAFC; margin-bottom: 14px; }
+.cmp-item {
+    display: grid;
+    grid-template-columns: auto 20px minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    padding: 7px 10px;
+    border-bottom: 1px solid #E2E8F0;
+    cursor: pointer;
+    background: #FFFFFF;
+}
+.cmp-item:last-child { border-bottom: none; }
+.cmp-item.on { background: #F0FDFA; }
+.cmp-item input { margin: 0; accent-color: #0F766E; }
+.cmp-order {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #E2E8F0;
+    color: #64748B;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.cmp-item.on .cmp-order, .cmp-order.num { background: #0F766E; color: #FFFFFF; }
+.cmp-item-main { min-width: 0; }
+.cmp-item-main b, .cmp-item-main small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cmp-item-main b { font-size: 12.5px; color: #1E293B; font-weight: 600; }
+.cmp-item-main small { font-size: 11px; color: #64748B; }
+.cmp-badge { font-size: 10.5px; color: #92400E; background: #FEF3C7; border: 1px solid #FCD34D; border-radius: 9px; padding: 1px 7px; white-space: nowrap; }
+.cmp-empty, .cmp-hint { padding: 14px; text-align: center; color: #64748B; font-size: 12px; line-height: 1.6; }
+.cmp-hint { padding: 6px 0; text-align: left; }
+.cmp-names { display: flex; flex-direction: column; gap: 5px; }
+.cmp-name-row { display: grid; grid-template-columns: 20px minmax(0, 150px) minmax(0, 1fr); gap: 8px; align-items: center; }
+.cmp-name-row input { padding: 4px 6px; border: 1px solid #94A3B8; font-size: 12px; font-family: inherit; min-width: 0; }
+.cmp-name-row small { font-size: 10.8px; color: #64748B; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cmp-field { margin-bottom: 12px; }
+.cmp-field > label { display: block; font-size: 12px; font-weight: 600; color: #1E293B; margin-bottom: 4px; }
+.cmp-field select, .cmp-field input[type="text"], .cmp-field textarea {
+    width: 100%;
+    padding: 4px 6px;
+    border: 1px solid #94A3B8;
+    font-size: 12px;
+    font-family: inherit;
+    background: #FFFFFF;
+}
+.cmp-field input[type="text"]:disabled { background: #F1F5F9; color: #94A3B8; }
+.cmp-field textarea { min-height: 76px; resize: vertical; font-family: "Consolas", "SFMono-Regular", Menlo, monospace; }
+.cmp-radio { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; margin-bottom: 5px; }
+.cmp-radio label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+.cmp-radio input { margin: 0; accent-color: #0F766E; }
+.cmp-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.cmp-chip { font-size: 10.5px; padding: 1px 6px; border: 1px solid #CBD5E1; border-radius: 3px; background: #FFFFFF; cursor: pointer; color: #334155; font-family: inherit; }
+.cmp-chip:hover { border-color: #0F766E; color: #0F766E; }
+.cmp-help { font-size: 10.8px; color: #64748B; line-height: 1.4; margin-top: 3px; }
+.cmp-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px; padding-top: 12px; border-top: 1px solid #E2E8F0; flex-wrap: wrap; }
+.cmp-summary { font-size: 12px; color: #334155; }
+.cmp-foot .py-btn:disabled { opacity: 0.55; cursor: default; }
 
 /* --- jamovi Library (+ Modules) & Settings Popovers --- */
 #modules-modal {
@@ -1501,6 +1642,9 @@ table.jmv-apa-table tbody tr:last-child {
     display: none;
     z-index: 3000;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+    max-width: min(560px, calc(100vw - 32px));
+    line-height: 1.45;
+    overflow-wrap: anywhere;
 }
 
 /* Language Switcher & User Guide in Titlebar */
@@ -1987,6 +2131,7 @@ table.jmv-apa-table tbody tr:last-child {
                 </div>
                 <div class="subbar-actions">
                     <button class="subbar-btn" onclick="openSyntheticDataModal()" title="합성데이터 생성 (시뮬레이션 / 개인정보보호)">🧬 합성데이터 생성</button>
+                    <button class="subbar-btn" onclick="openCompareModal()" title="계수표가 있는 분석 결과를 한 표에 나란히 비교 (Stata esttab 형식)">📊 모형 비교표</button>
                     <button class="subbar-btn" onclick="openRibbonMenu(event, 'export_tables')">📄 내보내기 ▾</button>
                     <button class="subbar-btn" onclick="clearAllResults()">🧹 결과 지우기</button>
                 </div>
@@ -2085,6 +2230,8 @@ table.jmv-apa-table tbody tr:last-child {
         <div class="bs-nav-item" onclick="window.open('user_guide.html', '_blank'); closeBackstage();" style="color:#A7F3D0;font-weight:700;">📖 클릭 투 클릭 사용 설명서 (User Guide)</div>
         <div class="bs-nav-item" onclick="triggerLocalFileUpload()">Import Local File...</div>
         <div class="bs-nav-item" onclick="window.location.href='/api/syntax/export_py'; closeBackstage();">Save Python Script (.py)</div>
+        <div class="bs-nav-section" title="아래 결과 내보내기(.pdf·.hwpx·.docx·.xlsx·.tex·.html)에 적용되는 표 양식">내보내기 표 양식 <span class="bs-style-tag">기본 APA 양식</span></div>
+        <div class="bs-nav-item" id="bs-tab-reportstyle" onclick="renderBackstageReportStyle()">⚙ 표 보고 양식 설정 (사회과학 양식)</div>
         <div class="bs-nav-item" onclick="exportTablesFormat('pdf'); closeBackstage();">Export Results + Graphs (.pdf)</div>
         <div class="bs-nav-item" onclick="exportTablesFormat('hwpx'); closeBackstage();">Export Results + Graphs (.hwpx 한글)</div>
         <div class="bs-nav-item" onclick="exportTablesFormat('docx'); closeBackstage();">Export Results + Graphs (.docx Word)</div>
@@ -2092,7 +2239,7 @@ table.jmv-apa-table tbody tr:last-child {
         <div class="bs-nav-item" onclick="exportTablesFormat('tex'); closeBackstage();">Export Tables + Figures (.tex LaTeX)</div>
         <div class="bs-nav-item" onclick="window.location.href='/api/dataset/export_omv'; closeBackstage();">Save Archive (.omv)</div>
         <div class="bs-nav-item" onclick="window.location.href='/api/dataset/export_csv'; closeBackstage();">Export Raw Data (.csv)</div>
-        <div class="bs-nav-item" onclick="window.location.href='/api/report/export_html'; closeBackstage();">Export Full Report (.html)</div>
+        <div class="bs-nav-item" onclick="exportReportHtml(); closeBackstage();">Export Full Report (.html)</div>
         <input type="file" id="hidden-file-input" accept=".omv,.csv,.tsv,.xlsx,.xls,.dta,.sav,.zsav,.por,.parquet" style="display:none;" onchange="handleFileUpload(this)">
     </div>
     <div class="backstage-content" id="backstage-body"></div>
@@ -2313,6 +2460,77 @@ table.jmv-apa-table tbody tr:last-child {
                 <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid #E2E8F0;">
                     <button class="silky-small-btn" onclick="bdOpenAsData()" title="현재 데이터를 경계 파일의 속성표(.dbf)로 교체하고 경계를 자동 연결">경계 속성표를 데이터로 열기</button>
                     <button class="py-btn run" id="bd-attach" onclick="bdAttach()">▶ 현재 데이터에 연결</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Model Comparison Modal (모형 비교표, Stata esttab layout -> analysis_type compareModels) -->
+<div class="ost-modal-backdrop" id="compare-modal" onclick="if(event.target===this) closeCompareModal()">
+    <div class="ost-modal-box" style="width:820px;">
+        <div class="ost-modal-hdr">
+            <span id="cmp-hdr-title">📊 모형 비교표 만들기</span>
+            <button class="silky-small-btn" onclick="closeCompareModal()">닫기</button>
+        </div>
+        <div class="ost-modal-body">
+            <div class="cmp-intro">
+                계수표가 있는 분석 결과(선형·로지스틱 회귀, 패널, 다층모형, Cox 생존분석, 공간회귀, SEM 등)를 한 표에 나란히 배치함.
+                <b>체크한 순서가 모형 순서</b>이며, 각 모형은 해당 결과 카드의 설정으로 다시 추정됨. 위계적 회귀(블록 k개)는 모형 k개로 펼쳐짐.
+                내보내기 시 사회과학 양식을 선택하면 계수 옆 별표·괄호 안 표준오차로 변환됨.
+            </div>
+            <div class="cmp-grid">
+                <div>
+                    <div class="cmp-step">1. 비교할 분석 결과 선택 <small>(선택 순서 = 모형 순서)</small></div>
+                    <div class="cmp-list" id="cmp-list"></div>
+                    <div class="cmp-step">2. 모형 이름 <small>(비우면 모형 1, 모형 2 …)</small></div>
+                    <div class="cmp-names" id="cmp-names"></div>
+                </div>
+                <div>
+                    <div class="cmp-step">3. 표시 항목</div>
+                    <div class="cmp-field">
+                        <label for="cmp-estimate">계수 표시</label>
+                        <select id="cmp-estimate" onchange="APP.cmp.estimate = this.value">
+                            <option value="b">B · SE · p (비표준화 계수)</option>
+                            <option value="beta">β (표준화 계수) · p</option>
+                            <option value="both">B · SE · β · p</option>
+                            <option value="exp">승산비·위험비 Exp(B) · p</option>
+                        </select>
+                    </div>
+                    <div class="cmp-field">
+                        <label>모형 통계량 (표 아래 행)</label>
+                        <div class="cmp-radio">
+                            <label><input type="radio" name="cmp-stats" value="auto" onchange="cmpSetStatsMode(this.value)" checked> 자동</label>
+                            <label><input type="radio" name="cmp-stats" value="none" onchange="cmpSetStatsMode(this.value)"> 없음</label>
+                            <label><input type="radio" name="cmp-stats" value="custom" onchange="cmpSetStatsMode(this.value)"> 직접 입력</label>
+                        </div>
+                        <input type="text" id="cmp-stats-text" placeholder="예: N, R2, R2_adj, AIC" oninput="APP.cmp.statsText = this.value" disabled>
+                        <div id="cmp-stats-custom" style="display:none;">
+                            <div class="cmp-help">쉼표로 구분. 아래 항목을 누르면 추가됨.</div>
+                            <div class="cmp-chips" id="cmp-stat-chips"></div>
+                        </div>
+                        <div class="cmp-help" id="cmp-stats-help">자동: 모형에 있는 N, R², 수정 R², F, AIC, BIC 등 표시</div>
+                    </div>
+                    <div class="cmp-field">
+                        <label for="cmp-title">표 제목</label>
+                        <input type="text" id="cmp-title" placeholder="모형 비교" oninput="APP.cmp.title = this.value">
+                    </div>
+                    <div class="cmp-field">
+                        <label for="cmp-labels">변수 이름 바꾸기 <span style="font-weight:400;color:#64748B;">(한 줄에 원래이름=새이름)</span></label>
+                        <textarea id="cmp-labels" placeholder="Intercept=상수&#10;Stress=직무 스트레스" oninput="APP.cmp.labelsText = this.value"></textarea>
+                        <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:4px;">
+                            <span class="cmp-help" style="margin:0;">새이름을 비운 줄은 원래 이름 유지</span>
+                            <button class="silky-small-btn" onclick="cmpFillTerms()" title="선택한 결과의 계수표에 있는 변수 이름을 목록에 추가">선택한 모형의 변수 불러오기</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="cmp-foot">
+                <span class="cmp-summary" id="cmp-summary"></span>
+                <div style="display:flex;gap:8px;">
+                    <button class="silky-small-btn" onclick="closeCompareModal()">취소</button>
+                    <button class="silky-small-btn" id="cmp-submit-new" style="display:none;" onclick="cmpSubmit(true)">새 비교표로 추가</button>
+                    <button class="py-btn run" id="cmp-submit" onclick="cmpSubmit(false)">▶ 비교표 만들기</button>
                 </div>
             </div>
         </div>
@@ -2811,7 +3029,10 @@ const RIBBON_MENUS_I18N = {
             { id: "linReg", label: "다중선형회귀분석 (Linear Regression)" },
             { sep: true },
             { section: "로지스틱 회귀분석 (Logistic)" },
-            { id: "logRegBin", label: "이항 로지스틱 회귀분석 (Binomial Logistic)" }
+            { id: "logRegBin", label: "이항 로지스틱 회귀분석 (Binomial Logistic)" },
+            { sep: true },
+            { section: "모형 비교 (Model Comparison)" },
+            { action: "openCompareModal()", label: "모형 비교표 (여러 모형 나란히 · esttab)", badge: "비교" }
         ],
         frequencies: [
             { section: "분할표 및 범주형 데이터" },
@@ -2883,6 +3104,8 @@ const RIBBON_MENUS_I18N = {
             { id: "textNetwork", label: "키워드 동시출현 관계망" }
         ],
         export_tables: [
+            { action: "openBackstage('reportStyle')", label: "표 보고 양식 설정 (기본 APA · 사회과학 양식)", badge: "@style" },
+            { sep: true },
             { section: "문서 및 논문 보고서 (.hwpx, .docx, .pdf)" },
             { action: "exportFullSessionResults('hwpx')", label: "한글 문서 (.hwpx) — 네이티브 편집 가능 표 + 그림", badge: "한글" },
             { action: "exportFullSessionResults('pdf')", label: "출판용 PDF (.pdf) — APA 3선 표 + 고해상도 그림", badge: "인쇄" },
@@ -2935,7 +3158,10 @@ const RIBBON_MENUS_I18N = {
             { id: "linReg", label: "Linear Regression" },
             { sep: true },
             { section: "Logistic Regression" },
-            { id: "logRegBin", label: "2 Outcomes (Binomial)" }
+            { id: "logRegBin", label: "2 Outcomes (Binomial)" },
+            { sep: true },
+            { section: "Model Comparison" },
+            { action: "openCompareModal()", label: "Model Comparison Table (side-by-side, esttab)", badge: "esttab" }
         ],
         frequencies: [
             { section: "Contingency Tables" },
@@ -3003,6 +3229,8 @@ const RIBBON_MENUS_I18N = {
             { id: "textNetwork", label: "Keyword Co-occurrence Network" }
         ],
         export_tables: [
+            { action: "openBackstage('reportStyle')", label: "Table report style (APA · social-science)", badge: "@style" },
+            { sep: true },
             { section: "Full Results (Tables + Embedded Graphs)" },
             { action: "exportFullSessionResults('pdf')", label: "Publication PDF Report (.pdf)", badge: "PDF" },
             { action: "exportFullSessionResults('hwpx')", label: "Hancom Hangul + Graphs (.hwpx)", badge: "한글" },
@@ -3150,7 +3378,7 @@ const OPTION_LABELS_KO = {
 
 function setLanguage(lang) {
     APP.lang = lang;
-    localStorage.setItem("openstat_lang", lang);
+    safeStorageSet("openstat_lang", lang);
     applyLanguage();
 }
 
@@ -4673,6 +4901,85 @@ const ANALYSIS_SCHEMAS = {
     }
 };
 
+/* --- Browser storage helpers: every access guarded so the page works when storage is blocked --- */
+function safeStorageGet(key) {
+    try {
+        return window.localStorage ? window.localStorage.getItem(key) : null;
+    } catch (_) {
+        return null;
+    }
+}
+
+function safeStorageSet(key, value) {
+    try {
+        if (!window.localStorage) return false;
+        window.localStorage.setItem(key, value);
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
+
+/* --- Export table format: 기본(APA) or 사회과학 보고 양식 (report_style=social + report_options) --- */
+const REPORT_STYLE_KEY = "openstat_report_style";
+const REPORT_OPTION_DEFAULTS = {
+    stars: "standard",
+    star_target: "estimate",
+    se_position: "beside",
+    keep_p: false,
+    keep_stat: true,
+    keep_ci: true,
+    decimals: 3,
+    leading_zero: false,
+    star_note: true,
+    table_numbers: true,
+    lang: "ko",
+    raw_sheet: true
+};
+const REPORT_OPTION_CHOICES = {
+    stars: ["standard", "dagger", "econ", "none"],
+    star_target: ["estimate", "std_estimate"],
+    se_position: ["beside", "below", "column"],
+    lang: ["ko", "en"]
+};
+const REPORT_STAR_LEVELS = {
+    standard: [[0.05, "*"], [0.01, "**"], [0.001, "***"]],
+    dagger: [[0.10, "†"], [0.05, "*"], [0.01, "**"], [0.001, "***"]],
+    econ: [[0.10, "*"], [0.05, "**"], [0.01, "***"]],
+    none: []
+};
+
+function sanitizeReportOptions(raw) {
+    const out = Object.assign({}, REPORT_OPTION_DEFAULTS);
+    if (!raw || typeof raw !== "object") return out;
+    for (const [k, def] of Object.entries(REPORT_OPTION_DEFAULTS)) {
+        const v = raw[k];
+        if (v === undefined) continue;
+        if (REPORT_OPTION_CHOICES[k]) {
+            if (REPORT_OPTION_CHOICES[k].includes(v)) out[k] = v;
+        } else if (typeof def === "boolean") {
+            if (typeof v === "boolean") out[k] = v;
+        } else if (k === "decimals") {
+            const n = Number(v);
+            if (Number.isInteger(n) && n >= 0 && n <= 6) out[k] = n;
+        }
+    }
+    return out;
+}
+
+function loadReportStyle() {
+    let saved = null;
+    const txt = safeStorageGet(REPORT_STYLE_KEY);
+    if (txt) {
+        try { saved = JSON.parse(txt); } catch (_) { saved = null; }
+    }
+    return {
+        style: saved && saved.style === "social" ? "social" : "default",
+        options: sanitizeReportOptions(saved && saved.options),
+        persisted: null      // after a change: true (saved) | false (storage unavailable)
+    };
+}
+
 /* --- Client State --- */
 const APP = {
     datasetName: "ToothGrowth.csv",
@@ -4689,7 +4996,9 @@ const APP = {
     pythonCode: "",
     plotTargetAnalysisId: null,
     runTimer: null,
-    lang: localStorage.getItem('openstat_lang') || 'ko'
+    lang: safeStorageGet('openstat_lang') || 'ko',
+    reportStyle: loadReportStyle(),   // export table format (backstage ☰ > 표 보고 양식 설정)
+    cmp: null                         // model comparison modal state
 };
 
 function measureIcon(mType) {
@@ -4702,12 +5011,12 @@ function measureIcon(mType) {
     return "assets/variable-nominal.svg";
 }
 
-function showToast(msg) {
+function showToast(msg, ms = 2600) {
     const el = document.getElementById("toast-banner");
     el.textContent = msg;
     el.style.display = "block";
     clearTimeout(el._t);
-    el._t = setTimeout(() => { el.style.display = "none"; }, 2600);
+    el._t = setTimeout(() => { el.style.display = "none"; }, ms);
 }
 
 /* --- Ribbon & Split Navigation --- */
@@ -4767,7 +5076,8 @@ function openRibbonMenu(ev, menuKey) {
         } else if (it.section) {
             html += `<div class="dd-section">${it.section}</div>`;
         } else if (it.action) {
-            const badge = it.badge ? `<span class="dd-badge">${it.badge}</span>` : "";
+            const badgeTxt = it.badge === "@style" ? (reportStyleIsSocial() ? "사회과학" : "APA") : it.badge;
+            const badge = badgeTxt ? `<span class="dd-badge">${badgeTxt}</span>` : "";
             html += `<div class="dd-item" onclick="closeDropdown(); ${it.action}"><span>${it.label}</span>${badge}</div>`;
         } else {
             const badge = it.badge ? `<span class="dd-badge">${it.badge}</span>` : "";
@@ -6047,22 +6357,7 @@ async function executeCurrentAnalysis(force = false) {
             APP.selectedAnalysisId = payload.analysisId;
             APP.runUi = { seconds: ((Date.now() - APP.runStarted) / 1000).toFixed(1) };
         }
-        APP.revision = payload.revision || APP.revision;
-        if (typeof payload.pythonCode === "string") {
-            APP.pythonCode = payload.pythonCode;
-            const pyBox = document.getElementById("live-py-textarea");
-            if (pyBox && document.activeElement !== pyBox) {
-                pyBox.value = payload.pythonCode;
-            }
-        }
-
-        const idx = APP.analyses.findIndex(a => a.analysisId === payload.analysisId);
-        if (idx >= 0) {
-            APP.analyses[idx] = payload;
-        } else {
-            APP.analyses.push(payload);
-        }
-        renderAllResults();
+        applyRunPayload(payload);
         const runCode = generateCodeCallForCurrentState(reqType, reqParams);
         if (runCode) logToSyntaxConsole("분석 실행 완료", runCode, `${payload.title || reqType} 결과 시트 출력`);
     } catch (err) {
@@ -6080,7 +6375,37 @@ async function executeCurrentAnalysis(force = false) {
     }
 }
 
+/* Adds or replaces a result card from a POST /api/analysis/run response (shared by the options
+   panel run and the model comparison modal). */
+function applyRunPayload(payload) {
+    APP.revision = payload.revision || APP.revision;
+    if (typeof payload.pythonCode === "string") {
+        APP.pythonCode = payload.pythonCode;
+        const pyBox = document.getElementById("live-py-textarea");
+        if (pyBox && document.activeElement !== pyBox) {
+            pyBox.value = payload.pythonCode;
+        }
+    }
+
+    const idx = APP.analyses.findIndex(a => a.analysisId === payload.analysisId);
+    if (idx >= 0) {
+        APP.analyses[idx] = payload;
+    } else {
+        APP.analyses.push(payload);
+    }
+    renderAllResults();
+}
+
 /* --- Results View Rendering --- */
+/* Column metadata with the row-level override `_rowfmt` (e.g. N / df rows of a comparison table).
+   p-value columns keep their own format (e.g. the p of ΔR² in a "zto" row). */
+function rowCellMeta(row, col) {
+    const rf = row && row._rowfmt;
+    if (!rf || col.format === "pvalue") return col;
+    if (rf === "integer") return Object.assign({}, col, { type: "integer", format: "" });
+    return Object.assign({}, col, { format: rf });
+}
+
 function formatCell(val, colMeta) {
     if (val === "" || val === undefined) return "";
     if (val === null || (typeof val === "number" && !Number.isFinite(val))) return "—";
@@ -6088,6 +6413,9 @@ function formatCell(val, colMeta) {
     if (typeof val === "number") {
         if (colMeta.format === "pvalue") {
             return val < 0.001 ? "&lt; .001" : val.toFixed(3);
+        }
+        if (colMeta.format === "zto") {
+            return val.toFixed(3);
         }
         if (colMeta.format === "pc") {
             return val.toFixed(1) + "%";
@@ -6168,14 +6496,20 @@ function renderAllResults() {
             html += `</tr></thead><tbody>`;
             // Text columns holding long values (keyword lists, document titles) wrap inside the cell.
             const longCols = new Set(tbl.columns.filter(c => c.type === "text" && tbl.rows.some(r => typeof r[c.name] === "string" && r[c.name].length > 40)).map(c => c.name));
-            for (const r of tbl.rows) {
-                html += `<tr>`;
+            // Row keys `_section` / `_rowfmt` are layout hints only (never printed): a rule separates
+            // row sections (coefficients | model statistics) and `_rowfmt` overrides the column format.
+            let prevSection = null;
+            tbl.rows.forEach((r, ri) => {
+                const sec = r._section || "";
+                const brk = ri > 0 && sec !== prevSection;
+                prevSection = sec;
+                html += brk ? `<tr class="sec-break">` : `<tr>`;
                 for (const c of tbl.columns) {
                     const nCls = (c.type === "number" || c.type === "integer") ? " class=\"num\"" : (longCols.has(c.name) ? " class=\"long\"" : "");
-                    html += `<td${nCls}>${formatCell(r[c.name], c)}</td>`;
+                    html += `<td${nCls}>${formatCell(r[c.name], rowCellMeta(r, c))}</td>`;
                 }
                 html += `</tr>`;
-            }
+            });
             html += `</tbody></table>`;
             for (const note of (tbl.notes || [])) {
                 html += `<div class="jmv-table-note"><em>Note.</em> ${escapeHtml(note)}</div>`;
@@ -6220,6 +6554,14 @@ function selectResultCard(ev, analysisId) {
     ev.stopPropagation();
     const card = APP.analyses.find(a => a.analysisId === analysisId);
     if (!card) return;
+    if (card.analysis_type === "compareModels") {
+        // No options panel for comparison tables: reopen the comparison modal to edit this card.
+        closeOptionsPanel();
+        APP.selectedAnalysisId = analysisId;
+        highlightSelectedSheet();
+        openCompareModal(card);
+        return;
+    }
     if (card.analysis_type && ANALYSIS_SCHEMAS[card.analysis_type]) {
         openAnalysis(card.analysis_type, card);
     } else {
@@ -6284,14 +6626,455 @@ function copyAnalysisPython(analysisId) {
 }
 
 /* --- Multi-Format Table & Vector Plot Exporters --- */
-function exportTablesFormat(fmt, analysisId = null) {
+/* Every table export (backstage ☰, ribbon menu, per-card buttons) goes through here; the active
+   report style (backstage > 표 보고 양식 설정) is appended as report_style / report_options. */
+async function exportTablesFormat(fmt, analysisId = null) {
     if (!APP.analyses || APP.analyses.length === 0) {
         showToast("Run at least one analysis first before exporting tables");
+        return false;
+    }
+    const qs = [`fmt=${encodeURIComponent(fmt)}`];
+    if (analysisId !== null && analysisId !== undefined) qs.push(`analysis_id=${encodeURIComponent(analysisId)}`);
+    const rsq = reportStyleQuery();
+    if (rsq) qs.push(rsq);
+    showToast(`Exporting analyzed tables as .${fmt}${rsq ? " (사회과학 양식)" : ""}...`, 6000);
+    return downloadFromServer(`/api/export/tables?${qs.join("&")}`, `openstat_results.${fmt}`);
+}
+
+/* Ribbon "결과 내보내기" menu entries (full session, every format of /api/export/tables). */
+function exportFullSessionResults(fmt) {
+    return exportTablesFormat(fmt);
+}
+
+/* Backstage "Export Full Report (.html)". */
+function exportReportHtml() {
+    const rsq = reportStyleQuery();
+    showToast(`Exporting full HTML report${rsq ? " (사회과학 양식)" : ""}...`, 6000);
+    return downloadFromServer(`/api/report/export_html${rsq ? "?" + rsq : ""}`, "openstat_results.html");
+}
+
+/* Query fragment for the active export table style ("" for the default APA style). */
+function reportStyleQuery() {
+    if (!reportStyleIsSocial()) return "";
+    const opts = sanitizeReportOptionsForSend(APP.reportStyle.options);
+    return `report_style=social&report_options=${encodeURIComponent(JSON.stringify(opts))}`;
+}
+
+function sanitizeReportOptionsForSend(opts) {
+    // Known option names only; values are sent as set so the server reports invalid ones (HTTP 400).
+    const out = {};
+    for (const k of Object.keys(REPORT_OPTION_DEFAULTS)) {
+        if (opts && opts[k] !== undefined) out[k] = opts[k];
+    }
+    return out;
+}
+
+function filenameFromDisposition(cd) {
+    if (!cd) return "";
+    let m = /filename\*\s*=\s*([^']*)''([^;]+)/i.exec(cd);
+    if (m) {
+        try { return decodeURIComponent(m[2].trim().replace(/^"|"$/g, "")); } catch (_) { /* fall through */ }
+    }
+    m = /filename\s*=\s*"([^"]+)"/i.exec(cd) || /filename\s*=\s*([^;]+)/i.exec(cd);
+    return m ? m[1].trim() : "";
+}
+
+/* Fetch a server file and save it; an error answer (e.g. HTTP 400 for an invalid report option)
+   is shown as a toast with the server's `detail` message instead of navigating to a JSON page. */
+async function downloadFromServer(url, fallbackName) {
+    let res;
+    try {
+        res = await fetch(url);
+    } catch (err) {
+        showToast("내보내기 실패: " + err.message, 8000);
+        return false;
+    }
+    if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        try {
+            const data = await res.json();
+            if (data && data.detail) msg = typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail);
+        } catch (_) { /* non-JSON error body */ }
+        showToast("내보내기 오류: " + msg, 9000);
+        return false;
+    }
+    let blob;
+    try {
+        blob = await res.blob();
+    } catch (err) {
+        showToast("내보내기 실패: " + err.message, 8000);
+        return false;
+    }
+    const name = filenameFromDisposition(res.headers.get("Content-Disposition")) || fallbackName;
+    const href = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = href;
+    a.download = name;
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(href), 15000);
+    showToast(`저장: ${name}`);
+    return true;
+}
+
+/* --- Model comparison table (모형 비교표 → analysis_type "compareModels", Stata esttab layout) --- */
+const CMP_EXCLUDED_TYPES = new Set(["compareModels", "customFigure"]);
+const CMP_STATS = [
+    ["N", "N"], ["Groups", "집단 수"], ["Periods", "시점 수"], ["Events", "사건 수"],
+    ["R2", "R²"], ["R2_adj", "수정 R²"], ["R2_change", "ΔR²"], ["F", "F"], ["F_change", "ΔF"],
+    ["R2_within", "R² (집단 내)"], ["R2_between", "R² (집단 간)"], ["R2_overall", "R² (전체)"],
+    ["R2_McF", "McFadden R²"], ["R2_N", "Nagelkerke R²"], ["R2_pseudo", "유사 R²"],
+    ["Chi2", "χ²"], ["df", "df"], ["CFI", "CFI"], ["TLI", "TLI"], ["RMSEA", "RMSEA"], ["SRMR", "SRMR"],
+    ["LL", "로그우도"], ["Deviance", "이탈도"], ["AIC", "AIC"], ["BIC", "BIC"], ["ICC", "ICC"],
+    ["Var_between", "집단 간 분산"], ["Var_within", "집단 내 분산"], ["Concordance", "C 지수"],
+    ["rho", "ρ"], ["lambda", "λ"]
+];
+
+function cmpQualifies(a) {
+    return !!(a && a.analysis_type && !CMP_EXCLUDED_TYPES.has(a.analysis_type)
+        && (a.tables || []).some(t => t && t.kind === "coefficients"));
+}
+
+/* Models one result contributes: a hierarchical linear regression contributes one per block. */
+function cmpModelCount(type, params) {
+    if (type === "linReg" && params && Array.isArray(params.blocks)) {
+        const k = params.blocks.filter(b => Array.isArray(b) ? b.length > 0 : !!b).length;
+        return Math.max(1, k);
+    }
+    return 1;
+}
+
+function cmpDescribe(type, p) {
+    p = p || {};
+    const list = v => Array.isArray(v) ? v.flat().filter(Boolean).join(", ") : (v ? String(v) : "");
+    const parts = [];
+    const dep = list(p.dep);
+    if (dep) parts.push(`종속 ${dep}`);
+    let preds = [list(p.covs), list(p.factors), list(p.pred), list(p.med)].filter(Boolean).join(", ");
+    if (!preds && Array.isArray(p.blocks)) preds = list(p.blocks);
+    if (preds) parts.push(`설명 ${preds}`);
+    if (!parts.length && typeof p.model === "string") parts.push(p.model.replace(/\s+/g, " ").trim());
+    return parts.join(" · ") || type;
+}
+
+function cmpFreshState() {
+    return { editId: null, order: [], names: {}, estimate: "b", statsMode: "auto", statsText: "",
+             labelsText: "", title: "", orphans: [], running: false };
+}
+
+/* Selectable entries: qualifying result cards (+ model specs of an edited table without a matching card). */
+function cmpItems() {
+    const items = [];
+    for (const a of (APP.analyses || [])) {
+        if (!cmpQualifies(a)) continue;
+        items.push({ key: "a" + a.analysisId, analysisId: a.analysisId, title: a.title || a.analysis_type,
+                     type: a.analysis_type, params: a.params || {}, k: cmpModelCount(a.analysis_type, a.params),
+                     tables: a.tables || [] });
+    }
+    return items.concat((APP.cmp && APP.cmp.orphans) || []);
+}
+
+/* Selected entries expanded to models, in selection order. */
+function cmpExpandedModels() {
+    const byKey = new Map(cmpItems().map(it => [it.key, it]));
+    const out = [];
+    for (const key of APP.cmp.order) {
+        const it = byKey.get(key);
+        if (!it) continue;
+        const head = it.analysisId !== null ? `#${it.analysisId} ${it.title}` : it.title;
+        for (let j = 0; j < it.k; j++) {
+            out.push({ nameKey: `${key}:${j}`, source: it.k > 1 ? `${head} · 블록 ${j + 1}` : head });
+        }
+    }
+    return out;
+}
+
+function cmpStableKey(v) {
+    const norm = x => Array.isArray(x) ? x.map(norm)
+        : (x && typeof x === "object" ? Object.keys(x).sort().reduce((o, k) => { o[k] = norm(x[k]); return o; }, {}) : x);
+    return JSON.stringify(norm(v));
+}
+
+/* Modal state from an existing comparison card (its model specs are matched back to result cards). */
+function cmpStateFromCard(card) {
+    const st = cmpFreshState();
+    const p = card.params || {};
+    st.editId = card.analysisId;
+    st.estimate = ["b", "beta", "both", "exp"].includes(p.estimate) ? p.estimate : "b";
+    if (p.stats === "none" || p.stats === false) {
+        st.statsMode = "none";
+    } else if (Array.isArray(p.stats) || (typeof p.stats === "string" && p.stats && p.stats !== "auto")) {
+        st.statsMode = "custom";
+        st.statsText = Array.isArray(p.stats) ? p.stats.join(", ") : p.stats;
+    }
+    if (p.labels && typeof p.labels === "object") {
+        st.labelsText = Object.entries(p.labels).map(([k, v]) => `${k}=${v}`).join("\n");
+    }
+    st.title = typeof p.title === "string" ? p.title : "";
+    const cards = (APP.analyses || []).filter(cmpQualifies);
+    const used = new Set();
+    const names = Array.isArray(p.names) ? p.names : null;
+    let mi = 0;
+    (Array.isArray(p.models) ? p.models : []).forEach((spec, i) => {
+        let type, params;
+        if (spec && spec.analysis_type) {
+            type = spec.analysis_type;
+            params = spec.params || {};
+        } else {
+            params = Object.assign({}, spec || {});
+            type = params.analysis;
+            delete params.analysis;
+        }
+        const sig = cmpStableKey(params);
+        const match = cards.find(a => !used.has(a.analysisId) && a.analysis_type === type && cmpStableKey(a.params || {}) === sig);
+        let key, k;
+        if (match) {
+            used.add(match.analysisId);
+            key = "a" + match.analysisId;
+            k = cmpModelCount(type, match.params);
+        } else {
+            key = "o" + i;
+            k = cmpModelCount(type, params);
+            st.orphans.push({ key, analysisId: null, title: `기존 비교표의 모형 지정 ${i + 1} (${type})`,
+                              type, params, k, tables: [], orphan: true });
+        }
+        st.order.push(key);
+        for (let j = 0; j < k; j++, mi++) {
+            if (names && names[mi] !== undefined && names[mi] !== null) st.names[`${key}:${j}`] = String(names[mi]);
+        }
+    });
+    return st;
+}
+
+function openCompareModal(editCard = null) {
+    closeDropdown();
+    if (editCard) {
+        APP.cmp = cmpStateFromCard(editCard);
+    } else {
+        if (!APP.cmp || APP.cmp.editId !== null) APP.cmp = cmpFreshState();
+        const valid = new Set(cmpItems().map(it => it.key));
+        APP.cmp.order = APP.cmp.order.filter(k => valid.has(k));
+    }
+    APP.cmp.running = false;
+    const st = APP.cmp;
+    document.getElementById("cmp-hdr-title").textContent = st.editId !== null
+        ? `📊 모형 비교표 수정 (결과 #${st.editId})`
+        : "📊 모형 비교표 만들기 (여러 모형 나란히 · esttab 형식)";
+    document.getElementById("cmp-estimate").value = st.estimate;
+    document.querySelectorAll('input[name="cmp-stats"]').forEach(r => { r.checked = r.value === st.statsMode; });
+    document.getElementById("cmp-stats-text").value = st.statsText;
+    document.getElementById("cmp-labels").value = st.labelsText;
+    document.getElementById("cmp-title").value = st.title;
+    document.getElementById("cmp-stat-chips").innerHTML = CMP_STATS.map(([k, lab]) =>
+        `<button type="button" class="cmp-chip" title="${escapeHtml(lab)}" onclick="cmpAddStat('${k}')">${k}</button>`).join("");
+    cmpSetStatsMode(st.statsMode);
+    cmpRender();
+    document.getElementById("compare-modal").classList.add("open");
+}
+
+function closeCompareModal() {
+    document.getElementById("compare-modal").classList.remove("open");
+    if (APP.cmp && APP.cmp.editId !== null && APP.selectedAnalysisId === APP.cmp.editId && !APP.currentType) {
+        APP.selectedAnalysisId = null;
+        highlightSelectedSheet();
+    }
+}
+
+function cmpToggle(key, on) {
+    const order = APP.cmp.order.filter(k => k !== key);
+    if (on) order.push(key);
+    APP.cmp.order = order;
+    cmpRender();
+}
+
+function cmpSetName(nameKey, value) {
+    APP.cmp.names[nameKey] = value;
+}
+
+function cmpSetStatsMode(mode) {
+    APP.cmp.statsMode = ["auto", "none", "custom"].includes(mode) ? mode : "auto";
+    const custom = APP.cmp.statsMode === "custom";
+    document.getElementById("cmp-stats-text").disabled = !custom;
+    document.getElementById("cmp-stats-custom").style.display = custom ? "" : "none";
+    document.getElementById("cmp-stats-help").textContent = {
+        auto: "자동: 모형에 있는 N, R², 수정 R², F, 유사 R², χ², AIC, BIC 등 표시",
+        none: "없음: 계수 행만 표시",
+        custom: "직접 입력: 입력한 순서대로 표시 (모형에 없는 통계량은 빈칸)"
+    }[APP.cmp.statsMode];
+}
+
+function cmpAddStat(key) {
+    const cur = APP.cmp.statsText.split(/[,\s]+/).filter(Boolean);
+    if (!cur.includes(key)) cur.push(key);
+    APP.cmp.statsText = cur.join(", ");
+    document.getElementById("cmp-stats-text").value = APP.cmp.statsText;
+}
+
+function cmpRender() {
+    const st = APP.cmp;
+    const items = cmpItems();
+    const listEl = document.getElementById("cmp-list");
+    if (!items.length) {
+        listEl.innerHTML = `<div class="cmp-empty">계수표가 있는 분석 결과 없음.<br>선형·로지스틱 회귀, 패널, 다층모형, Cox 생존분석, 공간회귀, SEM 등을 먼저 실행해야 함.</div>`;
+    } else {
+        listEl.innerHTML = items.map(it => {
+            const pos = st.order.indexOf(it.key);
+            const on = pos >= 0;
+            const badge = it.k > 1 ? `<span class="cmp-badge">(블록 ${it.k}개 → 모형 ${it.k}개)</span>` : "";
+            const head = it.analysisId !== null ? `#${it.analysisId} ${escapeHtml(it.title)}` : escapeHtml(it.title);
+            const desc = escapeHtml(cmpDescribe(it.type, it.params));
+            return `<label class="cmp-item${on ? " on" : ""}" title="${desc}">
+                <input type="checkbox" ${on ? "checked" : ""} onchange="cmpToggle('${it.key}', this.checked)">
+                <span class="cmp-order">${on ? pos + 1 : ""}</span>
+                <span class="cmp-item-main"><b>${head}</b><small>${desc}</small></span>${badge}
+            </label>`;
+        }).join("");
+    }
+
+    const models = cmpExpandedModels();
+    const namesEl = document.getElementById("cmp-names");
+    namesEl.innerHTML = models.length
+        ? models.map((m, i) => `<div class="cmp-name-row">
+                <span class="cmp-order num">${i + 1}</span>
+                <input type="text" value="${escapeHtml(st.names[m.nameKey] || "")}" placeholder="모형 ${i + 1}" oninput="cmpSetName('${m.nameKey}', this.value)">
+                <small title="${escapeHtml(m.source)}">${escapeHtml(m.source)}</small>
+            </div>`).join("")
+        : `<div class="cmp-hint">위 목록에서 비교할 결과를 체크하면 모형 이름 칸이 표시됨.</div>`;
+
+    document.getElementById("cmp-summary").textContent = st.order.length
+        ? `선택 ${st.order.length}건 → 모형 ${models.length}개`
+        : "선택한 결과 없음";
+    const submit = document.getElementById("cmp-submit");
+    submit.disabled = !models.length || st.running;
+    submit.textContent = st.running ? "계산 중…" : (st.editId !== null ? "▶ 이 비교표 갱신" : "▶ 비교표 만들기");
+    const subNew = document.getElementById("cmp-submit-new");
+    subNew.style.display = st.editId !== null ? "" : "none";
+    subNew.disabled = !models.length || st.running;
+}
+
+/* "원래이름=새이름" lines -> labels object (blank new name keeps the original). */
+function cmpParseLabels(text) {
+    const labels = {};
+    const bad = [];
+    String(text || "").split(/\r?\n/).forEach((line, i) => {
+        const s = line.trim();
+        if (!s) return;
+        const eq = s.indexOf("=");
+        if (eq <= 0) { bad.push(i + 1); return; }
+        const from = s.slice(0, eq).trim();
+        const to = s.slice(eq + 1).trim();
+        if (to) labels[from] = to;
+    });
+    return { labels, bad };
+}
+
+/* Adds "변수=" lines for the terms of the selected results' coefficient tables. */
+function cmpFillTerms() {
+    const st = APP.cmp;
+    const byKey = new Map(cmpItems().map(it => [it.key, it]));
+    const terms = [];
+    for (const key of st.order) {
+        const it = byKey.get(key);
+        const tbl = it && (it.tables || []).find(t => t.kind === "coefficients");
+        if (!tbl) continue;
+        const labCols = Array.isArray(tbl.coefLabel) && tbl.coefLabel.length ? tbl.coefLabel : [(tbl.columns[0] || {}).name];
+        for (const r of (tbl.rows || [])) {
+            const term = labCols.map(c => String(r[c] === undefined || r[c] === null ? "" : r[c]).trim()).filter(Boolean).join(" ");
+            if (term && !terms.includes(term)) terms.push(term);
+        }
+    }
+    if (!terms.length) {
+        showToast(st.order.length ? "선택한 결과에서 변수 이름을 찾지 못함" : "먼저 비교할 결과를 선택해야 함");
         return;
     }
-    const q = analysisId !== null ? `?fmt=${encodeURIComponent(fmt)}&analysis_id=${analysisId}` : `?fmt=${encodeURIComponent(fmt)}`;
-    window.location.href = `/api/export/tables${q}`;
-    showToast(`Exporting analyzed tables as .${fmt}...`);
+    const lines = String(st.labelsText || "").split(/\r?\n/).filter(l => l.trim());
+    const have = new Set(lines.map(l => l.split("=")[0].trim()));
+    const add = terms.filter(t => !have.has(t)).map(t => `${t}=`);
+    st.labelsText = lines.concat(add).join("\n");
+    document.getElementById("cmp-labels").value = st.labelsText;
+    showToast(add.length ? `변수 ${add.length}개 추가 — '=' 뒤에 새 이름 입력` : "모든 변수가 이미 목록에 있음");
+}
+
+function cmpBuildParams() {
+    const st = APP.cmp;
+    const byKey = new Map(cmpItems().map(it => [it.key, it]));
+    const chosen = st.order.map(k => byKey.get(k)).filter(Boolean);
+    if (!chosen.length) throw new Error("비교할 결과를 1개 이상 선택해야 함");
+    const params = {
+        models: chosen.map(it => Object.assign({}, JSON.parse(JSON.stringify(it.params || {})), { analysis: it.type }))
+    };
+
+    // names: only when edited (blank entries keep the default name); count = expanded model count
+    const models = cmpExpandedModels();
+    if (models.some(m => (st.names[m.nameKey] || "").trim())) {
+        const names = models.map((m, i) => (st.names[m.nameKey] || "").trim() || `모형 ${i + 1}`);
+        const dup = names.find((n, i) => names.indexOf(n) !== i);
+        if (dup) throw new Error(`모형 이름 중복: ${dup}`);
+        if (names.length === models.length) params.names = names;
+    }
+    if (st.estimate && st.estimate !== "b") params.estimate = st.estimate;
+    if (st.statsMode === "none") {
+        params.stats = "none";
+    } else if (st.statsMode === "custom") {
+        const keys = String(st.statsText || "").split(/[,\s]+/).map(s => s.trim()).filter(Boolean);
+        if (!keys.length) throw new Error("모형 통계량을 입력하거나 '자동'을 선택해야 함");
+        const lookup = new Map(CMP_STATS.map(([k]) => [k.toLowerCase(), k]));
+        const unknown = keys.filter(k => !lookup.has(k.toLowerCase()));
+        if (unknown.length) throw new Error(`알 수 없는 통계량: ${unknown.join(", ")}`);
+        params.stats = keys.map(k => lookup.get(k.toLowerCase()));
+    }
+    const { labels, bad } = cmpParseLabels(st.labelsText);
+    if (bad.length) throw new Error(`변수 이름 바꾸기 ${bad.join(", ")}번째 줄: '원래이름=새이름' 형식 필요`);
+    if (Object.keys(labels).length) params.labels = labels;
+    if ((st.title || "").trim()) params.title = st.title.trim();
+    return params;
+}
+
+async function cmpSubmit(asNew = false) {
+    const st = APP.cmp;
+    if (!st || st.running) return;
+    let params;
+    try {
+        params = cmpBuildParams();
+    } catch (err) {
+        showToast(err.message, 6000);
+        return;
+    }
+    const replaceId = (!asNew && st.editId !== null && APP.analyses.some(a => a.analysisId === st.editId)) ? st.editId : null;
+    const statusEl = document.getElementById("engine-status-text");
+    st.running = true;
+    cmpRender();
+    if (statusEl) statusEl.textContent = "Computing...";
+    try {
+        const res = await fetch("/api/analysis/run", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ analysis_type: "compareModels", params, analysis_id: replaceId })
+        });
+        let payload = null;
+        try { payload = await res.json(); } catch (_) { payload = null; }
+        if (!res.ok) {
+            const d = payload && payload.detail;
+            showToast("모형 비교표 오류: " + (typeof d === "string" ? d : (d ? JSON.stringify(d) : `HTTP ${res.status}`)), 9000);
+            return;
+        }
+        applyRunPayload(payload);
+        closeCompareModal();
+        const nModels = cmpExpandedModels().length;
+        showToast(`모형 비교표 ${replaceId !== null ? "갱신" : "추가"} (모형 ${nModels}개)`);
+        const code = generateCodeCallForCurrentState("compareModels", params).replace(/^sess\.compareModels\(/, "sess.run('compareModels', ");
+        if (code) logToSyntaxConsole("모형 비교표", code, `${payload.title || "모형 비교"} 결과 시트 출력`);
+        const el = document.querySelector(`.jmv-results-sheet[data-aid="${payload.analysisId}"]`);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (err) {
+        showToast("모형 비교표 실행 오류: " + err.message, 8000);
+    } finally {
+        if (statusEl) statusEl.textContent = "Python 3.0 · Claude Ready";
+        st.running = false;
+        if (document.getElementById("compare-modal").classList.contains("open")) cmpRender();
+    }
 }
 
 function downloadPlotVector(analysisId, plotIdx, fmt) {
@@ -6602,6 +7385,8 @@ async function syncCatalogPlugins() {
         if (!res.ok) return;
         const data = await res.json();
         for (const entry of (data.catalog || [])) {
+            // The comparison table has its own modal (openCompareModal), not an options panel.
+            if (CMP_EXCLUDED_TYPES.has(entry.id)) continue;
             if (!ANALYSIS_SCHEMAS[entry.id]) {
                 ANALYSIS_SCHEMAS[entry.id] = {
                     title: entry.title || entry.id,
@@ -6621,7 +7406,10 @@ async function syncCatalogPlugins() {
 /* --- Backstage Menu (☰) & Modules Modal --- */
 async function openBackstage(mode = "open") {
     document.getElementById("backstage-overlay").classList.add("open");
-    if (mode === "open") {
+    updateReportStyleIndicators();
+    if (mode === "reportStyle") {
+        renderBackstageReportStyle();
+    } else if (mode === "open") {
         await renderBackstageOpen();
     }
 }
@@ -6630,7 +7418,200 @@ function closeBackstage() {
     document.getElementById("backstage-overlay").classList.remove("open");
 }
 
+function setBackstageActive(tabId) {
+    document.querySelectorAll("#backstage-overlay .bs-nav-item").forEach(el => {
+        el.classList.toggle("active", el.id === tabId);
+    });
+}
+
+/* --- Backstage: 표 보고 양식 설정 (export table style) --- */
+function reportStyleIsSocial() {
+    return !!(APP.reportStyle && APP.reportStyle.style === "social");
+}
+
+function updateReportStyleIndicators() {
+    const social = reportStyleIsSocial();
+    document.querySelectorAll(".bs-style-tag").forEach(el => {
+        el.textContent = social ? "사회과학 양식 적용" : "기본 APA 양식";
+        el.classList.toggle("social", social);
+    });
+}
+
+function saveReportStyle() {
+    const rs = APP.reportStyle;
+    rs.persisted = safeStorageSet(REPORT_STYLE_KEY, JSON.stringify({ style: rs.style, options: rs.options }));
+    updateReportStyleIndicators();
+    const st = document.getElementById("rs-save-state");
+    if (st) st.textContent = reportStyleSaveText();
+}
+
+function reportStyleSaveText() {
+    const p = APP.reportStyle.persisted;
+    if (p === false) return "브라우저 저장소 사용 불가: 이 창을 닫으면 설정이 초기화됨";
+    if (p === true) return "변경 즉시 저장됨 (이 브라우저)";
+    return "변경 즉시 이 브라우저에 저장됨";
+}
+
+function setReportStyle(style) {
+    APP.reportStyle.style = style === "social" ? "social" : "default";
+    saveReportStyle();
+    renderBackstageReportStyle();
+}
+
+function setReportOption(key, value) {
+    if (key === "decimals") value = parseInt(value, 10);
+    APP.reportStyle.options[key] = value;
+    saveReportStyle();
+    document.querySelectorAll(`#backstage-body input[name="rs-${key}"]`).forEach(inp => {
+        inp.parentElement.classList.toggle("on", inp.checked);
+    });
+    renderReportStylePreview();
+}
+
+function resetReportOptions() {
+    APP.reportStyle.options = Object.assign({}, REPORT_OPTION_DEFAULTS);
+    saveReportStyle();
+    renderBackstageReportStyle();
+    showToast("세부 항목을 기본값으로 되돌림");
+}
+
+function renderBackstageReportStyle() {
+    setBackstageActive("bs-tab-reportstyle");
+    const body = document.getElementById("backstage-body");
+    const rs = APP.reportStyle;
+    const o = rs.options;
+    const social = rs.style === "social";
+    const seg = (key, items) => `<div class="rs-seg" role="radiogroup">${items.map(([v, lab]) =>
+        `<label class="${o[key] === v ? "on" : ""}"><input type="radio" name="rs-${key}" value="${v}" ${o[key] === v ? "checked" : ""} onchange="setReportOption('${key}', '${v}')">${lab}</label>`).join("")}</div>`;
+    const sel = (key, items) => `<select onchange="setReportOption('${key}', this.value)">${items.map(([v, lab]) =>
+        `<option value="${v}" ${String(o[key]) === String(v) ? "selected" : ""}>${lab}</option>`).join("")}</select>`;
+    const chk = (key, lab, help) => `<label class="rs-check"><input type="checkbox" ${o[key] ? "checked" : ""} onchange="setReportOption('${key}', this.checked)"><span>${lab}${help ? `<small>${help}</small>` : ""}</span></label>`;
+    const row = (lab, help, ctl) => `<div class="rs-row"><div class="rs-lab">${lab}${help ? `<small>${help}</small>` : ""}</div><div class="rs-ctl">${ctl}</div></div>`;
+    const card = (v, title, help) => `<label class="rs-card${rs.style === v ? " on" : ""}"><input type="radio" name="rs-style" value="${v}" ${rs.style === v ? "checked" : ""} onchange="setReportStyle('${v}')"><span><b>${title}</b><small>${help}</small></span></label>`;
+
+    body.innerHTML = `<div class="rs-panel">
+        <h2>표 보고 양식 설정</h2>
+        <p class="rs-lead">결과 내보내기(.hwpx · .docx · .pdf · .xlsx · .tex · .html · .md · .csv)의 표 양식.
+            별표와 괄호 안 표준오차는 계수표(회귀·로지스틱·패널·다층·Cox·공간회귀·SEM 추정치·R3STEP·모형 비교표)에만 적용되며,
+            그 밖의 표는 열 구성을 유지하고 숫자 표기·표 번호만 바뀜. 화면의 분석 결과 표는 바뀌지 않음.</p>
+        <div class="rs-choice">
+            ${card("default", "기본 (APA 3선 표)", "통계량마다 별도 열 (B · SE · β · t · p)")}
+            ${card("social", "사회과학 보고 양식", "유의성 별표 · 괄호 안 표준오차 · p 열 생략 · &lt;표 n&gt; 번호")}
+        </div>
+        <div class="rs-preview" id="rs-preview"></div>
+        ${social ? "" : `<div class="rs-hint">현재 기본(APA) 양식 적용 중. 아래 세부 항목은 사회과학 보고 양식을 선택한 경우에만 적용됨.</div>`}
+        <fieldset class="rs-opts" ${social ? "" : "disabled"}>
+            <div class="rs-group">
+                <div class="rs-group-title">계수 표기</div>
+                ${row("유의성 별표 기준", "p 값에 따라 계수 뒤에 붙는 기호", sel("stars", [
+                    ["standard", "* p&lt;.05, ** p&lt;.01, *** p&lt;.001 (기본)"],
+                    ["dagger", "† p&lt;.10, * p&lt;.05, ** p&lt;.01, *** p&lt;.001"],
+                    ["econ", "* p&lt;.10, ** p&lt;.05, *** p&lt;.01 (경제학)"],
+                    ["none", "별표 표시 안 함"]
+                ]))}
+                ${row("별표 부착 대상", "별표를 붙일 계수", seg("star_target", [["estimate", "비표준화 계수 (B)"], ["std_estimate", "표준화 계수 (β)"]]))}
+                ${row("표준오차 위치", "괄호 안 표준오차의 배치", seg("se_position", [["beside", "계수 옆 괄호"], ["below", "계수 아래 줄"], ["column", "별도 열"]]))}
+                ${row("소수 자릿수", "계수·통계량의 소수점 아래 자릿수 (p 값은 3자리)", sel("decimals", [0, 1, 2, 3, 4, 5, 6].map(d => [d, `${d}자리`])))}
+                ${chk("leading_zero", "1을 넘지 않는 값(p · β · R²)에 앞자리 0 표기", "해제 시 .042 / 선택 시 0.042")}
+            </div>
+            <div class="rs-group">
+                <div class="rs-group-title">계수표 열 구성</div>
+                ${chk("keep_p", "p 열 유지", "해제 시 별표로 유의성 표시 후 p 열 생략")}
+                ${chk("keep_stat", "t · z 통계량 열 유지", "")}
+                ${chk("keep_ci", "신뢰구간 열 유지", "분석에서 신뢰구간을 계산한 경우")}
+            </div>
+            <div class="rs-group">
+                <div class="rs-group-title">표 번호 · 주석 · 언어</div>
+                ${chk("table_numbers", "표 번호 붙이기", "&lt;표 1&gt;, &lt;표 2&gt; … (영어: Table 1.)")}
+                ${chk("star_note", "표 주에 별표 기준과 표준오차 안내 추가", "예: * p&lt;.05, ** p&lt;.01, *** p&lt;.001 / 괄호 안은 표준오차임.")}
+                ${row("주석·표 번호 언어", "", seg("lang", [["ko", "한국어"], ["en", "English"]]))}
+                ${chk("raw_sheet", "엑셀(.xlsx)에 서식 없는 원 수치 시트 추가", "별표·괄호가 붙은 셀 대신 숫자 값으로 재계산할 때 사용")}
+            </div>
+        </fieldset>
+        <div class="rs-foot">
+            <span id="rs-save-state">${reportStyleSaveText()}</span>
+            <button class="silky-small-btn" onclick="resetReportOptions()" ${social ? "" : "disabled"}>세부 항목 기본값으로 되돌리기</button>
+        </div>
+    </div>`;
+    renderReportStylePreview();
+}
+
+/* Static example of one coefficient table in the selected style (example values, not results). */
+function renderReportStylePreview() {
+    const box = document.getElementById("rs-preview");
+    if (!box) return;
+    const rs = APP.reportStyle;
+    const o = rs.options;
+    const social = rs.style === "social";
+    const en = social && o.lang === "en";
+    const dec = social ? o.decimals : 3;
+    const sample = [
+        { term: en ? "Job stress" : "직무 스트레스", b: 0.512, se: 0.103, beta: 0.421, t: 4.971, p: 0.0000012, cil: 0.309, ciu: 0.715 },
+        { term: en ? "Social support" : "사회적 지지", b: -0.087, se: 0.051, beta: -0.062, t: -1.706, p: 0.089, cil: -0.187, ciu: 0.013 }
+    ];
+    const stripZero = s => s.replace(/^(-?)0\./, "$1.");
+    const fx = (v, bounded) => {
+        const s = v.toFixed(dec);
+        return (social && bounded && !o.leading_zero) ? stripZero(s) : s;
+    };
+    const fp = p => {
+        const lz = !social || o.leading_zero;
+        if (p < 0.001) return lz && social ? "&lt; 0.001" : "&lt; .001";
+        const s = p.toFixed(3);
+        return lz ? s : stripZero(s);
+    };
+    const levels = social ? (REPORT_STAR_LEVELS[o.stars] || []).slice().sort((a, b) => b[0] - a[0]) : [];
+    const starOf = p => { let s = ""; for (const [thr, sym] of levels) if (p < thr) s = sym; return s; };
+    const seBeside = social && o.se_position === "beside";
+    const seBelow = social && o.se_position === "below";
+    const seCol = !social || o.se_position === "column";
+    const showStat = !social || o.keep_stat;
+    const showCi = social && o.keep_ci;
+    const showP = !social || o.keep_p;
+
+    const head = [en ? "Variable" : "변수", "B"];
+    if (seCol) head.push("SE");
+    head.push("β");
+    if (showStat) head.push("t");
+    if (showCi) head.push("95% CI");
+    if (showP) head.push("p");
+
+    let rowsHtml = "";
+    for (const r of sample) {
+        const st = starOf(r.p);
+        const bTxt = fx(r.b, false) + (o.star_target === "estimate" ? st : "");
+        const cells = [r.term, seBeside ? `${bTxt} (${fx(r.se, false)})` : bTxt];
+        if (seCol) cells.push(fx(r.se, false));
+        cells.push(fx(r.beta, true) + (o.star_target === "std_estimate" ? st : ""));
+        if (showStat) cells.push(fx(r.t, false));
+        if (showCi) cells.push(`[${fx(r.cil, false)}, ${fx(r.ciu, false)}]`);
+        if (showP) cells.push(fp(r.p));
+        rowsHtml += `<tr>${cells.map(c => `<td>${c}</td>`).join("")}</tr>`;
+        if (seBelow) {
+            rowsHtml += `<tr class="se-row"><td></td><td>(${fx(r.se, false)})</td>${"<td></td>".repeat(head.length - 2)}</tr>`;
+        }
+    }
+
+    const title = en ? "Regression results (example)" : "회귀분석 결과 (예시)";
+    const cap = social && o.table_numbers ? (en ? `Table 1. ${title}` : `&lt;표 1&gt; ${title}`) : title;
+    const notes = [];
+    if (social && o.star_note) {
+        const thrTxt = t => { const s = t < 0.01 ? t.toFixed(3) : t.toFixed(2); return o.leading_zero ? s : stripZero(s); };
+        if (levels.length) {
+            notes.push(en ? levels.map(([t, s]) => `${s}p &lt; ${thrTxt(t)}.`).join(" ")
+                          : levels.map(([t, s]) => `${s} p&lt;${thrTxt(t)}`).join(", "));
+        }
+        if (o.se_position !== "column") notes.push(en ? "Standard errors in parentheses." : "괄호 안은 표준오차임.");
+    }
+    const notePrefix = en ? "<em>Note.</em> " : "주: ";
+    box.innerHTML = `<div class="rs-preview-label">미리보기 — 예시 값 (실제 분석 결과 아님) · ${social ? "사회과학 보고 양식" : "기본 APA 양식"}</div>
+        <div class="rs-preview-cap">${cap}</div>
+        <table><thead><tr>${head.map(h => `<th>${h}</th>`).join("")}</tr></thead><tbody>${rowsHtml}</tbody></table>
+        ${notes.length ? `<div class="rs-preview-note">${notePrefix}${notes.join(" ")}</div>` : ""}`;
+}
+
 async function renderBackstageOpen() {
+    setBackstageActive("bs-tab-open");
     const body = document.getElementById("backstage-body");
     const res = await fetch("/api/datasets");
     const data = await res.json();
@@ -6909,7 +7890,7 @@ window.addEventListener("click", () => {
 
 function setLayoutMode(mode) {
     APP.layoutMode = mode;
-    localStorage.setItem("openstat_layout_mode", mode);
+    safeStorageSet("openstat_layout_mode", mode);
     closeLayoutMenu();
 
     const leftPane = document.getElementById("left-pane");
@@ -7610,6 +8591,7 @@ function applySemBuilderToModel(runNow = false) {
 /* --- Bootstrap Application cleanly with ZERO event.target errors --- */
 window.addEventListener("DOMContentLoaded", async () => {
     switchRibbonTab("analyses");
+    updateReportStyleIndicators();
     await syncCatalogPlugins();
     try {
         const res = await fetch("/api/session/state?since_revision=0");

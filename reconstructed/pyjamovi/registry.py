@@ -133,6 +133,7 @@ ANALYSIS_CATALOG: List[Dict[str, Any]] = [
     {"id": "bayesCorr", "group": "Regression", "title": "Bayesian Correlation", "module": "jsq", "icon": "analysis-regression.svg"},
     {"id": "linReg", "group": "Regression", "title": "Linear Regression", "module": "jmv", "icon": "analysis-regression.svg"},
     {"id": "logRegBin", "group": "Regression", "title": "2 Outcomes (Binomial Logistic)", "module": "jmv", "icon": "analysis-regression.svg"},
+    {"id": "compareModels", "group": "Regression", "title": "Model Comparison Table (side-by-side, esttab)", "module": "openstat", "icon": "analysis-regression.svg"},
 
     {"id": "contTables", "group": "Frequencies", "title": "Independent Samples (χ² Association)", "module": "jmv", "icon": "analysis-frequencies.svg"},
 
@@ -255,6 +256,11 @@ def _dispatch_inner(analysis_type: str, df: pd.DataFrame, p: Dict[str, Any]) -> 
         "traj": "lcga",
         "group_based_trajectory": "lcga",
         "cfa": "sem",
+        "compare_models": "compareModels",
+        "model_comparison": "compareModels",
+        "modelcomparison": "compareModels",
+        "esttab": "compareModels",
+        "compare": "compareModels",
     }
     if t == "lpa" and p.get("vars") and not p.get("continuous"):
         p = dict(p, continuous=p.get("vars"))
@@ -616,6 +622,27 @@ def _dispatch_inner(analysis_type: str, df: pd.DataFrame, p: Dict[str, Any]) -> 
             path_diagram=bool(p.get("pathDiagram", p.get("path_diagram", True))),
             **extra,
         )
+
+    elif t == "compareModels":
+        from .analyses.model_compare import compare_results, normalize_model_spec
+        specs = p.get("models") or []
+        if isinstance(specs, str):
+            import json as _json
+            specs = _json.loads(specs)
+        if not isinstance(specs, (list, tuple)) or not specs:
+            raise ValueError("모형 비교: models에 비교할 모형 지정 필요 (예: [{'analysis': 'linReg', 'dep': 'y', 'covs': ['x1']}])")
+        results = []
+        for sp in specs:
+            sp = normalize_model_spec(sp)
+            a_type = str(sp.pop("analysis"))
+            if alias_map.get(a_type, a_type) == "compareModels":
+                raise ValueError("모형 비교: 모형 비교표를 다시 비교 대상으로 지정할 수 없음")
+            results.append(dispatch_analysis(a_type, df, sp))
+        keys = ("models", "names", "stats", "estimate", "labels", "terms", "table", "title", "lang")
+        return compare_results(results, names=p.get("names"), stats=p.get("stats", "auto"),
+                               estimate=p.get("estimate", "b"), labels=p.get("labels"), terms=p.get("terms"),
+                               table=p.get("table"), title=p.get("title"), lang=p.get("lang", "ko"),
+                               options={k: p[k] for k in keys if k in p})
 
     elif t in ("lca", "lta", "lcga"):
         from .analyses.mixture_module import (

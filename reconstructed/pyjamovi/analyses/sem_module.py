@@ -242,10 +242,15 @@ class SEM(BaseAnalysis):
                        + {"stdyx": "잠재·관측 변수 모두의 분산으로 표준화",
                           "stdy": "관측 공변량(x)은 원척도 유지, 나머지 변수의 분산으로 표준화",
                           "std": "잠재변수의 분산으로만 표준화"}[std_kind] + ", SE는 델타법" + (" (붓스트랩 시 붓스트랩 SE)" if boot is not None else "") + ".")
+        t.mark_coefficients(estimate="est", se="se", p="p", stat="z", std_estimate="std", ci=("ci_lo", "ci_hi"),
+                            label=["group", "mplus"])
         self.add_table(t)
 
         # ---------------------------------------------------------------- 2. fit
         fs = res.fitstats
+        self.model_stats = {"N": int(fs["N"]), "LL": fs["ll0"], "AIC": fs["aic"], "BIC": fs["bic"],
+                            "Chi2": (fs["chi2_test"], fs["pvalue"]), "df": int(fs["df"]), "CFI": fs["cfi"],
+                            "TLI": fs["tli"], "RMSEA": fs["rmsea"], "SRMR": fs["srmr"]}
         mlr = s["estimator"] == "mlr"
         if s["fit"]:
             ft = ResultsTable(name="fit", title="모형 적합도 (Model Fit Indices)")
@@ -359,6 +364,7 @@ class SEM(BaseAnalysis):
                             "ci_lo": float(a), "ci_hi": float(b)})
             dt.add_note("SE는 델타법" + (f", 붓스트랩 {boot.shape[0]}회 SE·신뢰구간({s['ciType']})" if boot is not None else "")
                         + ". 신뢰구간 기본은 대칭(추정치 ± z·SE, Mplus CINTERVAL 기본).")
+            dt.mark_coefficients(estimate="est", se="se", p="p", stat="z", ci=("ci_lo", "ci_hi"), label="name")
             self.add_table(dt)
 
         # ---------------------------------------------------------------- 6. indirect effects
@@ -476,6 +482,8 @@ class SEM(BaseAnalysis):
                     + (f", 붓스트랩 {boot.shape[0]}회 SE·신뢰구간({s['ciType']})" if boot is not None else
                        (" (붓스트랩 신뢰구간은 bootstrap=1000, ciType='bc' 지정)" if s["estimator"] == "ml" else
                         " (붓스트랩은 ML 추정에서만 사용: estimator='ml', bootstrap=1000)")) + ".")
+        it.mark_coefficients(estimate="est", se="se", p="p", stat="z", std_estimate="std", ci=("ci_lo", "ci_hi"),
+                             label=["group", "type", "path"])
         self.add_table(it)
 
     def _invariance_table(self, s):

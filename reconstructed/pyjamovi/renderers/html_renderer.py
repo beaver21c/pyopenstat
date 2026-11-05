@@ -4,17 +4,67 @@ License: MIT
 Produces standalone, printable HTML reports with APA 3-line tables, vector/high-DPI figures, and reproducible Python syntax.
 """
 
-from typing import List, Any
+from typing import List, Any, Optional
 import html
 
 
-def render_jamovi_html_report(analyses: List[Any], title: str = "OpenStat Studio — Statistical Analysis Report") -> str:
-    """Generate a self-contained, publication-ready HTML report."""
+def _rendered_table_html(rt: Any, rf: Any) -> str:
+    """APA table from a RenderedTable: grouped heads as colspan/rowspan cells, numbered caption, notes."""
+    out = ["<div class='jamovi-table-container'>", f"<h4>{html.escape(rt.caption)}</h4>", "<table class='apa-table'>", "<thead>"]
+    for hrow in rt.header_rows:
+        out.append("<tr>")
+        for hc in hrow:
+            span = (f" colspan='{hc.colspan}'" if hc.colspan > 1 else "") + (f" rowspan='{hc.rowspan}'" if hc.rowspan > 1 else "")
+            style = " style='text-align:center;border-bottom:1px solid #334155;'" if hc.colspan > 1 else ""
+            out.append(f"<th{span}{style}>{html.escape(hc.text)}</th>")
+        out.append("</tr>")
+    out.append("</thead><tbody>")
+    rules = set(rt.rules_above)
+    for bi, row in enumerate(rt.body):
+        tr_style = " style='border-top:1px solid #334155;'" if bi in rules else ""
+        out.append(f"<tr{tr_style}>")
+        for ci, v in enumerate(row):
+            al = rt.aligns[ci]
+            cls = " class='num'" if al == "right" else (" style='text-align:center;'" if al == "center" else "")
+            out.append(f"<td{cls}>{html.escape(v)}</td>")
+        out.append("</tr>")
+    out.append("</tbody></table>")
+    head = "주: " if getattr(rf, "lang", "ko") == "ko" else "Note. "
+    for i, n in enumerate(rt.notes):
+        out.append(f"<div class='footnote'>{head if i == 0 else ''}{html.escape(n)}</div>")
+    out.append("</div>")
+    return "".join(out)
+
+
+def _social_snippet(a: Any, rf: Any, numbers: dict) -> str:
+    from ..report_format import render_table
+    parts = ["<div class='analysis-block'>"]
+    for t in getattr(a, "tables", []):
+        if t.columns:
+            parts.append(_rendered_table_html(render_table(t, rf, numbers.get(id(t))), rf))
+    for p in getattr(a, "plots", []):
+        parts.append(f"<div class='jamovi-plot'><h4>{html.escape(p['title'])}</h4><img src='{p['src']}' style='max-width:100%;height:auto;'/></div>")
+    if getattr(a, "apa_narrative", ""):
+        parts.append(f"<p class='apa-summary'><strong>APA Summary:</strong> {a.apa_narrative}</p>")
+    parts.append("</div>")
+    return "\n".join(parts)
+
+
+def render_jamovi_html_report(analyses: List[Any], title: str = "OpenStat Studio — Statistical Analysis Report",
+                              report_format: Optional[Any] = None) -> str:
+    """Generate a self-contained, publication-ready HTML report (social-science table format when `report_format` is given)."""
     cards_html = []
+    numbers = {}
+    if report_format is not None:
+        from ..report_format import table_numbering
+        numbers = table_numbering(analyses)
 
     for idx, a in enumerate(analyses, start=1):
         a_title = getattr(a, "title", f"Analysis {idx}")
-        a_content = getattr(a, "to_html_snippet", lambda: "")()
+        if report_format is not None:
+            a_content = _social_snippet(a, report_format, numbers)
+        else:
+            a_content = getattr(a, "to_html_snippet", lambda: "")()
         syn_py = getattr(a, "syntax_python", "")
         syn_block = (
             f"<pre class='code-box'>{html.escape(syn_py)}</pre>"

@@ -44,6 +44,21 @@ PLOT_STYLE_SCHEMA = {
     }
 }
 
+REPORT_STYLE_SCHEMA = {
+    "type": "string",
+    "enum": ["default", "social"],
+    "description": "Table format of exported reports. default = APA (every statistic in its own column); social = social-science "
+                   "journal format for coefficient tables (significance stars, SE in parentheses beside or below B, p column "
+                   "dropped) plus numbered <표 n> captions and merged group headers."
+}
+REPORT_OPTIONS_SCHEMA = {
+    "type": "object",
+    "description": "Options of report_style='social': stars ('standard' * .05 ** .01 *** .001 | 'dagger' adds † .10 | 'econ' * .10 ** .05 *** .01 | 'none' | [[0.05, '*'], ...]), "
+                   "star_target ('estimate' = B | 'std_estimate' = β), se_position ('beside' | 'below' | 'column'), keep_p, keep_stat, keep_ci, "
+                   "decimals (0-6), leading_zero, star_note, table_numbers, lang ('ko' | 'en'), raw_sheet (xlsx numeric sheet).",
+    "additionalProperties": True
+}
+
 RUN_INPUT_SCHEMA = {
     "type": "object",
     "properties": {
@@ -65,6 +80,8 @@ RUN_INPUT_SCHEMA = {
             "description": "Optional list of output file paths to export analyzed tables (.xlsx, .docx, .hwpx, .tex, .csv, .tsv, .md, .html, .json, .omv)"
         },
         "export_plot_path": {"type": "string", "description": "Optional path to export figure (.svg, .pdf, or .png)"},
+        "report_style": REPORT_STYLE_SCHEMA,
+        "report_options": REPORT_OPTIONS_SCHEMA,
         "save_omv_path": {"type": "string", "description": "Optional output .omv path"},
         "save_html_path": {"type": "string", "description": "Optional output standalone .html report path"},
         "push_to_live_ui": {"type": "boolean", "description": "If true and UI is open, pushes result straight into OpenStat Studio Web UI"}
@@ -146,6 +163,8 @@ TOOLS = [
                     "items": {"type": "string"},
                     "description": "Optional paths to export Analysis Results report (.pdf, .hwpx, .docx, .xlsx, .html, .tex, .md)"
                 },
+                "report_style": REPORT_STYLE_SCHEMA,
+                "report_options": REPORT_OPTIONS_SCHEMA,
                 "push_to_live_ui": {"type": "boolean", "default": False}
             },
             "required": ["file_path", "chart_type"]
@@ -161,7 +180,9 @@ TOOLS = [
                     "type": "array",
                     "items": {"type": "string"},
                     "description": "Target output file paths (e.g. ['reports/results.pdf', 'reports/results.hwpx', 'reports/results.docx'])"
-                }
+                },
+                "report_style": REPORT_STYLE_SCHEMA,
+                "report_options": REPORT_OPTIONS_SCHEMA
             },
             "required": ["output_paths"]
         }
@@ -182,6 +203,8 @@ TOOLS = [
                     "description": "Optional output paths for analyzed tables (e.g. ['reports/tables.xlsx', 'reports/tables.hwpx', 'reports/tables.docx'])"
                 },
                 "export_plot_dir": {"type": "string", "description": "Optional directory to export all generated figures"},
+                "report_style": REPORT_STYLE_SCHEMA,
+                "report_options": REPORT_OPTIONS_SCHEMA,
                 "plot_format": {"type": "string", "enum": ["svg", "pdf", "png"], "default": "svg"}
             }
         }
@@ -347,8 +370,9 @@ def handle_tool_call(name: str, arguments: Dict[str, Any]) -> Any:
         if out_py:
             sess.save_py(out_py)
             output_text += f"\n- Saved `.py` syntax: `{out_py}`"
+        rep_kw = {"report_style": arguments.get("report_style"), "report_options": arguments.get("report_options")}
         for t_path in export_tables_list:
-            sess.export_tables(t_path)
+            sess.export_tables(t_path, **rep_kw)
             output_text += f"\n- Exported analyzed table: `{t_path}`"
         if export_plot and res.plots:
             os.makedirs(os.path.dirname(os.path.abspath(export_plot)), exist_ok=True)
@@ -404,7 +428,7 @@ def handle_tool_call(name: str, arguments: Dict[str, Any]) -> Any:
             output_text += f"\n- Saved standalone graph: `{export_plot}`"
 
         for r_path in (arguments.get("export_results_paths") or []):
-            sess.export_results(r_path)
+            sess.export_results(r_path, report_style=arguments.get("report_style"), report_options=arguments.get("report_options"))
             output_text += f"\n- Exported Analysis Results (table + graph): `{r_path}`"
 
         if bool(arguments.get("push_to_live_ui", False)):
@@ -430,7 +454,8 @@ def handle_tool_call(name: str, arguments: Dict[str, Any]) -> Any:
             analyses_out.append(dispatch_analysis(a_type, sess.df, sp.get("params") or {}))
         saved_lines = []
         for out_p in (arguments.get("output_paths") or []):
-            export_analyses(analyses_out, output_path=out_p, dataset=sess.df)
+            export_analyses(analyses_out, output_path=out_p, dataset=sess.df,
+                            report_style=arguments.get("report_style"), report_options=arguments.get("report_options"))
             saved_lines.append(f"- Exported full Analysis Results -> `{out_p}`")
         return {"content": [{"type": "text", "text": "### Exported Analysis Results\n" + "\n".join(saved_lines)}]}
 
@@ -458,7 +483,8 @@ def handle_tool_call(name: str, arguments: Dict[str, Any]) -> Any:
 
         exported_notes = []
         for t_path in (arguments.get("export_table_paths") or []):
-            export_analyses(analyses, output_path=t_path, dataset=final_df)
+            export_analyses(analyses, output_path=t_path, dataset=final_df,
+                            report_style=arguments.get("report_style"), report_options=arguments.get("report_options"))
             exported_notes.append(f"- Exported analyzed tables -> `{t_path}`")
 
         plot_dir = arguments.get("export_plot_dir")
