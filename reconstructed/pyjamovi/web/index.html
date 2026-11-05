@@ -207,6 +207,82 @@ input, textarea, select, .selectable, .jmv-results-sheet, .jmv-results-sheet * {
     border-color: #5EEAD4;
 }
 
+/* --- Window Layout Selector (창 배열): hidden until the pill is clicked --- */
+.layout-selector-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.layout-pill {
+    white-space: nowrap;
+}
+
+.layout-dd {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    display: none;
+    width: 360px;
+    max-width: calc(100vw - 16px);
+    background: #FFFFFF;
+    border: 1px solid #94A3B8;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
+    border-radius: 4px;
+    padding: 4px 0;
+    z-index: 1200;
+}
+
+.layout-dd.open {
+    display: block;
+}
+
+.layout-dd-item {
+    padding: 6px 14px;
+    cursor: pointer;
+}
+
+.layout-dd-title {
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #1E293B;
+}
+
+.layout-dd-desc {
+    margin-top: 1px;
+    font-size: 11px;
+    line-height: 1.45;
+    color: #64748B;
+}
+
+.layout-dd-item.active {
+    background-color: #F0FDFA;
+}
+
+.layout-dd-item.active .layout-dd-title {
+    color: var(--ost-accent-hover);
+}
+
+.layout-dd-item.active .layout-dd-title::after {
+    content: " ✓";
+}
+
+.layout-dd-item:hover {
+    background-color: var(--ost-primary);
+}
+
+.layout-dd-item:hover .layout-dd-title,
+.layout-dd-item:hover .layout-dd-desc {
+    color: #FFFFFF;
+}
+
+.layout-dd-sep {
+    height: 1px;
+    background: #E2E8F0;
+    margin: 4px 0;
+}
+
 .ribbon-icon-btn {
     width: 26px;
     height: 24px;
@@ -5062,6 +5138,7 @@ function toggleSyntaxModeUI() {
 
 function openRibbonMenu(ev, menuKey) {
     ev.stopPropagation();
+    closeLayoutMenu();
     const dd = document.getElementById("ribbon-dropdown");
     const lang = APP.lang || 'ko';
     const menus = RIBBON_MENUS_I18N[lang] || RIBBON_MENUS_I18N.ko;
@@ -7379,6 +7456,28 @@ async function triggerRebuildFromUI() {
     }
 }
 
+// Catalog group of a scaffolded plugin -> ribbon menu that lists it.
+const PLUGIN_GROUP_MENU = {
+    "Exploration": "exploration", "T-Tests": "ttests", "ANOVA": "anova", "Regression": "regression",
+    "Frequencies": "frequencies", "Factor": "factor", "MedMod": "medmod", "Linear Models": "linearmodels",
+    "Survival": "survival", "Mixture": "mixture", "Spatial": "spatial", "Text": "text", "Network": "network"
+};
+const PLUGIN_SECTION_LABEL = { ko: "추가 모듈 (Plugin)", en: "Added Modules (Plugin)" };
+
+function addPluginMenuItem(entry) {
+    // Groups without a ribbon menu (e.g. upstream "Plugins") go to the Exploration menu.
+    const key = PLUGIN_GROUP_MENU[entry.group] || "exploration";
+    for (const lang of Object.keys(RIBBON_MENUS_I18N)) {
+        const menu = RIBBON_MENUS_I18N[lang][key];
+        if (!menu || menu.some(x => x.id === entry.id)) continue;
+        if (!menu.some(x => x.pluginSection)) {
+            menu.push({ sep: true, pluginSection: true },
+                      { section: PLUGIN_SECTION_LABEL[lang] || PLUGIN_SECTION_LABEL.en, pluginSection: true });
+        }
+        menu.push({ id: entry.id, label: entry.title || entry.id, badge: "Plugin" });
+    }
+}
+
 async function syncCatalogPlugins() {
     try {
         const res = await fetch("/api/catalog");
@@ -7395,12 +7494,12 @@ async function syncCatalogPlugins() {
                         : [{ key: "vars", label: "Variables", multi: true, req: true, prefer: "num" }],
                     sections: []
                 };
-                if (!RIBBON_MENUS.anova.some(x => x.id === entry.id)) {
-                    RIBBON_MENUS.anova.push({ id: entry.id, label: entry.title || entry.id, badge: "Plugin" });
-                }
+                addPluginMenuItem(entry);
             }
         }
-    } catch (_) {}
+    } catch (err) {
+        console.warn("Catalog plugin sync failed:", err);
+    }
 }
 
 /* --- Backstage Menu (☰) & Modules Modal --- */
@@ -7873,6 +7972,9 @@ function renderLeftVarExplorer() {
 /* --- Window Layout Mode Switcher --- */
 function toggleLayoutMenu(ev) {
     if (ev) ev.stopPropagation();
+    closeDropdown();
+    const sp = document.getElementById("settings-popover");
+    if (sp) sp.classList.remove("open");
     const dd = document.getElementById("layout-dropdown");
     if (dd) dd.classList.toggle("open");
 }

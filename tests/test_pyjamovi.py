@@ -613,3 +613,33 @@ def test_jasp_features_synthetic_data_and_stata_transpiler():
     assert st_sp == 200
     res_sp = json.loads(b_sp.decode("utf-8"))
     assert any(a.get("name") == "spatialAnalysis" or a.get("analysis_type") == "spatialAnalysis" for a in res_sp["analyses"])
+
+
+def test_web_ui_layout_menu_and_plugin_menu_contract():
+    """Static checks on web/index.html: the window-layout menu is hidden until opened, and catalog
+    plugins are added to RIBBON_MENUS_I18N menus that exist (RIBBON_MENUS itself is not defined)."""
+    import re
+
+    html_path = os.path.join(ROOT_DIR, "reconstructed", "pyjamovi", "web", "index.html")
+    with open(html_path, encoding="utf-8") as f:
+        html = f.read()
+
+    css = re.search(r"\n\.layout-dd \{(.*?)\}", html, re.S)
+    assert css, ".layout-dd has no CSS rule"
+    assert "position: absolute" in css.group(1) and "display: none" in css.group(1)
+    assert re.search(r"\.layout-dd\.open \{\s*display: block;", html)
+
+    assert not re.search(r"\bRIBBON_MENUS(?!_I18N)\b", html), "undefined RIBBON_MENUS referenced"
+
+    def menu_keys(lang):
+        start = html.index(f"    {lang}: {{", html.index("const RIBBON_MENUS_I18N"))
+        block = html[start:html.index("\n    }", start)]
+        return set(re.findall(r"^        ([a-z_]+): \[", block, re.M))
+
+    ko, en = menu_keys("ko"), menu_keys("en")
+    assert ko == en
+    group_map = re.search(r"const PLUGIN_GROUP_MENU = \{(.*?)\};", html, re.S).group(1)
+    targets = set(re.findall(r':\s*"([a-z_]+)"', group_map)) | {"exploration"}
+    assert targets <= ko, f"plugin groups map to missing menus: {targets - ko}"
+    ribbon_keys = set(re.findall(r"openRibbonMenu\(event, '([a-z_]+)'\)", html))
+    assert ribbon_keys <= ko
