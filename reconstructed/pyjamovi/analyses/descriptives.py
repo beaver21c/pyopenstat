@@ -119,6 +119,8 @@ class Descriptives(BaseAnalysis):
             if not opts.get(opt_key, False):
                 continue
             row = {"var": stat_name}
+            if opt_key in ("n", "missing"):
+                row["_rowfmt"] = "integer"   # counts print as whole numbers (60, not 60.000)
             for v in self.vars:
                 if v not in df.columns:
                     continue

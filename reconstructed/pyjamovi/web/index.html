@@ -321,7 +321,23 @@ input, textarea, select, .selectable, .jmv-results-sheet, .jmv-results-sheet * {
 }
 
 .jmv-ribbon-body::-webkit-scrollbar {
-    height: 0;
+    height: 6px;
+}
+
+.jmv-ribbon-body::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 3px;
+}
+
+/* Narrow windows: labels never break character by character; the ribbon scrolls sideways instead. */
+.jmv-ribbon-tab, .ribbon-pill-btn, .ribbon-btn .rb-label { white-space: nowrap; }
+.ribbon-pill-btn, .ribbon-btn { flex-shrink: 0; }
+.ribbon-tabs { min-width: 0; }
+
+@media (max-width: 1240px) {
+    .jmv-ribbon-tab { padding: 0 9px; }
+    .ribbon-pill-btn { padding: 0 6px; font-size: 11px; }
+    .ribbon-right-tools { gap: 3px; }
 }
 
 .ribbon-pane {
@@ -697,6 +713,29 @@ body[data-layout="data-only"] #left-pane {
     color: #6EE7B7;
 }
 
+.badge-pill.gray {
+    background: #334155;
+    color: #CBD5E1;
+}
+
+.badge-pill.blue {
+    background: #1E3A8A;
+    color: #BFDBFE;
+}
+
+.badge-pill.red {
+    background: #7F1D1D;
+    color: #FECACA;
+}
+
+/* Self-check (doctor) status colours and tables */
+.doc-pass { color: #047857; font-weight: 600; }
+.doc-warn { color: #B45309; font-weight: 600; }
+.doc-fail { color: #B91C1C; font-weight: 600; }
+.doc-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.doc-table th, .doc-table td { border-bottom: 1px solid #E2E8F0; padding: 4px 6px; text-align: left; }
+.doc-table th { background: #F1F5F9; font-weight: 600; }
+
 .left-box-tools {
     margin-left: auto;
     display: flex;
@@ -1037,21 +1076,28 @@ table.jmv-grid td[contenteditable="true"]:focus {
     background-position: 0 100%;
     background-repeat: no-repeat;
     flex-shrink: 0;
+    flex-wrap: wrap;
+    gap: 6px;
 }
 
 .silky-options-title {
     font-size: 17px;
     font-weight: 400;
     color: #222222;
+    flex: 1 1 180px;
+    min-width: 0;
 }
 
 .silky-hdr-actions {
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-shrink: 0;
+    margin-left: auto;
 }
 
 .silky-small-btn {
+    white-space: nowrap;
     padding: 3px 8px;
     font-size: 11px;
     border: 1px solid #999999;
@@ -1439,16 +1485,21 @@ table.jmv-grid td[contenteditable="true"]:focus {
 }
 
 .sheet-toolbar {
-    position: absolute;
-    top: 10px;
-    right: 12px;
-    display: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     gap: 5px;
+    margin: -8px -10px 4px 0;
+    visibility: hidden;
 }
 
 .jmv-results-sheet:hover .sheet-toolbar,
 .jmv-results-sheet.selected .sheet-toolbar {
-    display: flex;
+    visibility: visible;
+}
+
+@media print {
+    .sheet-toolbar { display: none; }
 }
 
 .sheet-tool-btn {
@@ -2275,7 +2326,7 @@ table.jmv-apa-table tbody tr.sec-break td {
                     <img class="rb-icon" src="assets/menu-row-add.svg" alt="Add Row">
                     <span class="rb-label" data-i18n="data_add_row">행 추가</span>
                 </button>
-                <button class="ribbon-btn" onclick="modifyStructure('delete_row')">
+                <button class="ribbon-btn" onclick="promptDeleteRow()">
                     <img class="rb-icon" src="assets/menu-row-remove.svg" alt="Delete Row">
                     <span class="rb-label" data-i18n="data_delete_row">행 삭제</span>
                 </button>
@@ -2449,7 +2500,7 @@ table.jmv-apa-table tbody tr.sec-break td {
         <strong>Computed Variable:</strong>
         <input type="text" id="comp-name" placeholder="NewVarName" style="width:130px;">
         <span>=</span>
-        <input type="text" id="comp-formula" placeholder="e.g. LOG(len) or Z(len) or len * 2" style="width:300px;">
+        <input type="text" id="comp-formula" placeholder="예: LN(len) 자연로그 · LOG(len) 상용로그 · Z(len) · len * 2" title="LN·log = 자연로그(Stata log와 같음), LOG·log10 = 상용로그, Z = 표준화, MEAN·SUM·MIN·MAX = 행 단위 계산, IFELSE(조건, 참, 거짓)" style="width:300px;">
         <button class="silky-small-btn" onclick="submitComputedColumn()">Compute</button>
         <button class="silky-small-btn" onclick="toggleComputeBar()">Close</button>
         <span style="font-size:11px;color:#666;">Functions: <code>LOG, LN, EXP, SQRT, ABS, Z, MEAN, SUM</code></span>
@@ -2465,7 +2516,7 @@ table.jmv-apa-table tbody tr.sec-break td {
                     <span class="left-box-title" data-i18n="var_explorer_title">📋 변수 탐색기</span>
                     <span id="left-var-count-badge" class="badge-pill">0개 변수</span>
                     <div class="left-box-tools">
-                        <input type="text" id="left-var-filter" placeholder="변수 검색..." oninput="filterLeftVariables(this.value)">
+                        <input type="text" id="left-var-filter" placeholder="변수 검색..." data-i18n-placeholder="var_filter_ph" oninput="filterLeftVariables(this.value)">
                         <button class="left-small-icon-btn" onclick="toggleComputeBar()" title="변수 계산 (Stata: generate)"><img src="assets/menu-compute.svg" alt="Compute"></button>
                         <button class="left-small-icon-btn" onclick="openRecodeModal()" title="변수 재코딩 (Stata: recode)"><img src="assets/menu-data-transform.svg" alt="Recode"></button>
                     </div>
@@ -2475,11 +2526,11 @@ table.jmv-apa-table tbody tr.sec-break td {
                         <thead>
                             <tr>
                                 <th style="width:26px;">#</th>
-                                <th style="width:22px;">척도</th>
-                                <th>변수명</th>
-                                <th style="width:50px;">유형</th>
-                                <th style="width:38px;text-align:right;">결측</th>
-                                <th style="width:32px;text-align:center;">선택</th>
+                                <th style="width:22px;" data-i18n="lv_scale">척도</th>
+                                <th data-i18n="lv_name">변수명</th>
+                                <th style="width:50px;" data-i18n="lv_type">유형</th>
+                                <th style="width:38px;text-align:right;" data-i18n="lv_missing">결측</th>
+                                <th style="width:32px;text-align:center;" data-i18n="lv_pick">선택</th>
                             </tr>
                         </thead>
                         <tbody id="left-var-tbody"></tbody>
@@ -2549,15 +2600,15 @@ table.jmv-apa-table tbody tr.sec-break td {
             <!-- Right Pane Subbar: View Switcher (Results vs Data Grid) -->
             <div class="right-pane-subbar">
                 <div class="view-switch-tabs">
-                    <button class="v-tab active" id="v-tab-results" onclick="switchRightView('results')">📄 분석 결과 시트</button>
-                    <button class="v-tab" id="v-tab-data" onclick="switchRightView('data')">📋 데이터 스프레드시트</button>
-                    <button class="v-tab" id="v-tab-split" onclick="switchRightView('split')">◫ 결과 + 데이터 분할</button>
+                    <button class="v-tab active" id="v-tab-results" onclick="switchRightView('results')" data-i18n="vt_results">📄 분석 결과 시트</button>
+                    <button class="v-tab" id="v-tab-data" onclick="switchRightView('data')" data-i18n="vt_data">📋 데이터 스프레드시트</button>
+                    <button class="v-tab" id="v-tab-split" onclick="switchRightView('split')" data-i18n="vt_split">◫ 결과 + 데이터 분할</button>
                 </div>
                 <div class="subbar-actions">
-                    <button class="subbar-btn" onclick="openSyntheticDataModal()" title="합성데이터 생성 (시뮬레이션 / 개인정보보호)">🧬 합성데이터 생성</button>
-                    <button class="subbar-btn" onclick="openCompareModal()" title="계수표가 있는 분석 결과를 한 표에 나란히 비교 (Stata esttab 형식)">📊 모형 비교표</button>
-                    <button class="subbar-btn" onclick="openRibbonMenu(event, 'export_tables')">📄 내보내기 ▾</button>
-                    <button class="subbar-btn" onclick="clearAllResults()">🧹 결과 지우기</button>
+                    <button class="subbar-btn" onclick="openSyntheticDataModal()" title="합성데이터 생성 (연구·교육·시뮬레이션용)" data-i18n="sb_synthetic">🧬 합성데이터 생성</button>
+                    <button class="subbar-btn" onclick="openCompareModal()" title="계수표가 있는 분석 결과를 한 표에 나란히 비교 (Stata esttab 형식)" data-i18n="sb_compare">📊 모형 비교표</button>
+                    <button class="subbar-btn" onclick="openRibbonMenu(event, 'export_tables')" data-i18n="sb_export">📄 내보내기 ▾</button>
+                    <button class="subbar-btn" onclick="clearAllResults()" data-i18n="sb_clear">🧹 결과 지우기</button>
                 </div>
             </div>
             <div id="right-grid-wrap" style="display:none;flex:1 1 auto;overflow:auto;background:#FFFFFF;border-bottom:1px solid #CBD5E1;">
@@ -3025,7 +3076,7 @@ table.jmv-apa-table tbody tr.sec-break td {
             </div>
             <div style="font-size:11px;color:#64748B;margin-bottom:14px;">
                 Supports standard Python comparisons: <code>==, !=, &gt;, &gt;=, &lt;, &lt;=, and, or, in</code>.<br>
-                Leave empty or click 'Reset / Show All Rows' to restore all data rows.
+                Rows that do not meet the condition are removed (Stata <code>keep if</code>). 'Reset / Show All Rows' removes every filter and restores the rows from the original data; other data steps (compute, recode, ...) are kept.
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid #E2E8F0;">
                 <button class="silky-small-btn" onclick="clearFilterModal()">Reset / Show All Rows</button>
@@ -3330,6 +3381,39 @@ const I18N = {
 
         toast_saved: "저장되었습니다.",
         toast_executed: "실행이 완료되었습니다.",
+        p_graph_builder: "차트 빌더",
+        p_plot_design: "그래프 디자인",
+        p_bar: "막대 / 누적 막대",
+        p_line: "선그래프 / 영역",
+        p_donut: "원형 / 도넛",
+        p_raincloud: "레인클라우드 / 상자",
+        p_hist: "히스토그램 / 밀도",
+        p_scatter: "산점도 / 버블",
+        p_heatmap: "히트맵 / 상관행렬",
+        p_errorbar: "오차막대 (95% CI)",
+        p_pareto: "파레토 품질도표",
+        e_live_py: "실시간 .py 에디터",
+        e_dl_py: ".py 다운로드",
+        e_inline_syntax: "인라인 신택스",
+        e_export_results: "결과 내보내기",
+        e_plot_design: "그래프 디자인",
+        e_save_omv: ".omv 저장",
+        e_clear_results: "결과 지우기",
+        var_explorer_title: "📋 변수 탐색기",
+        syntax_editor_title: "&lt;/&gt; 명령어 &amp; 신택스 에디터 (.py / .do)",
+        lv_scale: "척도",
+        lv_name: "변수명",
+        lv_type: "유형",
+        lv_missing: "결측",
+        lv_pick: "선택",
+        var_filter_ph: "변수 검색...",
+        vt_results: "📄 분석 결과 시트",
+        vt_data: "📋 데이터 스프레드시트",
+        vt_split: "◫ 결과 + 데이터 분할",
+        sb_synthetic: "🧬 합성데이터 생성",
+        sb_compare: "📊 모형 비교표",
+        sb_export: "📄 내보내기 ▾",
+        sb_clear: "🧹 결과 지우기",
         toast_undone: "이전 상태로 복원되었습니다."
     },
     en: {
@@ -3410,6 +3494,39 @@ const I18N = {
 
         toast_saved: "Saved successfully.",
         toast_executed: "Executed successfully.",
+        p_graph_builder: "Chart Builder",
+        p_plot_design: "Plot Design",
+        p_bar: "Bar / Stacked Bar",
+        p_line: "Line / Area",
+        p_donut: "Pie / Donut",
+        p_raincloud: "Raincloud / Box",
+        p_hist: "Histogram / Density",
+        p_scatter: "Scatter / Bubble",
+        p_heatmap: "Heatmap / Correlation",
+        p_errorbar: "Error Bars (95% CI)",
+        p_pareto: "Pareto Chart",
+        e_live_py: "Live .py Editor",
+        e_dl_py: "Download .py",
+        e_inline_syntax: "Inline Syntax",
+        e_export_results: "Export Results",
+        e_plot_design: "Plot Design",
+        e_save_omv: "Save .omv",
+        e_clear_results: "Clear Results",
+        var_explorer_title: "📋 Variable Explorer",
+        syntax_editor_title: "&lt;/&gt; Command &amp; Syntax Editor (.py / .do)",
+        lv_scale: "Scale",
+        lv_name: "Name",
+        lv_type: "Type",
+        lv_missing: "Miss.",
+        lv_pick: "Use",
+        var_filter_ph: "Search variables...",
+        vt_results: "📄 Results",
+        vt_data: "📋 Data Sheet",
+        vt_split: "◫ Results + Data",
+        sb_synthetic: "🧬 Synthetic Data",
+        sb_compare: "📊 Model Comparison",
+        sb_export: "📄 Export ▾",
+        sb_clear: "🧹 Clear Results",
         toast_undone: "Restored to previous state."
     }
 };
@@ -3460,7 +3577,7 @@ const RIBBON_MENUS_I18N = {
         ],
         frequencies: [
             { section: "분할표 및 범주형 데이터" },
-            { id: "conttables", label: "교차분할표 독립성 검정 (χ² / Fisher)" }
+            { id: "contTables", label: "교차분할표 독립성 검정 (χ² / Fisher)" }
         ],
         factor: [
             { id: "reliability", label: "신뢰도 분석 (Cronbach's α & ω)" },
@@ -3560,6 +3677,7 @@ const RIBBON_MENUS_I18N = {
             { id: "ttestOneS", label: "One Sample T-Test" },
             { sep: true },
             { section: "Bayesian (jsq)" },
+            { id: "summaryTTest", label: "Summary Statistics T-Test (JASP Summary Stats)", badge: "JASP" },
             { id: "bayesTTestIS", label: "Bayesian Independent Samples T-Test", badge: "BF₁₀" }
         ],
         anova: [
@@ -3589,7 +3707,7 @@ const RIBBON_MENUS_I18N = {
         ],
         frequencies: [
             { section: "Contingency Tables" },
-            { id: "conttables", label: "Contingency Tables (χ² / Fisher)" }
+            { id: "contTables", label: "Contingency Tables (χ² / Fisher)" }
         ],
         factor: [
             { id: "reliability", label: "Reliability Analysis (Cronbach's α & ω)" },
@@ -3800,6 +3918,236 @@ const OPTION_LABELS_KO = {
     "lavaan Model Syntax (=~ latent, ~ regression, ~~ covariance)": "lavaan 모델 문법 (=~ 잠재변수, ~ 경로회귀, ~~ 공분산)"
 };
 
+/* Korean labels for option strings that previously stayed in English in the Korean UI */
+Object.assign(OPTION_LABELS_KO, {
+    "FDR (Benjamini–Hochberg)": "FDR 보정 (Benjamini–Hochberg)",
+    "Summary Statistics T-Test (JASP)": "요약 통계량 T-검정 (Summary Statistics T-Test)",
+    "Group 1 Parameters": "집단 1 요약 통계량",
+    "Group 2 Parameters": "집단 2 요약 통계량",
+    "Mean (M₁)": "평균 (M₁)",
+    "Std. Dev. (s₁)": "표준편차 (s₁)",
+    "Sample Size (n₁)": "표본 수 (n₁)",
+    "Mean (M₂)": "평균 (M₂)",
+    "Std. Dev. (s₂)": "표준편차 (s₂)",
+    "Sample Size (n₂)": "표본 수 (n₂)",
+    "Prior & Hypothesis": "사전분포 및 가설",
+    "Cauchy Prior Width (r)": "코시 사전분포 폭 (r)",
+    "Estimation Method": "추정 방법",
+    "Network Estimator": "네트워크 추정 방식",
+    "EBICglasso (Regularized Partial Correlation)": "EBICglasso (정규화 편상관)",
+    "Ridge Shrinkage Inverse Covariance": "능형 축소 역공분산 (Ridge)",
+    "EBIC Tuning Parameter (γ)": "EBIC 조율 모수 (γ)",
+    "Plots & Visualizations": "그래프",
+    "Network Plot (Partial Correlations)": "네트워크 그림 (편상관)",
+    "Centrality Comparison Plot (z-scores)": "중심성 비교 그림 (z 점수)",
+    "Statistics": "통계량",
+    "S.E. mean": "평균의 표준오차",
+    "Minimum": "최솟값",
+    "Maximum": "최댓값",
+    "Frequency tables": "빈도표",
+    "Histogram & Density": "히스토그램·밀도",
+    "Violin / Raincloud": "바이올린·레인클라우드",
+    "Scatterplot": "산점도 (Scatterplot)",
+    "X-Axis": "X축",
+    "Y-Axis": "Y축",
+    "Group": "집단",
+    "Regression Line & Marginals": "회귀선 및 주변 분포",
+    "Regression Line": "회귀선",
+    "None": "없음",
+    "Linear": "선형",
+    "Smooth (LOESS)": "평활선 (LOESS)",
+    "Marginals": "주변 분포",
+    "Densities": "밀도곡선",
+    "Boxplots": "상자도표",
+    "Pareto Chart": "파레토 차트 (Pareto Chart)",
+    "X-Axis (Categorical)": "X축 (범주형)",
+    "Graph Builder (15 Chart Types → Analysis Results)": "차트 빌더 (15종 그래프 → 분석 결과)",
+    "X-Axis / Category": "X축 / 범주",
+    "Y-Axis / Value": "Y축 / 값",
+    "Color / Split Group": "색상 / 집단 구분",
+    "Bubble Size (Scatter)": "버블 크기 (산점도)",
+    "Multi-Variables (Pairplot / Heatmap)": "여러 변수 (산점도 행렬 / 히트맵)",
+    "Chart Type & Statistical Aggregation": "차트 유형 및 집계 방식",
+    "Chart Type (15 Standalone Types)": "차트 유형 (15종)",
+    "1. Bar / Grouped Bar Chart": "1. 막대 / 묶은 막대",
+    "2. Stacked / 100% Bar Chart": "2. 누적 / 100% 누적 막대",
+    "3. Line / Trend Chart": "3. 선그래프 / 추세",
+    "4. Area / Stacked Area Chart": "4. 영역 / 누적 영역",
+    "5. Pie Composition Chart": "5. 원그래프 (구성비)",
+    "6. Donut Chart (Center N)": "6. 도넛 차트 (가운데 N)",
+    "7. Histogram + KDE + Normal PDF": "7. 히스토그램 + 커널밀도 + 정규곡선",
+    "8. Multi-Group Kernel Density": "8. 집단별 커널밀도",
+    "9. Boxplot (with Mean ♦)": "9. 상자도표 (평균 ♦ 표시)",
+    "10. Violin + Inner Box Plot": "10. 바이올린 + 내부 상자",
+    "11. Raincloud Plot (Half-KDE + Box + Dots)": "11. 레인클라우드 (반쪽 밀도 + 상자 + 점)",
+    "12. Scatter / Bubble Chart": "12. 산점도 / 버블",
+    "13. Scatterplot Matrix (Pairplot)": "13. 산점도 행렬 (Pairplot)",
+    "14. Pivot / Correlation Heatmap": "14. 피벗 / 상관 히트맵",
+    "15. Mean & Confidence Interval Forest Plot": "15. 평균·신뢰구간 포레스트 플롯",
+    "Summary Statistic (Bar / Line / Area / Heatmap)": "요약 통계량 (막대 / 선 / 영역 / 히트맵)",
+    "Sum": "합계",
+    "Count (N)": "빈도 (N)",
+    "Percentage (%)": "백분율 (%)",
+    "Error Bars / Confidence Ribbon": "오차막대 / 신뢰띠",
+    "95% Confidence Interval": "95% 신뢰구간",
+    "±1 Standard Error (SE)": "±1 표준오차 (SE)",
+    "±1 Std. Deviation (SD)": "±1 표준편차 (SD)",
+    "Scatter Fit Line": "산점도 적합선",
+    "Linear OLS": "선형 (OLS)",
+    "Quadratic Curve": "2차 곡선",
+    "Smooth LOESS": "평활선 (LOESS)",
+    "Histogram Bins": "히스토그램 구간 수",
+    "Layout & Analysis Results Export Options": "배치 및 결과 출력 설정",
+    "Include Summary Data Table in Results": "요약 자료표를 결과에 포함",
+    "Show Data Value Labels (Bar)": "값 표시 (막대)",
+    "Horizontal Orientation (Bar / Error-Bar)": "가로 방향 (막대 / 오차막대)",
+    "100% Proportional Stacked Bar": "100% 비율 누적 막대",
+    "Overlay Jittered Data Points (Boxplot)": "개별 자료점 표시 (상자도표)",
+    "Figure Caption / APA Note in Results": "그림 설명 / APA 주석",
+    "Grouping Variable (2 levels)": "집단 변수 (2수준)",
+    "Tests & Additional Statistics": "검정 및 추가 통계량",
+    "Effect size (Cohen's d)": "효과크기 (Cohen's d)",
+    "Assumption Checks & Plots": "가정 점검 및 그래프",
+    "Normality test": "정규성 검정",
+    "Homogeneity test": "등분산성 검정",
+    "Descriptives plots": "기술통계 그림",
+    "Group 1 ≠ Group 2": "집단 1 ≠ 집단 2 (양측)",
+    "Group 1 > Group 2": "집단 1 > 집단 2 (단측)",
+    "Group 1 < Group 2": "집단 1 < 집단 2 (단측)",
+    "Measure 1": "측정 1",
+    "Measure 2": "측정 2",
+    "Tests & Plots": "검정 및 그래프",
+    "Wilcoxon rank": "Wilcoxon 부호순위 검정",
+    "Profile plot": "프로파일 그림",
+    "Tests & Options": "검정 및 옵션",
+    "Test value (μ₀)": "검정값 (μ₀)",
+    "Distribution plot": "분포 그림",
+    "Bayesian Independent Samples T-Test": "베이지안 독립표본 T-검정",
+    "Prior & Plots (jsq)": "사전분포 및 그래프",
+    "Credible intervals": "신용구간",
+    "Prior & Posterior plot": "사전·사후분포 그림",
+    "BF Robustness check": "베이즈 인자 강건성 점검",
+    "Variances & Additional Tables": "분산 가정 및 추가 표",
+    "Don't assume equal (Welch's)": "등분산 가정 안 함 (Welch)",
+    "Assume equal (Fisher's)": "등분산 가정 (Fisher)",
+    "Descriptives table": "기술통계표",
+    "Homogeneity (Levene's)": "등분산성 (Levene)",
+    "Normality (Shapiro-Wilk)": "정규성 (Shapiro-Wilk)",
+    "Post-Hoc Correction": "사후검정 방법",
+    "Tukey HSD (Equal variances)": "Tukey HSD (등분산)",
+    "Games-Howell (Unequal variances)": "Games-Howell (이분산)",
+    "Effect Size & Assumptions": "효과크기 및 가정 점검",
+    "Partial η² (η²p)": "부분 η² (η²p)",
+    "EMM Interaction plot": "추정 주변평균 상호작용 그림",
+    "Sum of Squares & Post-Hoc": "제곱합 및 사후검정",
+    "Sum of Squares": "제곱합 유형",
+    "Post-Hoc": "사후검정",
+    "Post-Hoc & Marginal Means": "사후검정 및 주변평균",
+    "Marginal means plot": "주변평균 그림",
+    "Repeated Measures Cells (≥2)": "반복측정 변수 (2개 이상)",
+    "Between Subject Factor": "개체 간 요인",
+    "Sphericity, Post-Hoc & Plots": "구형성·사후검정·그래프",
+    "Sphericity tests": "구형성 검정",
+    "Post-Hoc (Holm)": "사후검정 (Holm)",
+    "One-Way ANOVA (Non-parametric)": "비모수 일원분산분석 (Kruskal-Wallis)",
+    "Options": "옵션",
+    "Pairwise comparisons": "쌍별 비교",
+    "Bayesian ANOVA": "베이지안 분산분석",
+    "Variables (≥2)": "변수 (2개 이상)",
+    "Correlation Coefficients & Plot": "상관계수 및 그림",
+    "Report significance": "유의확률 표시",
+    "Flag significant (*)": "유의 표시 (*)",
+    "Correlation heatmap": "상관 히트맵",
+    "Controlling for": "통제 변수",
+    "Method": "방법",
+    "Correlation Type": "상관계수 유형",
+    "Bayesian Correlation Matrix": "베이지안 상관행렬",
+    "Covariates (Continuous)": "공변량 (연속형)",
+    "Factors (Categorical)": "요인 (범주형)",
+    "Model Fit & Coefficients": "모형 적합도 및 계수",
+    "Adjusted R²": "수정 R²",
+    "AIC / BIC / RMSE": "AIC / BIC / RMSE",
+    "Overall F-test": "모형 전체 F 검정",
+    "Standardized β": "표준화 계수 β",
+    "Assumption Checks & Diagnostics": "가정 점검 및 진단",
+    "Collinearity (VIF)": "다중공선성 (VIF)",
+    "2×2 Diagnostic plots": "2×2 진단 그림",
+    "Binomial Logistic Regression": "이항 로지스틱 회귀분석",
+    "Dependent Variable (Binary)": "종속변수 (이분형)",
+    "Factors": "요인",
+    "Odds Ratios, Classification & ROC": "오즈비·분류표·ROC",
+    "Odds ratios exp(β)": "오즈비 exp(β)",
+    "Classification table": "분류표",
+    "ROC curve & AUC": "ROC 곡선 및 AUC",
+    "Cut-off": "분류 기준값",
+    "Statistics & Cells": "통계량 및 셀 표시",
+    "Continuity corr.": "연속성 보정",
+    "Likelihood ratio": "우도비 검정",
+    "Phi and Cramér's V": "Phi 및 Cramér's V",
+    "Odds ratio (2×2)": "오즈비 (2×2)",
+    "Observed counts": "관측 빈도",
+    "Expected counts": "기대 빈도",
+    "Row %": "행 %",
+    "Column %": "열 %",
+    "Items (≥2)": "문항 (2개 이상)",
+    "Reverse-Scaled Items": "역코딩 문항",
+    "Scale & Item Statistics": "척도 및 문항 통계량",
+    "Mean & SD": "평균 및 표준편차",
+    "Item-rest & α/ω if dropped": "문항-나머지 상관, 문항 제거 시 α/ω",
+    "Rotation & Output": "회전 및 출력",
+    "Rotation": "회전",
+    "Hide loadings below": "적재량 숨김 기준",
+    "KMO & Bartlett's test": "KMO 및 Bartlett 검정",
+    "Eigenvalues table": "고윳값 표",
+    "Scree plot (Parallel)": "스크리 도표 (평행분석)",
+    "Extraction, Rotation & Output": "추출·회전·출력",
+    "Extraction": "추출 방법",
+    "Minimum residual": "최소잔차",
+    "Maximum likelihood": "최대우도",
+    "Principal axis": "주축 요인추출",
+    "Model": "모형",
+    "Mediation": "매개효과 분석 (Mediation)",
+    "Dependent Variable (Y)": "종속변수 (Y)",
+    "Mediator (M)": "매개변수 (M)",
+    "Predictor (X)": "독립변수 (X)",
+    "Mediation Options (medmod)": "매개효과 옵션",
+    "Bootstrap samples": "부트스트랩 표본 수",
+    "95% Boot CI": "95% 부트스트랩 신뢰구간",
+    "Percent mediation": "매개 비율",
+    "Path estimates": "경로 추정치",
+    "Moderation": "조절효과 분석 (Moderation)",
+    "Moderator (W)": "조절변수 (W)",
+    "Simple Slopes (medmod)": "단순기울기",
+    "Simple slope estimates": "단순기울기 추정치",
+    "Simple slope plot": "단순기울기 그림",
+    "Entity ID (Firm / Panel)": "개체 식별 변수 (기업·패널)",
+    "Time Variable (Year / Wave)": "시점 변수 (연도·차수)",
+    "Regressors / Covariates": "설명변수",
+    "Panel Estimator & Diagnostics": "패널 추정 방법 및 진단",
+    "Estimator": "추정 방법",
+    "Entity Fixed Effects (Within)": "개체 고정효과 (Within)",
+    "Two-Way Fixed Effects (Entity + Time)": "이원 고정효과 (개체 + 시점)",
+    "Random Effects (GLS)": "확률효과 (GLS)",
+    "Pooled OLS": "통합 OLS (Pooled)",
+    "Standard Errors": "표준오차",
+    "Heteroskedasticity-Robust": "이분산 강건",
+    "Entity-Clustered": "개체 군집 강건",
+    "Conventional": "일반",
+    "Hausman Test (FE vs RE)": "Hausman 검정 (고정효과 대 확률효과)",
+    "Longitudinal trajectory plot": "종단 추세 그림",
+    "Linear Mixed Model (Multilevel)": "선형 혼합모형 (다층모형)",
+    "Cluster Variable (Random Intercept)": "집단 변수 (무선절편)",
+    "Estimation": "추정",
+    "REML estimation": "제한최대우도 (REML) 추정",
+    "Survival Analysis (Kaplan-Meier & Cox PH)": "생존분석 (Kaplan-Meier·Cox 비례위험)",
+    "Time Elapsed": "관찰 기간",
+    "Event / Status (1=Event, 0=Censored)": "사건 여부 (1=사건, 0=중도절단)",
+    "Explanatory Group (Log-Rank)": "비교 집단 (로그순위 검정)",
+    "Cox PH Covariates": "Cox 모형 공변량",
+    "Survival Plots": "생존 그림",
+    "Kaplan-Meier curve (95% CI)": "Kaplan-Meier 곡선 (95% 신뢰구간)"
+});
+
 function setLanguage(lang) {
     APP.lang = lang;
     safeStorageSet("openstat_lang", lang);
@@ -3821,6 +4169,11 @@ function applyLanguage() {
     document.querySelectorAll("[data-i18n]").forEach(el => {
         const key = el.getAttribute("data-i18n");
         if (dict[key]) el.innerHTML = dict[key];
+    });
+
+    document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+        const key = el.getAttribute("data-i18n-placeholder");
+        if (dict[key]) el.setAttribute("placeholder", dict[key]);
     });
 
     document.querySelectorAll("[data-i18n-title]").forEach(el => {
@@ -4130,7 +4483,8 @@ function mixtureEstimationSection(withEnum) {
     ];
     if (withEnum) {
         items.push({ type: "check", key: "tech11", label: "VLMR·LMR 검정 (TECH11)", def: false });
-        items.push({ type: "check", key: "tech14", label: "부트스트랩 LRT (TECH14)", def: false });
+        items.push({ type: "check", key: "tech14", label: "부트스트랩 LRT (TECH14)", def: false,
+                     help: "계층 수 비교 범위의 각 비교마다 부트스트랩 표본 수만큼 두 모형을 다시 추정하므로 계산 시간이 김(예제 자료 1,200명·1~5계층·100표본에서 30분 이상). 계층 수 범위를 좁히거나 표본 수를 줄여 사용" });
         items.push({ type: "number", key: "blrtDraws", label: "BLRT 반복 수", def: 100, min: 20, max: 1000, step: 10, showIf: { tech14: [true, "true"] } });
     }
     return { title: "추정 (Mplus 기본 설정)", collapsed: true, items };
@@ -5436,8 +5790,64 @@ function measureIcon(mType) {
     return "assets/variable-nominal.svg";
 }
 
+/* Korean wording for the English status messages (applied in the Korean UI). */
+const TOAST_KO = [
+    [/^Cleared all analysis results$/, "분석 결과 전체 삭제"],
+    [/^Appended new card to Analysis Results$/, "분석 결과 시트에 새 카드 추가"],
+    [/^Loaded (.+) \((\d+) rows × (\d+) cols\)$/, "$1 불러옴 ($2행 × $3열)"],
+    [/^Imported (.+)$/, "$1 가져옴"],
+    [/^Loaded and executed '(.+)'$/, "'$1' 불러와 실행 완료"],
+    [/^Load error: ([\s\S]*)$/, "불러오기 오류: $1"],
+    [/^Computed column '(.+)' created & added to \.py pipeline script$/, "계산 변수 '$1' 생성 (.py 코드에 기록)"],
+    [/^Created standardized variable (.+)$/, "표준화 변수 $1 생성"],
+    [/^No numeric variable available to standardize$/, "표준화할 숫자형 변수 없음"],
+    [/^Enter both column name and formula$/, "변수 이름과 계산식을 모두 입력"],
+    [/^Recoded '(.+)' -> '(.+)' & recorded in \.py pipeline$/, "'$1' → '$2' 재코딩 완료 (.py 코드에 기록)"],
+    [/^Select source variable and enter at least one recoding rule$/, "원 변수를 고르고 재코딩 규칙을 1개 이상 입력"],
+    [/^Recode failed: ([\s\S]*)$/, "재코딩 실패: $1"],
+    [/^Applied filter: '(.+)' \((\d+) rows\)$/, "필터 적용: '$1' ($2행)"],
+    [/^Filters removed: all (\d+) rows restored$/, "필터 해제: 전체 $1행 복원"],
+    [/^Filter failed: ([\s\S]*)$/, "필터 실패: $1"],
+    [/^Reshape failed: ([\s\S]*)$/, "구조 변환 실패: $1"],
+    [/^Undid last data management step$/, "직전 자료 처리 단계 취소"],
+    [/^Undo failed: ([\s\S]*)$/, "실행 취소 실패: $1"],
+    [/^Created new blank dataset$/, "빈 데이터셋 생성"],
+    [/^Upload failed/, "파일 올리기 실패"],
+    [/^Executed Python syntax \((\d+) results rendered\)$/, "파이썬 코드 실행 완료 (결과 $1건)"],
+    [/^Python execution error$/, "파이썬 실행 오류"],
+    [/^Python editor is empty$/, "파이썬 편집기가 비어 있음"],
+    [/^Execution failed: ([\s\S]*)$/, "실행 실패: $1"],
+    [/^Execution error: ([\s\S]*)$/, "실행 오류: $1"],
+    [/^Synced live_session\.py from workspace$/, "workspace의 live_session.py와 동기화"],
+    [/^Sync failed: ([\s\S]*)$/, "동기화 실패: $1"],
+    [/^Copied full \.py script to clipboard$/, "전체 .py 코드를 클립보드에 복사"],
+    [/^Copied OpenStat Python \(\.py\) syntax$/, "파이썬(.py) 코드를 클립보드에 복사"],
+    [/^Copied APA Markdown to clipboard$/, "APA 마크다운을 클립보드에 복사"],
+    [/^Downloading plot #(\d+) as \.(\w+)$/, "그림 $1을(를) .$2 파일로 내려받는 중"],
+    [/^Exported graph directly to Analysis Results Sheet$/, "그래프를 분석 결과 시트에 추가"],
+    [/^Could not push graph to Results$/, "그래프를 결과 시트에 추가하지 못함"],
+    [/^Saved PlotStyle defaults for next analysis$/, "그래프 디자인을 다음 분석의 기본값으로 저장"],
+    [/^Plot restyle notice$/, "그래프 디자인 적용 알림"],
+    [/^Run at least one analysis first before exporting tables$/, "내보낼 분석 결과 없음: 분석을 먼저 실행"],
+    [/^Exporting analyzed tables as \.(\w+)(.*)\.\.\.$/, "결과를 .$1 파일로 내보내는 중$2..."],
+    [/^Exporting full HTML report(.*)\.\.\.$/, "전체 HTML 보고서를 내보내는 중$1..."],
+    [/^Scaffolded plugin '(.+)' \((\d+) analyses active\)$/, "플러그인 '$1' 생성 (분석 $2종 사용 가능)"],
+    [/^OpenStat Studio package rebuilt cleanly$/, "패키지 재빌드 완료"],
+    [/^Syntax Mode Enabled \(R & Python\)$/, "인라인 신택스 표시 켜짐"],
+    [/^Syntax Mode Disabled$/, "인라인 신택스 표시 꺼짐"],
+];
+
+function localizeToast(msg) {
+    if ((APP.lang || "ko") === "en" || typeof msg !== "string") return msg;
+    for (const [re, ko] of TOAST_KO) {
+        if (re.test(msg)) return msg.replace(re, ko);
+    }
+    return msg;
+}
+
 function showToast(msg, ms = 2600) {
     const el = document.getElementById("toast-banner");
+    msg = localizeToast(msg);
     el.textContent = msg;
     el.style.display = "block";
     clearTimeout(el._t);
@@ -5560,6 +5970,7 @@ function applyDatasetPayload(data) {
     APP.datasetName = data.name;
     APP.columns = data.columns || [];
     APP.rows = data.rows || [];
+    APP.rowCount = (typeof data.rowCount === "number") ? data.rowCount : APP.rows.length;
     APP.analyses = data.analyses || [];
     APP.revision = data.revision || APP.revision;
     APP.dataOps = data.dataOps || [];
@@ -5616,28 +6027,72 @@ function renderSpreadsheet() {
             const v = rowObj[col.name];
             const disp = (v === null || v === undefined) ? "" : String(v);
             const cls = (col.dataType === "Decimal" || col.dataType === "Integer") ? " class=\"num-cell\"" : "";
-            tr += `<td${cls} contenteditable="true" data-r="${r}" data-c="${escapeHtml(col.name)}" onblur="commitCellEdit(this)">${escapeHtml(disp)}</td>`;
+            tr += `<td${cls} contenteditable="true" data-r="${r}" data-c="${escapeHtml(col.name)}" onkeydown="handleCellKey(event, this)" onblur="commitCellEdit(this)">${escapeHtml(disp)}</td>`;
         }
         tr += `</tr>`;
         rowsHtml.push(tr);
     }
+    rowsHtml.push(gridMoreRowHtml());
     tbody.innerHTML = rowsHtml.join("");
+}
+
+function cellPrevValue(r, c) {
+    return (APP.rows[r] && APP.rows[r][c] !== undefined && APP.rows[r][c] !== null) ? String(APP.rows[r][c]) : "";
+}
+
+/* Spreadsheet keys: Enter saves and moves down, Escape restores the stored value. */
+function handleCellKey(ev, td) {
+    if (ev.key === "Enter" && !ev.shiftKey) {
+        ev.preventDefault();
+        td._moveDown = true;
+        td.blur();
+    } else if (ev.key === "Escape") {
+        ev.preventDefault();
+        td.textContent = cellPrevValue(parseInt(td.getAttribute("data-r"), 10), td.getAttribute("data-c"));
+        td.blur();
+    }
+}
+
+/* The server sends the first rows only (preview): say so under the grid when the dataset is longer. */
+function gridMoreRowHtml() {
+    if (!((APP.rowCount || 0) > APP.rows.length)) return "";
+    const en = (APP.lang || "ko") === "en";
+    const msg = en ? `Showing the first ${APP.rows.length.toLocaleString()} of ${APP.rowCount.toLocaleString()} rows (analyses use all rows)`
+                   : `전체 ${APP.rowCount.toLocaleString()}행 중 처음 ${APP.rows.length.toLocaleString()}행 표시 (분석에는 전체 행 사용)`;
+    return `<tr class="grid-more-row"><td class="row-num">…</td><td colspan="${APP.columns.length}" style="color:#64748B;font-style:italic;background:#F8FAFC;white-space:nowrap;">${msg}</td></tr>`;
 }
 
 async function commitCellEdit(td) {
     const r = parseInt(td.getAttribute("data-r"), 10);
     const c = td.getAttribute("data-c");
     const val = td.textContent.trim();
-    const prev = (APP.rows[r] && APP.rows[r][c] !== undefined && APP.rows[r][c] !== null) ? String(APP.rows[r][c]) : "";
-    if (val === prev) return;
-
-    await fetch("/api/cell/edit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ row_idx: r, col_name: c, value: val })
-    });
-    if (!APP.rows[r]) APP.rows[r] = {};
-    APP.rows[r][c] = val;
+    const prev = cellPrevValue(r, c);
+    const moveDown = !!td._moveDown;
+    td._moveDown = false;
+    if (val !== prev) {
+        let res;
+        try {
+            res = await fetch("/api/cell/edit", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ row_idx: r, col_name: c, value: val })
+            });
+        } catch (err) {
+            res = null;
+        }
+        if (!res || !res.ok) {
+            let msg = res ? `HTTP ${res.status}` : "서버 연결 실패";
+            try { const d = await res.json(); if (d && d.detail) msg = d.detail; } catch (_) { /* non-JSON body */ }
+            showToast(`값 입력 오류 (${c} ${r + 1}행): ${msg}`, 6000);
+            td.textContent = prev;
+            return;
+        }
+        applyDatasetPayload(await res.json());
+    }
+    if (moveDown) {
+        const next = document.querySelector(`#grid-tbody td[data-r="${r + 1}"][data-c="${CSS.escape(c)}"]`);
+        if (next) next.focus();
+    }
 }
 
 async function cycleColumnMeasure(colName, currentType) {
@@ -5854,7 +6309,7 @@ async function submitFilterModal() {
         if (res.ok) {
             applyDatasetPayload(await res.json());
             closeFilterModal();
-            showToast(`Applied filter: '${cond || "all rows"}'`);
+            showToast(cond ? `Applied filter: '${cond}' (${APP.rowCount} rows)` : `Filters removed: all ${APP.rowCount} rows restored`);
         } else {
             const err = await res.json();
             showToast(err.detail || "Filter error");
@@ -5914,7 +6369,8 @@ function toggleMergeFields() {
     show("merge-wrap-force", isAppend);
 }
 
-function _splitNames(v) { return (v || "").split(",").map(x => x.trim()).filter(Boolean); }
+/* Variable lists: comma-separated, or space-separated as in Stata when no comma is typed. */
+function _splitNames(v) { v = (v || "").trim(); return (v.includes(",") ? v.split(",") : v.split(/\s+/)).map(x => x.trim()).filter(Boolean); }
 
 async function submitMergeModal() {
     const other = document.getElementById("merge-other-source").value;
@@ -6052,9 +6508,9 @@ function toggleReshapeFields() {
 
 async function submitReshapeModal() {
     const dir = document.getElementById("reshape-direction").value;
-    const ids = document.getElementById("reshape-id-vars").value.split(",").map(s => s.trim()).filter(Boolean);
-    const stubs = document.getElementById("reshape-stubnames").value.split(",").map(s => s.trim()).filter(Boolean);
-    const vVars = document.getElementById("reshape-value-vars").value.split(",").map(s => s.trim()).filter(Boolean);
+    const ids = _splitNames(document.getElementById("reshape-id-vars").value);
+    const stubs = _splitNames(document.getElementById("reshape-stubnames").value);
+    const vVars = _splitNames(document.getElementById("reshape-value-vars").value);
     const timeCol = document.getElementById("reshape-time-col").value.trim() || "wave";
     const valCol = document.getElementById("reshape-value-col").value.trim() || "value";
     const sep = document.getElementById("reshape-sep").value;
@@ -6111,17 +6567,34 @@ async function modifyStructure(action, target = null) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, target })
     });
-    if (res.ok) applyDatasetPayload(await res.json());
+    if (res.ok) {
+        applyDatasetPayload(await res.json());
+    } else {
+        let msg = `HTTP ${res.status}`;
+        try { const d = await res.json(); if (d && d.detail) msg = d.detail; } catch (_) { /* non-JSON body */ }
+        showToast(msg, 5000);
+    }
 }
 
 function deleteSpecificCol(colName) {
     modifyStructure("delete_col", colName);
 }
 
+/* Ribbon "변수 삭제" / "행 삭제": remove the last variable / row after confirmation (undo restores it). */
 function promptDeleteCol() {
-    if (APP.columns.length > 1) {
-        modifyStructure("delete_col", APP.columns[APP.columns.length - 1].name);
-    }
+    if (APP.columns.length <= 1) return;
+    const name = APP.columns[APP.columns.length - 1].name;
+    const en = (APP.lang || "ko") === "en";
+    if (!confirm(en ? `Delete the last variable '${name}'? (Undo restores it)` : `마지막 변수 '${name}'을(를) 삭제할까요? (실행 취소로 되돌릴 수 있음)`)) return;
+    modifyStructure("delete_col", name);
+}
+
+function promptDeleteRow() {
+    const n = APP.rowCount || (APP.rows ? APP.rows.length : 0);
+    if (n <= 1) return;
+    const en = (APP.lang || "ko") === "en";
+    if (!confirm(en ? `Delete the last row (row ${n})? (Undo restores it)` : `마지막 행(${n}행)을 삭제할까요? (실행 취소로 되돌릴 수 있음)`)) return;
+    modifyStructure("delete_row");
 }
 
 /* --- Analysis Options Panel & Smart Variable Supplier --- */
@@ -6340,20 +6813,48 @@ function autoAssignVariablesIntoParams(type, params) {
     const schema = ANALYSIS_SCHEMAS[type];
     if (!schema) return;
     const used = new Set();
+    // Subject IDs and codes are numeric but never measures: keep them out of numeric slots.
+    const isIdName = n => /^(id|no|seq)$|(^|_)(id|no|code|cd)$|^subj(ect)?(_?id)?$|식별|번호|코드$/i.test(n);
+    const measureNums = numCols.filter(n => !isIdName(n));
+    // Repeated measures: prefer one family of numbered columns (bp_w1, bp_w2, bp_w3).
+    const repeatedFamily = () => {
+        const fam = new Map();
+        for (const n of measureNums) {
+            const m = n.match(/^(.*\D)\d+$/);
+            if (m) fam.set(m[1], (fam.get(m[1]) || []).concat(n));
+        }
+        for (const v of fam.values()) if (v.length >= 2) return v;
+        return null;
+    };
 
     for (const sl of schema.slots) {
         if (!sl.req && !(type === "linReg" && sl.key === "covs") && !(type === "logRegBin" && sl.key === "covs") && !(type === "mixedModel" && sl.key === "covs")) {
             continue;
         }
+        if (type === "anovaRM" && sl.key === "rmVars") {
+            const fam = repeatedFamily();
+            if (fam) {
+                params.rmVars = fam;
+                fam.forEach(v => used.add(v));
+                continue;
+            }
+        }
         let pool = allNames;
-        if (sl.prefer === "num") pool = numCols.length ? numCols : allNames;
+        if (sl.prefer === "num") pool = measureNums.length ? measureNums : (numCols.length ? numCols : allNames);
         else if (sl.prefer === "bin") pool = binCols.length ? binCols : (catCols.length ? catCols : allNames);
         else if (sl.prefer === "cat") pool = catCols.length ? catCols : allNames;
 
-        const avail = pool.filter(x => !used.has(x));
-        const src = avail.length ? avail : pool;
+        // A variable already placed in another slot is not reused (e.g. the dependent variable as a covariate):
+        // the slot stays empty for the user to fill.
+        const src = pool.filter(x => !used.has(x));
+        if (!src.length) {
+            params[sl.key] = sl.multi ? [] : "";
+            continue;
+        }
         if (sl.multi) {
-            const count = (type === "anovaRM" || type === "corrMatrix" || type === "bayesCorr" || type === "reliability" || type === "pca" || type === "efa") ? Math.min(4, src.length) : Math.min(2, src.length);
+            let count = (type === "anovaRM" || type === "corrMatrix" || type === "bayesCorr" || type === "reliability" || type === "pca" || type === "efa") ? Math.min(4, src.length) : Math.min(2, src.length);
+            if (type === "networkAnalysis") count = Math.min(8, src.length);
+            if (type === "ancova" && sl.key === "factors") count = 1;
             const picked = src.slice(0, Math.max(1, count));
             params[sl.key] = picked;
             picked.forEach(v => used.add(v));
@@ -6683,6 +7184,19 @@ function removeVarFromSlot(slotKey, vName) {
 
 function updateOptionParam(key, val, debounceMs = 120) {
     APP.currentParams[key] = val;
+    // LPA/LCA: class-specific covariances need class-specific variances (and equal with equal), as in Mplus
+    if (APP.currentType === "lca" && (key === "covariances" || key === "variances")) {
+        const p = APP.currentParams;
+        if (key === "covariances" && (val === "equal" || val === "free") && p.variances !== val) {
+            p.variances = val;
+            showToast(`연속 지표 분산을 '${val}'(으)로 맞춤 (공분산과 같은 제약 필요)`);
+            renderOptionsPanel();
+        } else if (key === "variances" && (p.covariances === "equal" || p.covariances === "free") && p.covariances !== val) {
+            p.covariances = val;
+            showToast(`연속 지표 공분산을 '${val}'(으)로 맞춤 (분산과 같은 제약 필요)`);
+            renderOptionsPanel();
+        }
+    }
     if (APP.currentType === "graph" && key === "chartType") {
         autoAssignVariablesIntoParams("graph", APP.currentParams);
         renderOptionsPanel();
@@ -8485,6 +8999,7 @@ function renderRightSpreadsheet() {
         tr += `</tr>`;
         rowsHtml.push(tr);
     }
+    rowsHtml.push(gridMoreRowHtml());
     tbody.innerHTML = rowsHtml.join("");
 }
 
@@ -8767,28 +9282,52 @@ function insertSyntaxSnippet(type) {
     if (dd) dd.style.display = "none";
     if (!editor) return;
 
-    const cols = (APP.columns || []).map(c => c.name);
-    const c1 = cols[0] || "var1";
-    const c2 = cols[1] || "var2";
-    const c3 = cols[2] || "var3";
+    // Pick variables by type so every template runs on the current dataset as inserted.
+    const colsAll = APP.columns || [];
+    const names = colsAll.map(c => c.name);
+    const isNum = c => (c.dataType === "Decimal" || c.dataType === "Integer") && c.measureType !== "ID"
+        && !/^(id|no|seq)$|(^|_)(id|no|code|cd)$|^subj(ect)?(_?id)?$/i.test(c.name);
+    const nums = colsAll.filter(isNum).map(c => c.name);
+    const grp2 = colsAll.filter(c => c.unique === 2).map(c => c.name);
+    const cats = colsAll.filter(c => c.measureType === "Nominal" || c.measureType === "Ordinal" || (c.unique >= 2 && c.unique <= 12)).map(c => c.name);
+    const n1 = nums[0] || names[0] || "var1";
+    const others = nums.filter(n => n !== n1);
+    const n2 = others[0] || "var2";
+    const n3 = others[1] || others[0] || "var3";
+    const g2 = grp2.find(n => n !== n1) || cats.find(n => n !== n1) || "group";
+    const g = cats.find(n => n !== n1) || g2;
+    const pick = (re, pool) => pool.find(n => re.test(n));
+    const entity = pick(/firm|entity|id$|^id|region|지역|기관|개체/i, names);
+    const time = pick(/^(year|yr|time|wave|period|t)$|연도|년도|시점|차수/i, names);
+    const sTime = pick(/time|month|day|week|기간|개월/i, names);
+    const sEvent = pick(/status|event|dead|death|사망|사건/i, names);
+    const uniq3 = [n1, n2, n3].filter((v, i, a) => a.indexOf(v) === i);
+    // Templates that need variables the dataset does not have are inserted as a comment to fill in.
+    const asTodo = (code, what) => `# ${what}을(를) 자료에 맞게 지정한 뒤 주석(#)을 지우고 실행\n# ${code}`;
 
     let snippet = "";
-    if (type === "desc") snippet = `sess.descriptives(vars=['${c1}', '${c2}'])`;
-    else if (type === "ttest") snippet = `sess.ttest(dep='${c1}', group='${c2}')`;
-    else if (type === "anova") snippet = `sess.anova(dep='${c1}', factors=['${c2}'])`;
-    else if (type === "reg") snippet = `sess.regression(dep='${c1}', covs=['${c2}', '${c3}'])`;
-    else if (type === "corr") snippet = `sess.correlation(vars=['${c1}', '${c2}', '${c3}'])`;
-    else if (type === "spatial") snippet = `sess.spatial_regression(dep='${c1}', covs=['${c2}'], model='sar')  # 경계: sess.attach_boundary('경계.shp', key='SIG_CD', data_key='지역코드')`;
-    else if (type === "sem") snippet = `sess.sem(model="F1 =~ ${c1} + ${c2} + ${c3}")`;
-    else if (type === "panel") snippet = `sess.panel(dep='${c1}', entity='firm_id', time='year', covs=['${c2}'])`;
-    else if (type === "survival") snippet = `sess.survival(time='time', event='status', covs=['${c1}'])`;
-    else if (type === "network") snippet = `sess.network(vars=['${c1}', '${c2}', '${c3}'])`;
+    if (type === "desc") snippet = `sess.descriptives(vars=['${n1}', '${n2}'])`;
+    else if (type === "ttest") snippet = `sess.ttest(dep='${n1}', group='${g2}')`;
+    else if (type === "anova") snippet = `sess.anova(dep='${n1}', group='${g}')`;
+    else if (type === "reg") snippet = `sess.regression(dep='${n1}', covs=['${n2}'${n3 !== n2 ? `, '${n3}'` : ""}])`;
+    else if (type === "corr") snippet = `sess.correlation(vars=[${[n1, n2, n3].filter((v, i, a) => a.indexOf(v) === i).map(v => `'${v}'`).join(", ")}])`;
+    else if (type === "spatial") snippet = `sess.spatial_regression(dep='${n1}', covs=['${n2}'], model='sar')  # 경계: sess.attach_boundary('경계.shp', key='SIG_CD', data_key='지역코드')`;
+    else if (type === "sem") snippet = uniq3.length >= 3 ? `sess.sem(model="F1 =~ ${uniq3.join(" + ")}")` : `sess.sem(model="${n1} ~ ${n2}")`;
+    else if (type === "panel") {
+        const code = `sess.panel(dep='${n1}', entity='${entity || "개체변수"}', time='${time || "시점변수"}', covs=['${others.find(n => n !== time && n !== entity) || n2}'])`;
+        snippet = entity && time ? code : asTodo(code, "개체·시점 변수");
+    }
+    else if (type === "survival") {
+        const code = `sess.survival(time='${sTime || "기간변수"}', event='${sEvent || "사건변수"}', covs=['${nums.find(n => n !== sTime && n !== sEvent) || n2}'])`;
+        snippet = sTime && sEvent ? code : asTodo(code, "기간·사건 변수");
+    }
+    else if (type === "network") snippet = `sess.network(vars=[${[n1, n2, n3].filter((v, i, a) => a.indexOf(v) === i).map(v => `'${v}'`).join(", ")}])`;
     else if (type === "summary_ttest") snippet = `sess.summary_ttest(m1=25.4, s1=4.2, n1=50, m2=21.1, s2=3.9, n2=50)`;
-    else if (type === "stata_ttest") snippet = `ttest ${c1}, by(${c2})`;
-    else if (type === "stata_reg") snippet = `reg ${c1} ${c2} ${c3}`;
-    else if (type === "stata_gen") snippet = `gen log_${c1} = log(${c1})`;
-    else if (type === "export_hwpx") snippet = `sess.export_results("reports/analysis_report.hwpx", title="연구 분석 보고서")`;
-    else if (type === "export_pdf") snippet = `sess.export_results("reports/analysis_report.pdf", title="연구 분석 보고서")`;
+    else if (type === "stata_ttest") snippet = `ttest ${n1}, by(${g2})`;
+    else if (type === "stata_reg") snippet = `reg ${n1} ${[n2, n3].filter((v, i, a) => a.indexOf(v) === i).join(" ")}`;
+    else if (type === "stata_gen") snippet = `gen log_${n1} = log(${n1})`;
+    else if (type === "export_hwpx") snippet = `sess.export_results("reports/analysis_report.hwpx")`;
+    else if (type === "export_pdf") snippet = `sess.export_results("reports/analysis_report.pdf")`;
 
     logToSyntaxConsole("스니펫 삽입", snippet);
 }
@@ -8874,15 +9413,15 @@ function clearSemCanvas() {
     updateSemSyntaxPreview();
 }
 
+/* Load the model of the options panel (lavaan syntax) into the builder; an empty model starts from a
+   one-factor example. The builder keeps its own drawing while the model text is the one it generated. */
 function initSemModelFromParams() {
+    const model = String((APP.currentType === "sem" && APP.currentParams && APP.currentParams.model) || "").trim();
+    if (model && model === (SEM_BUILDER.lastSyntax || "").trim() && SEM_BUILDER.nodes.length) return;
+    if (model && semBuilderLoadSyntax(model)) return;
     if (SEM_BUILDER.nodes.length > 0) return;
 
-    const cols = (APP.columns || []).map(c => c.name);
-    const numCols = cols.filter(c => {
-        const m = APP.columns.find(x => x.name === c);
-        return m && (m.dataType === "Decimal" || m.dataType === "Integer");
-    });
-
+    const numCols = (APP.columns || []).filter(m => m.dataType === "Decimal" || m.dataType === "Integer").map(m => m.name);
     const ind1 = numCols.slice(0, 3);
     if (ind1.length >= 2) {
         SEM_BUILDER.nodes.push({ id: "F1", name: "F1", type: "latent", x: 120, y: 160 });
@@ -8891,6 +9430,61 @@ function initSemModelFromParams() {
             SEM_BUILDER.links.push({ from: "F1", to: v, type: "measurement" });
         });
     }
+}
+
+/* Parse =~, ~ and ~~ lines (labels such as a* or 1* are dropped) and lay the model out left to right:
+   indicators of exogenous latents | exogenous variables | outcomes | indicators of latent outcomes. */
+function semBuilderLoadSyntax(model) {
+    const meas = [], regs = [], covs = [];
+    const terms = (rhs) => rhs.split("+").map(t => t.trim().replace(/^[^*]*\*/, "").trim()).filter(t => /^[^\s~=+*]+$/.test(t));
+    for (let line of model.split(/[\n;]/)) {
+        line = line.replace(/#.*$/, "").trim();
+        if (!line) continue;
+        let m;
+        if ((m = line.match(/^(\S+)\s*=~\s*(.+)$/))) meas.push([m[1], terms(m[2])]);
+        else if ((m = line.match(/^(\S+)\s*~~\s*(.+)$/))) terms(m[2]).forEach(t => { if (t !== m[1]) covs.push([m[1], t]); });
+        else if ((m = line.match(/^(\S+)\s*~\s*(.+)$/)) && !/^1$/.test(m[2].trim())) regs.push([m[1], terms(m[2])]);
+    }
+    if (!meas.length && !regs.length) return false;
+    const latents = new Set(meas.map(x => x[0]));
+    const outcomes = new Set(regs.map(x => x[0]));
+    const nodes = [], links = [], seen = new Set();
+    const add = (id, type, x, y) => { if (!seen.has(id)) { seen.add(id); nodes.push({ id, name: id, type, x, y }); } };
+    const colY = { a: 60, b: 60, c: 60, d: 60 };
+    const X = { a: 70, b: 230, c: 440, d: 610 };
+    for (const [L, items] of meas) {
+        const right = outcomes.has(L);
+        const ly = Math.max(right ? colY.c : colY.b, (right ? colY.d : colY.a) + (items.length - 1) * 27);
+        add(L, "latent", right ? X.c : X.b, ly);
+        items.forEach((it, i) => {
+            add(it, "observed", right ? X.d : X.a, ly + (i - (items.length - 1) / 2) * 54);
+            links.push({ from: L, to: it, type: "measurement" });
+        });
+        if (right) { colY.c = ly + 90; colY.d = ly + (items.length + 1) * 27 + 20; }
+        else { colY.b = ly + 90; colY.a = ly + (items.length + 1) * 27 + 20; }
+    }
+    for (const [dep, preds] of regs) {
+        if (!seen.has(dep)) { add(dep, latents.has(dep) ? "latent" : "observed", X.c, colY.c); colY.c += 80; }
+        for (const p of preds) {
+            if (!seen.has(p)) { add(p, latents.has(p) ? "latent" : "observed", X.b, colY.b); colY.b += 80; }
+            links.push({ from: p, to: dep, type: "regression" });
+        }
+    }
+    for (const [x, y] of covs) {
+        if (seen.has(x) && seen.has(y)) links.push({ from: x, to: y, type: "covariance" });
+    }
+    // fit the drawing to the canvas height (boxes are 36px tall, so rows stay at least 38px apart)
+    const svgEl = document.getElementById("sem-canvas-svg");
+    const avail = svgEl ? svgEl.clientHeight : 0;
+    const maxY = Math.max(...nodes.map(n => n.y));
+    if (avail > 120 && maxY + 30 > avail) {
+        const f = Math.max(38 / 54, (avail - 60) / (maxY - 30));
+        nodes.forEach(n => { n.y = 30 + (n.y - 30) * f; });
+    }
+    SEM_BUILDER.nodes = nodes;
+    SEM_BUILDER.links = links;
+    SEM_BUILDER.lastSyntax = model;
+    return true;
 }
 
 function renderSemCanvas() {
@@ -9040,15 +9634,14 @@ function applySemBuilderToModel(runNow = false) {
         return;
     }
 
-    if (!APP.currentParams) APP.currentParams = {};
-    APP.currentParams.model = syntaxText;
     closeSemBuilderModal();
-
-    if (APP.currentType === "sem") {
-        renderOptionsPanel();
-    } else {
-        openAnalysis("sem");
-    }
+    // open the SEM panel first: openAnalysis() builds default parameters, which would replace the model
+    const openedNow = APP.currentType !== "sem";
+    if (openedNow) openAnalysis("sem");
+    APP.currentParams.model = syntaxText;
+    SEM_BUILDER.lastSyntax = syntaxText;
+    renderOptionsPanel();
+    if (openedNow && !runNow) scheduleAutoRun(true);   // replace the card computed from the default model
 
     logToSyntaxConsole("SEM 모델러 작성", `sess.sem(model="""\n${syntaxText}\n""")`, "Stata SEM Builder 그래픽 모델");
 
@@ -9060,8 +9653,34 @@ function applySemBuilderToModel(runNow = false) {
 }
 
 /* --- Bootstrap Application cleanly with ZERO event.target errors --- */
+/* Escape closes the top-most open dialog (each backdrop closes itself when clicked outside its box),
+   then the ribbon / layout / settings menus. */
+document.addEventListener("keydown", (ev) => {
+    if (ev.key !== "Escape" || ev.defaultPrevented) return;
+    const t = ev.target;
+    if (t && t.closest && t.closest("#grid-tbody")) return;
+    const ids = ["sem-builder-modal", "synthetic-modal", "plot-design-modal", "doctor-modal", "textimport-modal", "boundary-modal",
+                 "compare-modal", "recode-modal", "filter-modal", "merge-modal", "convert-modal", "reshape-modal", "modules-modal", "backstage-overlay"];
+    const open = ids.map(id => document.getElementById(id)).filter(el => {
+        if (!el) return false;
+        const cs = getComputedStyle(el);
+        return cs.display !== "none" && cs.visibility !== "hidden" && el.getBoundingClientRect().height > 0;
+    });
+    if (open.length) {
+        open.sort((a, b) => (parseInt(getComputedStyle(b).zIndex, 10) || 0) - (parseInt(getComputedStyle(a).zIndex, 10) || 0));
+        open[0].click();   // the backdrop's own handler: if (event.target === this) close...()
+        ev.preventDefault();
+        return;
+    }
+    closeDropdown();
+    closeLayoutMenu();
+    const pop = document.getElementById("settings-popover");
+    if (pop) pop.classList.remove("open");
+});
+
 window.addEventListener("DOMContentLoaded", async () => {
     switchRibbonTab("analyses");
+    applyLanguage();   // the saved language (localStorage) is applied to the whole page at start-up
     setLayoutMode(safeStorageGet("openstat_layout_mode") || "default");
     updateReportStyleIndicators();
     await syncCatalogPlugins();
@@ -9090,7 +9709,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         <div style="padding:16px;font-size:12.5px;color:#334155;line-height:1.6;">
             <div style="background:#F0FDFA;border:1px solid #CCFBF1;border-radius:6px;padding:10px;margin-bottom:12px;font-size:11.5px;color:#0F766E;">
                 <strong>다변량 가우시안 코퓰러(Gaussian Copula) &amp; 차등 정보보호(DP) 엔진:</strong><br>
-                현재 로드된 원시 데이터의 변수 간 순위 상관관계(Spearman)와 경험적 주변분포를 정밀 복제하여, 개인식별정보(PII) 유출 위험이 없는 안전한 연구·시뮬레이션용 합성데이터를 생성합니다.
+                현재 자료의 변수 간 순위상관(Spearman)과 경험적 주변분포를 따르는 연구·교육·시뮬레이션용 합성데이터를 생성함. 재식별 불가능성을 보증하지 않으므로, 공개·반출 전 관련 기준에 따른 별도 평가가 필요함.
             </div>
             <div style="margin-bottom:10px;">
                 <label style="display:block;font-weight:600;margin-bottom:4px;">생성할 표본 수 (N):</label>
@@ -9099,7 +9718,7 @@ window.addEventListener("DOMContentLoaded", async () => {
             <div style="margin-bottom:10px;">
                 <label style="display:block;font-weight:600;margin-bottom:4px;">차등 정보보호 노이즈 계수 (ε, Epsilon - 낮을수록 프라이버시 강력):</label>
                 <select id="synth-epsilon" style="width:100%;padding:6px 8px;border:1px solid #CBD5E1;border-radius:4px;">
-                    <option value="none">노이즈 없음 (정밀 상관계수 100% 보존 - 연구 시뮬레이션용)</option>
+                    <option value="none">노이즈 없음 (상관 구조 최대 보존 - 연구 시뮬레이션용)</option>
                     <option value="1.0" selected>ε = 1.0 (균형적 차등 정보보호 - 권장)</option>
                     <option value="0.5">ε = 0.5 (강력한 프라이버시 보호 - 민감 보건데이터용)</option>
                     <option value="0.1">ε = 0.1 (최대 보호 노이즈 주입)</option>

@@ -118,9 +118,14 @@ class JamoviSession:
         if self.df is None:
             raise ValueError("No data loaded in session")
 
-    def compute(self, col_name: str, formula: str) -> "JamoviSession":
-        """Create/overwrite a variable from a formula (Stata `generate`/`replace`)."""
+    def compute(self, col_name: str, formula: Optional[str] = None) -> "JamoviSession":
+        """Create/overwrite a variable from a formula (Stata `generate`/`replace`).
+        Also accepts one Stata-style string: ``sess.compute("loglen = log(len)")``."""
         from .data_ops import compute_variable
+        if formula is None:
+            if "=" not in str(col_name):
+                raise ValueError("compute() needs a formula: compute('new', 'expr') or compute('new = expr')")
+            col_name, formula = (x.strip() for x in str(col_name).split("=", 1))
         self._require_df()
         return self._apply_data_op(
             compute_variable(self.df, col_name, formula),
@@ -450,7 +455,16 @@ class JamoviSession:
         """Undo the last data operation by reloading raw data and replaying all previous steps."""
         if not self.data_ops:
             return self
-        remaining = self.data_ops[:-1]
+        return self._replay_data_ops(self.data_ops[:-1])
+
+    def clear_filters(self) -> "JamoviSession":
+        """Remove every row filter (`keep if`) and rebuild the data from the raw snapshot with the other steps."""
+        remaining = [op for op in self.data_ops if op.get("op") != "filter_rows"]
+        if len(remaining) == len(self.data_ops):
+            return self
+        return self._replay_data_ops(remaining)
+
+    def _replay_data_ops(self, remaining: List[Dict[str, Any]]) -> "JamoviSession":
         raw = self._raw_df.copy() if self._raw_df is not None else None
         if raw is None:
             raise ValueError("Raw data snapshot unavailable for undo")
@@ -648,6 +662,14 @@ class JamoviSession:
 
     def anova(self, dep: Optional[Union[str, List[str]]] = None, group: str = "", welchs: bool = True, deps: Optional[Union[str, List[str]]] = None, **kwargs):
         target = dep if dep is not None else (deps if deps is not None else kwargs.pop("deps", None))
+        factors = kwargs.pop("factors", None)
+        if factors and not group:
+            factors = [factors] if isinstance(factors, str) else list(factors)
+            if len(factors) > 1:
+                # several factors: factorial ANOVA on a single dependent variable
+                dv = target[0] if isinstance(target, (list, tuple)) else target
+                return self.run("anovaFactorial", dep=dv, factors=factors, **kwargs)
+            group = factors[0]
         return self.run("anovaOneW", deps=target, group=group, welchs=welchs, **kwargs)
 
     def anova_oneway(self, deps: Optional[Union[str, List[str]]] = None, dep: Optional[Union[str, List[str]]] = None, group: str = "", welchs: bool = True, **kwargs):

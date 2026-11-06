@@ -5,7 +5,7 @@ Capabilities:
 1. Multivariate Gaussian Copula Simulation: preserves correlation and empirical marginals of continuous variables.
 2. Categorical Distribution & Conditional Sampling: preserves multinomial value proportions and frequencies.
 3. Differential Privacy (DP) Noise Injection: adds calibrated Laplace/Gaussian noise controlled by epsilon (ε).
-4. Simulation Dataset Generator: create synthetic microdata for power analysis, teaching, or sharing without PII.
+4. Simulation Dataset Generator: create synthetic microdata for power analysis, teaching or examples (re-identification risk must be assessed separately before release).
 """
 
 from typing import List, Optional, Dict, Any, Union

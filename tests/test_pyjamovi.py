@@ -583,7 +583,7 @@ def test_jasp_features_synthetic_data_and_stata_transpiler():
     # 4. Stata Transpiler
     assert transpile_stata_line("ttest len, by(supp)") == "sess.ttest(dep='len', group='supp')"
     assert transpile_stata_line("reg len supp dose") == "sess.regression(dep='len', covs=['supp', 'dose'])"
-    assert transpile_stata_line("gen log_len = log(len)") == "sess.compute('log_len = log(len)')"
+    assert transpile_stata_line("gen log_len = log(len)") == "sess.compute('log_len', 'log(len)')"
     assert "sess.spatial_regression" in transpile_stata_line("spregress welfare_expenditure elderly_ratio, dvarlag(W)")
     assert "sess.spatial_regression" in transpile_stata_line("moran welfare_expenditure")
 
@@ -670,3 +670,110 @@ def test_web_ui_handlers_and_pane_styles_defined():
     assert 'document.body.setAttribute("data-layout", mode)' in html
     for mode in ("default", "syntax", "quad", "jamovi", "results-only", "data-only"):
         assert f'body[data-layout="{mode}"]' in html, mode
+
+
+def test_audit_sdk_fixes():
+    """Fixes from the full UI audit (2026-11-06): Stata gen/replace, compute shorthand, anova(factors=...),
+    integer counts in descriptives, filter removal, and the SEM / mediation path diagrams."""
+    import openstat as ost
+    from pyjamovi.stata_transpiler import transpile_stata_line
+    from pyjamovi.syntax_engine import execute_python_syntax
+    from pyjamovi.analyses.plots import plot_sem_diagram
+
+    sess = ost.Session(os.path.join(ROOT_DIR, "sample_data", "ToothGrowth.csv"))
+    sess.compute("loglen = log(len)")
+    assert np.allclose(sess.df["loglen"], np.log(sess.df["len"]))
+    with pytest.raises(ValueError):
+        sess.compute("no_formula_here")
+
+    # Stata gen / replace run end to end through the syntax engine
+    assert transpile_stata_line("replace len = len + 1") == "sess.compute('len', 'len + 1')"
+    _, _, df_out, _ = execute_python_syntax(transpile_stata_line("gen log_len = log(len)"),
+                                            default_df=sess.df, sync_workspace=False)
+    assert "log_len" in df_out.columns
+
+    assert sess.anova(dep="len", factors=["supp"]).name == "anovaOneW"
+    assert sess.anova(dep="len", factors=["supp", "dose"]).name == "anovaFactorial"
+
+    rows = {r["var"]: r for r in sess.run("descriptives", vars=["len"]).tables[0].rows}
+    assert rows["N"]["_rowfmt"] == "integer" and rows["Missing"]["_rowfmt"] == "integer"
+
+    n0 = len(sess.df)
+    sess.filter_rows("len > 20")
+    sess.compute("dbl", "len * 2")
+    assert len(sess.df) < n0
+    sess.clear_filters()
+    assert len(sess.df) == n0 and "dbl" in sess.df.columns
+    assert [op["op"] for op in sess.data_ops].count("filter_rows") == 0
+
+    sem_rows = pd.DataFrame([
+        {"lval": "F1", "op": "=~", "rval": "a1", "Estimate": 0.8, "p-value": np.nan},
+        {"lval": "F1", "op": "=~", "rval": "a2", "Estimate": 0.7, "p-value": 0.001},
+        {"lval": "F2", "op": "=~", "rval": "b1", "Estimate": 0.9, "p-value": np.nan},
+        {"lval": "F2", "op": "=~", "rval": "b2", "Estimate": 0.6, "p-value": 0.0001},
+        {"lval": "F2", "op": "~", "rval": "F1", "Estimate": 0.4, "p-value": 0.02},
+        {"lval": "y", "op": "~", "rval": "F2", "Estimate": 0.3, "p-value": 0.2},
+        {"lval": "y", "op": "~", "rval": "F1", "Estimate": 0.1, "p-value": 0.5},
+    ])
+    for df_ in (sem_rows, sem_rows.iloc[:4], pd.DataFrame(columns=["lval", "op", "rval"])):
+        src = plot_sem_diagram(df_, title="t")
+        assert src.startswith("data:image/png;base64,") and len(src) > 1000
+
+
+def test_audit_syntax_append_and_filter_reset_endpoints():
+    """Adding results from the syntax editor keeps earlier data steps and appends to the live script;
+    an empty filter condition restores the rows removed by earlier filters."""
+    try:
+        from fastapi.testclient import TestClient
+    except (ImportError, RuntimeError):
+        pytest.skip("Starlette TestClient requires httpx2")
+    from pyjamovi.server import app
+    c = TestClient(app)
+    c.post("/api/dataset/load", params={"name": "ToothGrowth.csv"})
+    c.post("/api/analysis/clear")
+    j = c.post("/api/data/compute", json={"col_name": "len2", "formula": "len * 2"}).json()
+    assert j["dataOps"][-1]["op"] == "compute"
+    j = c.post("/api/syntax/execute", json={"code": "summarize len", "replace_existing": False}).json()
+    assert any(op["op"] == "compute" for op in j["dataOps"]), "earlier data steps were dropped"
+    j = c.post("/api/syntax/execute", json={"code": "gen loglen = log(len)", "replace_existing": False}).json()
+    assert [op["op"] for op in j["dataOps"]][-2:] == ["compute", "compute"]
+    code = c.get("/api/syntax/current").json()["code"]
+    assert "sess.compute('loglen', 'log(len)')" in code and "gen loglen" not in code.replace("# gen", "")
+    assert "len2" in code, "the live script lost the earlier steps"
+    n0 = j["rowCount"]
+    assert c.post("/api/data/filter", json={"condition": "len > 20"}).json()["rowCount"] < n0
+    j = c.post("/api/data/filter", json={"condition": ""}).json()
+    assert j["rowCount"] == n0 and "loglen" in [col["name"] for col in j["columns"]]
+
+
+def test_web_ui_audit_contracts():
+    """Static contracts from the full UI audit: ribbon menu ids exist as analysis schemas in both languages,
+    every data-i18n key is translated in ko and en, status colours exist, Escape closes dialogs."""
+    import re
+
+    html_path = os.path.join(ROOT_DIR, "reconstructed", "pyjamovi", "web", "index.html")
+    with open(html_path, encoding="utf-8") as f:
+        html = f.read()
+
+    menus = html[html.index("const RIBBON_MENUS_I18N = {"):html.index("const OPTION_LABELS_KO")]
+    ko_part, en_part = menus.split("\n    en: {", 1)
+    ids_ko = set(re.findall(r'\{ id: "(\w+)"', ko_part))
+    ids_en = set(re.findall(r'\{ id: "(\w+)"', en_part))
+    assert ids_ko == ids_en, f"ko/en menus differ: {sorted(ids_ko ^ ids_en)}"
+    schema_block = html[html.index("const ANALYSIS_SCHEMAS = {"):]
+    schema_keys = set(re.findall(r"^    (\w+): \{", schema_block, re.M))
+    schema_keys |= set(re.findall(r"^    (\w+): \{", html[html.index("const TEXT_NETWORK_SCHEMAS"):], re.M)) if "const TEXT_NETWORK_SCHEMAS" in html else set()
+    missing = sorted(i for i in ids_ko if i not in schema_keys)
+    assert not missing, f"menu items without an analysis schema: {missing}"
+
+    i18n = html[html.index("const I18N = {"):html.index("const RIBBON_MENUS_I18N")]
+    ko_d, en_d = i18n.split("\n    en: {", 1)
+    keys_ko = set(re.findall(r"^\s+(\w+):", ko_d, re.M))
+    keys_en = set(re.findall(r"^\s+(\w+):", en_d, re.M))
+    used = set(re.findall(r'data-i18n(?:-placeholder|-title)?="(\w+)"', html))
+    assert not (used - keys_ko) and not (used - keys_en), (sorted(used - keys_ko), sorted(used - keys_en))
+
+    for selector in (".badge-pill.gray", ".badge-pill.red", ".doc-pass", ".doc-warn", ".doc-fail"):
+        assert selector + " {" in html, f"no CSS rule for {selector}"
+    assert 'ev.key !== "Escape"' in html and "handleCellKey(event, this)" in html
+    assert "applyLanguage();   // the saved language" in html

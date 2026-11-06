@@ -490,82 +490,194 @@ def plot_scree(eigenvalues: np.ndarray, parallel_ev: Optional[np.ndarray] = None
 
 
 def plot_sem_diagram(estimates_df: pd.DataFrame, title: str = "Structural Path Diagram") -> str:
-    """Automatic Path & CFA Diagram renderer (Ellipses for Latent, Rectangles for Observed)."""
-    fig, ax = plt.subplots(figsize=(8.0, 5.0))
-    ax.set_xlim(0, 10)
-    ax.set_ylim(0, 6.5)
-    ax.axis("off")
+    """Path / CFA diagram: latent variables as ellipses, observed variables as boxes.
 
-    # Identify latent vs observed nodes from semopy / lavaan operators
-    # In semopy: op '~' where rval is latent or lval is indicator (x ~ Latent means Latent =~ x in semopy!)
-    latents = set()
-    observed = set()
-    edges = []
-
+    Rows use lavaan operators: ``F =~ x`` (loading, latent → indicator) and ``y ~ x`` (regression, x → y).
+    Structural variables are laid out left → right by path depth; indicators of exogenous latents sit in a
+    column on the left, indicators of the most endogenous latents on the right, others below their latent.
+    Edge labels show the estimate (standardized when supplied) with significance stars."""
+    rows = []
     for _, r in estimates_df.iterrows():
         op = str(r.get("op", ""))
-        lv = str(r.get("lval", ""))
-        rv = str(r.get("rval", ""))
-        est = r.get("Estimate", r.get("est", 0.0))
-        pval = r.get("p-value", r.get("p", 0.0))
-        if op == "~~":
+        if op not in ("=~", "~"):
             continue
-        edges.append((lv, op, rv, est, pval))
-
-    # Heuristic: nodes that appear in =~ or have no raw variance rows or start with capital / latent naming
-    all_nodes = sorted(list({e[0] for e in edges} | {e[2] for e in edges}))
-    if not all_nodes:
-        ax.text(5, 3.2, "No structural paths to display", ha="center")
+        est = r.get("Estimate", r.get("est", np.nan))
+        pval = r.get("p-value", r.get("p", np.nan))
+        lv, rv = str(r.get("lval", "")), str(r.get("rval", ""))
+        if op == "=~":
+            rows.append((lv, rv, "load", est, pval))       # latent -> indicator
+        else:
+            rows.append((rv, lv, "path", est, pval))       # predictor -> outcome
+    if not rows:
+        fig, ax = plt.subplots(figsize=(6.0, 2.0))
+        ax.axis("off")
+        ax.text(0.5, 0.5, "No paths to display", ha="center", va="center", transform=ax.transAxes)
         return fig_to_base64(fig)
 
-    # Separate predictors/latents (left) vs targets/indicators (right)
-    sources = [n for n in all_nodes if any(e[2] == n for e in edges)]
-    targets = [n for n in all_nodes if n not in sources]
-    if not targets:
-        mid = max(1, len(all_nodes) // 2)
-        sources, targets = all_nodes[:mid], all_nodes[mid:]
+    latents = list(dict.fromkeys(src for src, _, kind, _, _ in rows if kind == "load"))
+    indicators: Dict[str, List[str]] = {L: [] for L in latents}
+    for src, dst, kind, _, _ in rows:
+        if kind == "load" and dst not in indicators[src]:
+            indicators[src].append(dst)
+    ind_of = {x: L for L, xs in indicators.items() for x in xs if x not in indicators}
+    structural = [n for n in dict.fromkeys([a for a, *_ in rows] + [b for _, b, *_ in rows]) if n not in ind_of]
+    paths = [(a, b) for a, b, kind, *_ in rows if kind == "path" and a in structural and b in structural]
 
+    # path depth: exogenous variables at level 0
+    level = {n: 0 for n in structural}
+    for _ in range(len(structural)):
+        changed = False
+        for a, b in paths:
+            if a != b and level[b] < level[a] + 1 <= len(structural):
+                level[b] = level[a] + 1
+                changed = True
+        if not changed:
+            break
+    max_level = max(level.values()) if level else 0
+    cols: Dict[int, List[str]] = {}
+    for n in structural:
+        cols.setdefault(level[n], []).append(n)
+
+    STEP_IND, BOX_W, BOX_H, ELL_W, ELL_H = 0.46, 1.15, 0.34, 1.35, 0.62
+    side = {}                                   # where the indicators of each latent go
+    for L in latents:
+        if L not in level:
+            continue
+        lev = level[L]
+        side[L] = "left" if lev == 0 else ("right" if lev == max_level else "below")
+    has_left = any(v == "left" for v in side.values())
+    has_right = any(v == "right" for v in side.values()) and max_level > 0
+
+    def slot_h(n):
+        if side.get(n) in ("left", "right"):
+            return max(0.95, len(indicators[n]) * STEP_IND + 0.2)
+        if side.get(n) == "below":
+            return 1.75
+        return 0.95
+
+    col_h = {lev: sum(slot_h(n) for n in ns) for lev, ns in cols.items()}
+    H = min(14.0, max(3.6, max(col_h.values()) + 1.2))
+    x0 = 1.0 + (2.4 if has_left else 0.0)
+    k_below = max([len(indicators[L]) for L in side if side[L] == "below"] or [0])
+    gap = max(2.5, k_below * (BOX_W + 0.12) / 2 + 1.4)
+    W = min(14.0, x0 + max_level * gap + 1.0 + (2.4 if has_right else 0.0))
     pos: Dict[str, Tuple[float, float]] = {}
-    for idx, s in enumerate(sources):
-        y = 5.4 - idx * (4.4 / max(1, len(sources) - 1)) if len(sources) > 1 else 3.25
-        pos[s] = (2.2, y)
-    for idx, t in enumerate(targets):
-        y = 5.6 - idx * (4.8 / max(1, len(targets) - 1)) if len(targets) > 1 else 3.25
-        pos[t] = (7.8, y)
+    top = (H - 0.5)
+    for lev, ns in cols.items():
+        x = x0 + lev * gap
+        y = top - (top - 0.25 - col_h[lev]) / 2          # centre the column
+        single_mid = (len(ns) == 1 and ns[0] not in indicators and 0 < lev < max_level
+                      and any(level[a] < lev < level[b] for a, b in paths))
+        for n in ns:
+            h = slot_h(n)
+            cy = y - h / 2 if side.get(n) != "below" else y - 0.45
+            if single_mid:
+                cy = min(top - 0.4, cy + 1.0)            # lift a lone mediator so the direct path stays visible
+            pos[n] = (x, cy)
+            y -= h
+    for L, xs in indicators.items():
+        if L not in pos:
+            continue
+        lx, ly = pos[L]
+        k = len(xs)
+        for i, x_name in enumerate(xs):
+            if x_name in pos:
+                continue
+            if side.get(L) == "left":
+                pos[x_name] = (0.85, ly + ((k - 1) / 2 - i) * STEP_IND)
+            elif side.get(L) == "right":
+                pos[x_name] = (W - 0.85, ly + ((k - 1) / 2 - i) * STEP_IND)
+            else:
+                pos[x_name] = (lx + (i - (k - 1) / 2) * (BOX_W + 0.12), ly - 1.0)
 
-    # Draw edges first
-    for lv, op, rv, est, pval in edges:
-        # In semopy, y ~ x means x -> y (rv -> lv)
-        src, dst = (rv, lv) if op == "~" else (lv, rv)
-        if src in pos and dst in pos and src != dst:
-            x1, y1 = pos[src]
-            x2, y2 = pos[dst]
-            stars = "***" if (pval is not None and not pd.isna(pval) and pval < 0.001) else (
-                    "**" if (pval is not None and not pd.isna(pval) and pval < 0.01) else (
-                    "*" if (pval is not None and not pd.isna(pval) and pval < 0.05) else ""))
-            color = JMV_NAVY if stars else "#888888"
-            ax.annotate("", xy=(x2 - 0.85, y2), xytext=(x1 + 0.85, y1),
-                        arrowprops=dict(arrowstyle="->", color=color, lw=1.6, shrinkA=4, shrinkB=4))
-            mx, my = (x1 + x2) / 2, (y1 + y2) / 2 + 0.14
-            est_val = 0.0 if pd.isna(est) else float(est)
-            ax.text(mx, my, f"{est_val:.2f}{stars}", fontsize=8.8, fontweight="bold",
-                    color=color, ha="center", va="center",
-                    bbox=dict(boxstyle="round,pad=0.18", facecolor="white", edgecolor="none", alpha=0.85))
+    is_lat = set(latents)
 
-    # Draw nodes
-    for node, (nx, ny) in pos.items():
-        is_latent = node in sources and len(targets) >= 3 and "_" not in node
-        if is_latent:
-            patch = Ellipse((nx, ny), width=1.85, height=0.72, facecolor="#EDF4FC", edgecolor=JMV_BLUE, lw=1.8, zorder=5)
-            ax.add_patch(patch)
+    # A straight path that would run through other variables is drawn as an arc above them.
+    def arc_rad(src, dst):
+        (x1, y1), (x2, y2) = pos[src], pos[dst]
+        dx, dy = x2 - x1, y2 - y1
+        L2 = dx * dx + dy * dy
+        if L2 == 0:
+            return 0.0
+        need = 0.0
+        for n, (px, py) in pos.items():
+            if n in (src, dst):
+                continue
+            t = ((px - x1) * dx + (py - y1) * dy) / L2
+            if not 0.08 < t < 0.92:
+                continue
+            off = (py - (y1 + t * dy)) if abs(dx) >= abs(dy) else (px - (x1 + t * dx))
+            half = (ELL_H if n in is_lat else BOX_H) / 2
+            if abs(off) < half + 0.45:
+                need = max(need, off + half + 0.45)        # clearance above (positive y) the variable
+        if need <= 0:
+            return 0.0
+        # quadratic Bezier apex sits at half the control-point offset: offset = -rad * dx (for left-to-right)
+        return -2.0 * need / dx if dx else 0.0
+
+    rads = {}
+    arc_top = 0.0
+    for src, dst, kind, est, pval in rows:
+        if kind == "path" and src in pos and dst in pos and src != dst:
+            r_ = arc_rad(src, dst)
+            if r_:
+                rads[(src, dst)] = r_
+                (x1, y1), (x2, y2) = pos[src], pos[dst]
+                arc_top = max(arc_top, (y1 + y2) / 2 - 0.5 * r_ * (x2 - x1) + 0.3)
+    H = max(H, arc_top + 0.7)
+    fig, ax = plt.subplots(figsize=(W, H))
+    ax.set_xlim(0, W)
+    ax.set_ylim(0, H)
+    ax.axis("off")
+
+    def anchor(n, toward):
+        cx, cy = pos[n]
+        dx, dy = toward[0] - cx, toward[1] - cy
+        if dx == 0 and dy == 0:
+            return cx, cy
+        if n in is_lat:
+            a, b = ELL_W / 2, ELL_H / 2
+            t = 1.0 / np.sqrt((dx / a) ** 2 + (dy / b) ** 2)
         else:
-            patch = FancyBboxPatch((nx - 0.98, ny - 0.30), 1.96, 0.60,
-                                   boxstyle="round,pad=0.04", facecolor="#FFFFFF", edgecolor="#2C3E50", lw=1.5, zorder=5)
-            ax.add_patch(patch)
-        lbl = node if len(node) <= 17 else (node[:16] + "…")
-        ax.text(nx, ny, lbl, ha="center", va="center", fontsize=8.8, fontweight="bold", color="#1A202C", zorder=6)
+            hw, hh = BOX_W / 2, BOX_H / 2
+            t = min(hw / abs(dx) if dx else np.inf, hh / abs(dy) if dy else np.inf)
+        return cx + t * dx, cy + t * dy
 
-    ax.set_title(title, color=JMV_NAVY, fontsize=11.5, fontweight="bold")
+    def stars(p):
+        if p is None or pd.isna(p):
+            return ""
+        return "***" if p < 0.001 else ("**" if p < 0.01 else ("*" if p < 0.05 else ""))
+
+    for src, dst, kind, est, pval in rows:
+        if src not in pos or dst not in pos or src == dst:
+            continue
+        p1 = anchor(src, pos[dst])
+        p2 = anchor(dst, pos[src])
+        st = stars(pval)
+        color = JMV_NAVY if (st or pd.isna(pval)) else "#94A3B8"
+        rad = rads.get((src, dst), 0.0)
+        ax.annotate("", xy=p2, xytext=p1, zorder=2,
+                    arrowprops=dict(arrowstyle="-|>", color=color, lw=1.3, mutation_scale=11, connectionstyle=f"arc3,rad={rad}"))
+        if est is None or pd.isna(est):
+            continue
+        mx, my = (p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2
+        if rad:
+            dx, dy = p2[0] - p1[0], p2[1] - p1[1]
+            mx, my = mx + 0.5 * rad * dy, my - 0.5 * rad * dx
+        ax.text(mx, my, f"{float(est):.2f}{st}", fontsize=7.6, color=color, ha="center", va="center", zorder=4,
+                bbox=dict(boxstyle="round,pad=0.12", facecolor="white", edgecolor="none", alpha=0.9))
+
+    for n, (nx, ny) in pos.items():
+        if n in is_lat:
+            ax.add_patch(Ellipse((nx, ny), ELL_W, ELL_H, facecolor="#E6F4F1", edgecolor=JMV_BLUE, lw=1.6, zorder=5))
+        else:
+            ax.add_patch(FancyBboxPatch((nx - BOX_W / 2, ny - BOX_H / 2), BOX_W, BOX_H, boxstyle="round,pad=0.02",
+                                        facecolor="#FFFFFF", edgecolor="#334155", lw=1.2, zorder=5))
+        lbl = n if len(n) <= 14 else n[:13] + "…"
+        ax.text(nx, ny, lbl, ha="center", va="center", fontsize=8.2, fontweight="bold" if n in is_lat else "normal",
+                color="#0F172A", zorder=6)
+
+    ax.set_title(title, color=JMV_NAVY, fontsize=11, fontweight="bold")
     return fig_to_base64(fig)
 
 

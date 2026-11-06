@@ -627,14 +627,14 @@ def transpile_stata_line(line: str, ctx: Optional[dict] = None) -> Optional[str]
     if m:
         var = m.group(1)
         form = m.group(2).strip()
-        return f"sess.compute({var + ' = ' + form!r})"
+        return f"sess.compute({var!r}, {form!r})"
 
     # replace var = formula
     m = re.match(r"^replace\s+([A-Za-z0-9_]+)\s*=\s*(.+)$", s, re.IGNORECASE)
     if m:
         var = m.group(1)
         form = m.group(2).strip()
-        return f"sess.compute({var + ' = ' + form!r})"
+        return f"sess.compute({var!r}, {form!r})"
 
     # 8. keep if condition / drop if condition
     m = re.match(r"^keep\s+if\s+(.+)$", s, re.IGNORECASE)

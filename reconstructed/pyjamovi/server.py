@@ -923,7 +923,11 @@ def recode_data_endpoint(req: RecodeRequest):
 def filter_data_endpoint(req: FilterRequest):
     """Row filtering endpoint (Stata `keep if ...`)."""
     try:
-        STATE.session.filter_rows(req.condition)
+        if str(req.condition or "").strip():
+            STATE.session.filter_rows(req.condition)
+        else:
+            # empty condition = remove the row filters applied so far (rows come back from the raw data)
+            STATE.session.clear_filters()
         return STATE.after_data_change()
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Filter error: {e}")
@@ -1136,19 +1140,30 @@ def execute_syntax_endpoint(req: ExecuteSyntaxRequest):
     try:
         from .stata_transpiler import transpile_stata_script
         code_to_run = transpile_stata_script(req.code)
+        prev_script = STATE.current_python_script()
         default_path = os.path.join(SAMPLE_DIR, STATE.dataset_name)
-        analyses, stdout_log, final_df, final_ds_name = execute_python_syntax(
+        analyses, stdout_log, final_df, final_ds_name, meta = execute_python_syntax(
             code_to_run,
             default_df=STATE.session.df,
             default_dataset_path=default_path if os.path.isfile(default_path) else None,
             sync_workspace=False,
+            return_meta=True,
             session_attrs={"boundary": {k: v for k, v in (getattr(STATE, "boundary", None) or {}).items()
                                         if k in ("boundary", "boundaryKey", "idVar", "labelVar") and v} or None},
         )
+        new_ops = list((meta or {}).get("data_ops") or [])
+        same_ds = (not final_ds_name) or final_ds_name == STATE.dataset_name
         if final_df is not None:
-            STATE.session = JamoviSession(final_df, auto_sync_workspace=False)
-            if final_ds_name:
-                STATE.dataset_name = final_ds_name
+            if not req.replace_existing and same_ds and new_ops:
+                # added to the current session: replay the new data steps on it so earlier steps and undo are kept
+                for op in new_ops:
+                    STATE.session.apply_data_op(op)
+            elif not req.replace_existing and same_ds and final_df.equals(STATE.session.df):
+                pass                                   # analyses only: the data and its history are unchanged
+            else:
+                STATE.session = JamoviSession(final_df, auto_sync_workspace=False)
+                if final_ds_name:
+                    STATE.dataset_name = final_ds_name
 
         if req.replace_existing:
             STATE.analyses_store = []
@@ -1165,7 +1180,13 @@ def execute_syntax_endpoint(req: ExecuteSyntaxRequest):
             STATE.analysis_objects[aid] = a
 
         STATE.session.history = list(STATE.analysis_objects.values())
-        STATE.sync_to_workspace(py_code=req.code)
+        # Keep the workspace .py valid Python (Stata lines in their transpiled form) and cumulative:
+        # a run that adds to the current results (selection, one-line command) appends to the script.
+        if req.replace_existing:
+            new_script = code_to_run
+        else:
+            new_script = (prev_script.rstrip() + "\n\n" + code_to_run.strip() + "\n") if prev_script.strip() else code_to_run
+        STATE.sync_to_workspace(py_code=new_script)
         STATE.revision += 1
 
         resp = STATE.dataset_payload()
