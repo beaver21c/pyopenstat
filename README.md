@@ -1,4 +1,4 @@
-# OpenStat Studio v3.0 (`openstat` / `pyjamovi`)
+# OpenStat Studio v3.0 (`pyopenstat`)
 
 🔗 **저장소** <https://github.com/beaver21c/pyopenstat> · ⬇️ **[내려받기 (ZIP)](https://github.com/beaver21c/pyopenstat/archive/refs/heads/main.zip)** · 📖 **사용 설명서** [온라인 보기](https://raw.githack.com/beaver21c/pyopenstat/main/docs/user_guide.html) / [파일](docs/user_guide.html) · ⚠️ **[면책 고지](#disclaimer)**
 
