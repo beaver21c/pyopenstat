@@ -6,6 +6,43 @@ This repository contains **OpenStat Studio v3.0** (`openstat` / `pyjamovi`, MIT 
 
 ---
 
+## 0. 「프로그램 실행·분석」 요청 처리 절차 (Claude Code 데스크톱 앱, 이 폴더를 연 세션)
+
+사용자가 "프로그램 실행", "분석 시작", "OpenStat 열어줘"처럼 요청하면 아래 순서로 바로 진행한다. **저장소 파일을 읽거나 폴더를 탐색하지 않는다** — 필요한 정보는 이 절에 모두 있다.
+
+**① 실행 환경 확인 (명령 1개)**
+- macOS·Linux: `test -x .venv/bin/python && echo ready || echo setup`
+- Windows: `if exist .venv\Scripts\python.exe (echo ready) else (echo setup)`
+- `setup`이면 최초 설치(1~2분): `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt && .venv/bin/pip install -e . --no-deps` (Windows는 `py -m venv .venv` 후 `.venv\Scripts\pip ...`)
+
+**② 프로그램 실행 — 컴퓨터의 기본 브라우저로 열기**
+- 백그라운드 명령으로 실행: `.venv/bin/python run_web_server.py --host 127.0.0.1 --port 8500 --open` (Windows: `.venv\Scripts\python.exe run_web_server.py --host 127.0.0.1 --port 8500 --open`)
+- `--open`은 서버 준비 후 운영체제의 기본 브라우저로 http://localhost:8500 을 연다. 이미 실행 중이면 브라우저만 연다.
+- Claude 앱 안의 브라우저 창(미리보기 패널, `preview_start`, `.claude/launch.json`)은 사용하지 않는다. 사용자가 앱 안에서 보기를 요청한 경우에만 사용.
+- 실행 확인: `curl -s http://127.0.0.1:8500/api/health` (응답 `"status":"ok"`)
+
+**③ 분석 대상 확인**
+- 자료 파일·분석 목적이 요청에 없으면 한 번만 묻는다 (예제 자료: `sample_data/` — ToothGrowth.csv, MedMod_WorkStress.csv, Grunfeld_Panel.csv, SEM_Latent3Factor.csv, Mixture_LCA_Care.csv, Spatial_Panel_Welfare.csv, Text_PolicyDocs.csv 등).
+- 사용자 파일 열기: `curl -s -F "file=@<파일 경로>" http://127.0.0.1:8500/api/dataset/upload` (.csv .xlsx .dta .sav .omv .parquet) / 예제 자료: `curl -s -X POST "http://127.0.0.1:8500/api/dataset/load?name=ToothGrowth.csv"`
+
+**④ 분석 실행 — 열린 프로그램에 명령 보내기**
+- `POST http://127.0.0.1:8500/api/syntax/execute` 본문 `{"code": "<명령>", "replace_existing": false}`. 명령은 파이썬 SDK 또는 Stata 명령 모두 가능:
+  - 자료 처리: `sess.compute('bmi', 'weight / (height/100)**2')`, `sess.filter_rows("age >= 20")`, `sess.recode('age', 'age_g', "min..29='20대'; 30..max='30대 이상'")`, `gen loglen = log(len)`, `keep if dose > 500`
+  - 분석: `sess.run('anovaOneW', deps=['len'], group='dose', phMethod='gamesHowell', eqv=True)`, `ttest len, by(supp)`, `regress len dose`
+  - 분석 이름·옵션 목록: `curl -s http://127.0.0.1:8500/api/catalog` 또는 §2 `openstat catalog`
+- 결과는 브라우저 화면에 2~3초 안에 나타나고, 모든 명령은 `workspace/command_log.py`에 누적 기록된다.
+- 결과 수치 확인: `curl -s http://127.0.0.1:8500/api/session/state` 의 `analyses[].tables` 를 읽어 보고한다 (요약은 표 이름·핵심 수치·해석 순서).
+
+**⑤ 기록·내보내기**
+- 명령 기록(파일 불러오기부터 전부): `workspace/command_log.py` (그대로 다시 실행 가능)
+- Stata·R 코드가 필요하면 변환본 요청: `curl -s "http://127.0.0.1:8500/api/command_log/export?fmt=do"` (`fmt=r`은 R)
+- 결과 문서: `curl -s -o 결과.hwpx "http://127.0.0.1:8500/api/export/tables?fmt=hwpx"` (pdf·docx·xlsx·tex·html 등)
+
+**⑥ 종료**
+- 사용자가 끝내라고 하면 실행한 백그라운드 서버를 종료한다 (`./STOP_OPENSTAT.sh`, Windows `STOP_OPENSTAT.bat`, 또는 해당 프로세스 종료).
+
+---
+
 ## 1. Quick Setup & One-Click MCP Registration
 
 If you need to register OpenStat Studio tools with Claude Code in any environment:

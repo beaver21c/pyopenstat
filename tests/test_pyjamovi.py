@@ -777,3 +777,69 @@ def test_web_ui_audit_contracts():
         assert selector + " {" in html, f"no CSS rule for {selector}"
     assert 'ev.key !== "Escape"' in html and "handleCellKey(event, this)" in html
     assert "applyLanguage();   // the saved language" in html
+
+
+def test_command_log_records_every_command_and_converts():
+    """One cumulative record from the file load onward: data steps, analyses (option edits of a card merged),
+    typed Stata commands, filter removal and exports; it runs as a script and converts to Stata / R."""
+    try:
+        from fastapi.testclient import TestClient
+    except (ImportError, RuntimeError):
+        pytest.skip("Starlette TestClient requires httpx2")
+    from pyjamovi.server import app, STATE
+    c = TestClient(app)
+    c.post("/api/dataset/load", params={"name": "ToothGrowth.csv"})
+    c.post("/api/data/compute", json={"col_name": "len2", "formula": "LN(len)"})
+    c.post("/api/data/filter", json={"condition": "len > 10"})
+    r = c.post("/api/analysis/run", json={"analysis_type": "anovaOneW", "params": {"deps": ["len"], "group": "dose"}}).json()
+    c.post("/api/analysis/run", json={"analysis_type": "anovaOneW", "analysis_id": r["analysisId"],
+                                      "params": {"deps": ["len"], "group": "dose", "phMethod": "gamesHowell"}})
+    c.post("/api/data/filter", json={"condition": ""})
+    c.post("/api/syntax/execute", json={"code": "regress len dose", "replace_existing": False})
+    c.get("/api/export/tables", params={"fmt": "csv"})
+    log = c.get("/api/command_log").json()
+    kinds = [e["kind"] for e in STATE.cmdlog.entries]
+    assert kinds == ["load", "data", "data", "analysis", "data_special", "code", "export"], kinds
+    text = log["commandLog"]
+    assert "sess = ost.Session(_data('sample_data/ToothGrowth.csv'))" in text
+    assert text.count("sess.run('anovaOneW'") == 1 and "gamesHowell" in text
+    assert "sess.clear_filters()" in text and "sess.regression(dep='len'" in text
+    assert text == open(STATE.cmdlog.py_path, encoding="utf-8").read()
+
+    run = subprocess.run([sys.executable, STATE.cmdlog.py_path], cwd=tempfile.gettempdir(), capture_output=True, text=True, timeout=180)
+    assert run.returncode == 0, run.stderr[-800:]
+
+    do = c.get("/api/command_log/export", params={"fmt": "do"}).text
+    for frag in ('import delimited "sample_data/ToothGrowth.csv"', 'delimiters(";")', "generate len2 = ln(len)",
+                 "keep if len > 10", "oneway len dose, tabulate", "regress len dose"):
+        assert frag in do, frag
+    assert "필터 해제" in do and do.count("import delimited") == 2      # filter removal = reload + replay
+    rr = c.get("/api/command_log/export", params={"fmt": "r"}).text
+    assert 'read.csv("sample_data/ToothGrowth.csv", sep = ";"' in rr and "jmv::anovaOneW(" in rr
+    assert c.get("/api/command_log/export", params={"fmt": "sas"}).status_code == 400
+
+    reset = c.post("/api/command_log/reset").json()
+    assert reset["archived"]                                           # new record starts from the open data:
+    assert [e["kind"] for e in STATE.cmdlog.entries] == ["load", "data"]   # the file and the steps still applied
+    c.post("/api/syntax/execute", json={"code": reset["commandLog"], "replace_existing": True})
+    assert STATE.cmdlog.entries[-1]["kind"] == "note"                  # re-running the record is not copied into it
+
+
+def test_web_ui_command_record_and_wording():
+    """No 신택스 wording in the program; the lower-left editor shows the server record; Stata / R code is
+    produced on request (code export menu) instead of in real time; --open uses the default browser."""
+    import re
+    from pyjamovi.syntax_engine import generate_python_script
+
+    html = open(os.path.join(ROOT_DIR, "reconstructed", "pyjamovi", "web", "index.html"), encoding="utf-8").read()
+    assert "신택스" not in html
+    assert "logToSyntaxConsole(" not in html, "client-side step logging replaced by the server record"
+    assert "syncCommandLog(data.commandLog)" in html and "syncCommandLog(payload.commandLog)" in html
+    assert html.count("downloadCommandLog('do')") == 2 and html.count("downloadCommandLog('r')") == 2
+    assert "[R ref]" not in html and "_syntax.do" not in html
+    script = generate_python_script([], data_ops=[{"op": "compute", "col_name": "x", "formula": "len*2"}])
+    assert "Stata:" not in script
+    runner = open(os.path.join(ROOT_DIR, "run_web_server.py"), encoding="utf-8").read()
+    assert '"--open"' in runner and "webbrowser.open" in runner
+    claude_md = open(os.path.join(ROOT_DIR, "CLAUDE.md"), encoding="utf-8").read()
+    assert "run_web_server.py --host 127.0.0.1 --port 8500 --open" in claude_md and "탐색하지 않는다" in claude_md

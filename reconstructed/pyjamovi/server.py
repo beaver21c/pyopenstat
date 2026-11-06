@@ -36,6 +36,7 @@ from pyjamovi.analyses.graph_builder import CHART_TYPES, CustomFigureResult
 from pyjamovi.exporters import export_analyses, SUPPORTED_TABLE_FORMATS
 from pyjamovi.diagnostics import startup_self_check_guard
 from pyjamovi.upstream_sync import check_jamovi_upstream, scaffold_jamovi_feature, rebuild_openstat_package
+from pyjamovi.command_log import CommandLog
 from pyjamovi.syntax_engine import (
     generate_python_script,
     execute_python_syntax,
@@ -119,13 +120,16 @@ class GlobalState:
         self.revision: int = 1
         self.custom_py_code: Optional[str] = None
         self.workspace_mtime: float = 0.0
+        # cumulative command record (workspace/command_log.py); log_sig = (data source, number of data steps) last written
+        self.cmdlog = CommandLog(os.path.join(WORKSPACE_ROOT, "workspace"))
+        self.log_sig: Optional[Tuple[str, int]] = None
 
         default_path = os.path.join(SAMPLE_DIR, "ToothGrowth.csv")
         if os.path.isfile(default_path):
             self.load_file("ToothGrowth.csv", sync_ws=False)
 
         # If Claude Code previously wrote workspace/live_session.json, restore it automatically on startup
-        self.check_external_workspace_sync()
+        self.check_external_workspace_sync(log=False)
 
     def _active_specs(self) -> List[Dict[str, Any]]:
         specs = []
@@ -136,6 +140,33 @@ class GlobalState:
                 "params": item.get("params") or item.get("options") or {}
             })
         return specs
+
+    # ---------------------------------------------------------------- command record
+    def _log_signature(self) -> Tuple[str, int]:
+        return (self._dataset_script_path(), len(getattr(self.session, "data_ops", None) or []))
+
+    def log_mark(self) -> None:
+        """The record now matches the open data (used after a command was written explicitly)."""
+        self.log_sig = self._log_signature()
+
+    def log_sync(self) -> None:
+        """Before a command is recorded: write the data source and any data steps not yet in the record."""
+        sig = self._log_signature()
+        if self.log_sig == sig:
+            return
+        ops = list(getattr(self.session, "data_ops", None) or [])
+        start = 0
+        if self.log_sig is not None and self.log_sig[0] == sig[0] and self.log_sig[1] <= len(ops):
+            start = self.log_sig[1]
+        else:
+            self.cmdlog.load_dataset(sig[0], self.dataset_name)
+        for op in ops[start:]:
+            self.cmdlog.data_op(op)
+        self.log_sig = self._log_signature()
+
+    def command_log_payload(self) -> Dict[str, Any]:
+        return {"commandLog": self.cmdlog.render_python(), "commandLogCount": len(self.cmdlog.entries),
+                "commandLogPath": "workspace/command_log.py"}
 
     def _dataset_script_path(self) -> str:
         sp = getattr(self.session, "source_path", None)
@@ -190,6 +221,7 @@ class GlobalState:
         return notes
 
     def after_data_change(self) -> Dict[str, Any]:
+        self.log_sync()
         for c in list(self.measure_overrides):
             if self.session.df is None or c not in self.session.df.columns:
                 self.measure_overrides.pop(c, None)
@@ -201,7 +233,7 @@ class GlobalState:
         payload["rerunNotes"] = notes
         return payload
 
-    def check_external_workspace_sync(self) -> bool:
+    def check_external_workspace_sync(self, log: bool = True) -> bool:
         """Detects when Claude Code (CLI / MCP / SDK) updated workspace/live_session.json externally and syncs state."""
         if not os.path.isfile(LIVE_JSON_PATH):
             return False
@@ -249,6 +281,11 @@ class GlobalState:
             self.session.history = list(self.analysis_objects.values())
             self.custom_py_code = doc.get("pythonCode")
             self.revision += 1
+            if log:
+                self.cmdlog.note("외부 세션(AI·파이썬)에서 실행한 결과 반영", "외부 세션(AI·파이썬)에서 실행한 결과를 반영함 — 아래 분석은 그 결과를 다시 계산한 명령")
+                self.log_sync()
+                for item in self.analyses_store:
+                    self.cmdlog.analysis(None, item.get("analysis_type"), item.get("title") or item.get("analysis_type"), item.get("params") or {})
             return True
         except Exception:
             return False
@@ -271,6 +308,8 @@ class GlobalState:
             self.boundary = dict(sample_geo, name=os.path.basename(sample_geo["boundary"]))
         if sync_ws:
             self.sync_to_workspace()
+            self.cmdlog.load_dataset(self._dataset_script_path(), name)
+            self.log_mark()
 
     def infer_columns(self) -> List[Dict[str, Any]]:
         df = self.session.df
@@ -383,6 +422,7 @@ class GlobalState:
             },
             "revision": self.revision,
             "boundary": getattr(self, "boundary", None),
+            **self.command_log_payload(),
         }
 
 
@@ -635,6 +675,9 @@ def new_dataset():
     STATE.custom_py_code = None
     STATE.revision += 1
     STATE.sync_to_workspace()
+    STATE.cmdlog.special("빈 데이터셋 만들기",
+                         'sess = ost.Session(pd.DataFrame({"A": [None] * 20, "B": [None] * 20, "C": [None] * 20}))')
+    STATE.log_mark()
     return STATE.dataset_payload()
 
 
@@ -781,6 +824,8 @@ def attach_boundary(req: BoundaryAttachRequest):
     STATE.boundary = {"boundary": _rel_root(path), "boundaryKey": req.boundaryKey, "idVar": req.idVar,
                       "labelVar": label, "name": os.path.basename(path), "matched": rep["matched"],
                       "dataUnits": rep["dataUnits"], "boundaryUnits": rep["boundaryUnits"]}
+    STATE.log_sync()
+    STATE.cmdlog.special("지도 경계 연결", f"sess.attach_boundary(_data({_rel_root(path)!r}), key={req.boundaryKey!r}, data_key={req.idVar!r})")
     payload = STATE.dataset_payload()
     payload["match"] = rep
     payload["preview"] = _boundary_preview(gdf, matched, req.boundaryKey)
@@ -927,7 +972,12 @@ def filter_data_endpoint(req: FilterRequest):
             STATE.session.filter_rows(req.condition)
         else:
             # empty condition = remove the row filters applied so far (rows come back from the raw data)
+            STATE.log_sync()
+            had = len(STATE.session.data_ops)
             STATE.session.clear_filters()
+            if len(STATE.session.data_ops) < had:
+                STATE.cmdlog.special("필터 해제 (원자료 행 복원)", "sess.clear_filters()")
+            STATE.log_mark()
         return STATE.after_data_change()
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Filter error: {e}")
@@ -993,6 +1043,10 @@ def generate_synthetic_endpoint(req: SyntheticDataRequest):
             epsilon=req.epsilon
         )
         if req.as_new_dataset:
+            STATE.log_sync()
+            eps = "None" if req.epsilon is None else repr(req.epsilon)
+            STATE.cmdlog.special("합성데이터 생성 (새 데이터셋)",
+                                 f"sess = ost.Session(sess.synthetic_data(n_samples={req.n_samples!r}, cols={req.cols!r}, epsilon={eps}))")
             STATE.session = JamoviSession(synth_df, auto_sync_workspace=False)
             STATE.dataset_name = req.dataset_name or "synthetic_dataset.csv"
             STATE.analyses_store = []
@@ -1001,6 +1055,7 @@ def generate_synthetic_endpoint(req: SyntheticDataRequest):
             STATE.measure_overrides = {}
             STATE.sync_to_workspace()
             STATE.revision += 1
+            STATE.log_mark()
             return STATE.dataset_payload()
         else:
             return {
@@ -1016,7 +1071,12 @@ def generate_synthetic_endpoint(req: SyntheticDataRequest):
 def undo_data_endpoint():
     """Undoes the most recent data operation."""
     try:
+        STATE.log_sync()
+        had = len(STATE.session.data_ops)
         STATE.session.undo_data_op()
+        if len(STATE.session.data_ops) < had:
+            STATE.cmdlog.special("실행 취소 (직전 자료 처리 단계)", "sess.undo_data_op()")
+        STATE.log_mark()
         return STATE.after_data_change()
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Undo error: {e}")
@@ -1090,8 +1150,12 @@ def run_analysis(req: RunAnalysisRequest):
         STATE.custom_py_code = None
         STATE.sync_to_workspace()
         STATE.revision += 1
+        STATE.log_sync()
+        STATE.cmdlog.analysis(aid, req.analysis_type, payload.get("title") or req.analysis_type, req.params,
+                              syntax_r=getattr(res, "syntax_r", None))
         payload["revision"] = STATE.revision
         payload["pythonCode"] = STATE.current_python_script()
+        payload.update(STATE.command_log_payload())
         return payload
 
     except ValueError as ve:
@@ -1115,13 +1179,17 @@ def delete_analysis(analysis_id: int):
 
 @app.post("/api/analysis/clear")
 def clear_analyses():
+    had = bool(STATE.analyses_store)
     STATE.analyses_store = []
     STATE.analysis_objects = {}
     STATE.session.history = []
     STATE.custom_py_code = None
     STATE.sync_to_workspace()
     STATE.revision += 1
-    return {"status": "success", "revision": STATE.revision, "pythonCode": STATE.current_python_script()}
+    if had:
+        STATE.cmdlog.note("결과 시트 비움", "결과 시트를 비움 (이후 명령의 결과만 화면에 남음)")
+    return {"status": "success", "revision": STATE.revision, "pythonCode": STATE.current_python_script(),
+            **STATE.command_log_payload()}
 
 
 @app.get("/api/syntax/current")
@@ -1141,6 +1209,8 @@ def execute_syntax_endpoint(req: ExecuteSyntaxRequest):
         from .stata_transpiler import transpile_stata_script
         code_to_run = transpile_stata_script(req.code)
         prev_script = STATE.current_python_script()
+        if not req.replace_existing:
+            STATE.log_sync()          # the record must hold the data this code runs on
         default_path = os.path.join(SAMPLE_DIR, STATE.dataset_name)
         analyses, stdout_log, final_df, final_ds_name, meta = execute_python_syntax(
             code_to_run,
@@ -1188,12 +1258,53 @@ def execute_syntax_endpoint(req: ExecuteSyntaxRequest):
             new_script = (prev_script.rstrip() + "\n\n" + code_to_run.strip() + "\n") if prev_script.strip() else code_to_run
         STATE.sync_to_workspace(py_code=new_script)
         STATE.revision += 1
+        STATE.cmdlog.code_run(code_to_run, whole=bool(req.replace_existing), source=req.code)
+        STATE.log_mark()
 
         resp = STATE.dataset_payload()
         resp["stdout"] = stdout_log
         return resp
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Python syntax execution error: {e}")
+
+
+@app.get("/api/command_log")
+def get_command_log():
+    """The cumulative command record (every command since the data file was loaded)."""
+    return STATE.command_log_payload()
+
+
+@app.post("/api/command_log/reset")
+def reset_command_log():
+    """Start a new record; the previous one is kept as workspace/command_log_YYYYmmdd_HHMMSS.py."""
+    kept = STATE.cmdlog.reset(archive=True)
+    STATE.log_sig = None
+    STATE.log_sync()            # the new record starts from the data that is open now
+    out = STATE.command_log_payload()
+    out["archived"] = os.path.relpath(kept, WORKSPACE_ROOT).replace(os.sep, "/") if kept else None
+    return out
+
+
+@app.get("/api/command_log/export")
+def export_command_log(fmt: str = Query("py")):
+    """Download the record as Python (.py) or converted on request to Stata (.do) or R (.R)."""
+    from .code_export import convert
+    ext = fmt.lower().lstrip(".")
+    STATE.log_sync()
+    base = os.path.splitext(STATE.dataset_name)[0]
+    if ext == "py":
+        text, name, mt = STATE.cmdlog.render_python(), f"{base}_명령기록.py", "text/x-python; charset=utf-8"
+    elif ext in ("do", "r"):
+        try:
+            text = convert(STATE.cmdlog.entries, ext, STATE.cmdlog.started)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"코드 변환 오류: {e}")
+        name = f"{base}_명령기록.{'do' if ext == 'do' else 'R'}"
+        mt = "text/plain; charset=utf-8"
+    else:
+        raise HTTPException(status_code=400, detail="fmt: py, do, r 중 하나")
+    return StreamingResponse(iter([text.encode("utf-8")]), media_type=mt,
+                             headers={"Content-Disposition": _attachment(name)})
 
 
 @app.get("/api/syntax/export_py")
@@ -1389,6 +1500,8 @@ def export_tables_endpoint(
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
 
+    STATE.log_sync()
+    STATE.cmdlog.export(ext, f"{base}_{suffix}.{ext}", "social" if rf else None)
     media_type = MIME_MAP.get(ext, "application/octet-stream")
     return StreamingResponse(
         iter([file_bytes]),
@@ -1461,6 +1574,8 @@ def export_html(report_style: Optional[str] = Query(None), report_options: Optio
     analyses_list = list(STATE.analysis_objects.values())
     html_str = render_jamovi_html_report(analyses_list, title=f"OpenStat Studio Results — {STATE.dataset_name}", report_format=rf)
     base = os.path.splitext(STATE.dataset_name)[0]
+    STATE.log_sync()
+    STATE.cmdlog.export("html", f"{base}_openstat_results.html", "social" if rf else None)
     return StreamingResponse(
         iter([html_str.encode("utf-8")]),
         media_type="text/html",

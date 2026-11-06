@@ -11,11 +11,11 @@
 ## ✨ 주요 강점
 
 - **AI 직접 연동**: Claude Code 등 AI 도구가 MCP 도구·명령줄(`openstat`)·파이썬 SDK로 분석을 직접 실행하고, 코드 기록과 결과 기록 파일을 읽어 수정·재실행. 외부 세션에서 실행한 분석도 열린 프로그램 화면에 자동 반영
-- **통계 프로그램 형식의 작업 화면**: 변수 탐색기, 데이터 스프레드시트, 분석 옵션 창, 결과 시트, 신택스 편집기(Stata 명령 입력 실행)를 한 화면에 배치하고 창 배열 6종 제공
+- **통계 프로그램 형식의 작업 화면**: 변수 탐색기, 데이터 스프레드시트, 분석 옵션 창, 결과 시트, 명령 기록·코드 편집기(Stata 명령 입력 실행)를 한 화면에 배치하고 창 배열 6종 제공
 - **사회과학 분석 범위**: 기술통계·t검정·분산분석·회귀·요인·신뢰도, 구조방정식(Mplus 기본 설정), 잠재계층·잠재전이·잠재계층 성장분석, 패널·다층모형, 생존·베이지안·매개·조절, GIS 공간회귀·공간패널·지리가중회귀, 텍스트·관계망 분석 등 분석 45종과 그래프 15종
 - **한글(.hwpx) 출력과 보고 양식**: 결과표(한글에서 편집 가능한 표 개체)와 그림을 한글 문서로 저장. 유의수준 별표·괄호 표준오차·「<표 n>」 번호의 사회과학 보고 양식, Stata `esttab` 형식 모형 비교표 제공. Word·Excel·PDF·LaTeX 등 11개 형식 지원
 - **Stata 방식 자료 관리**: merge(1:1·m:1·1:m, `_merge` 표시 변수)·reshape·recode·destring·encode, 실행 취소, .dta·.sav·.omv 입출력, 텍스트 파일·지도 경계 파일 불러오기, 합성데이터 생성
-- **재현 가능한 분석 기록**: 화면에서 실행한 분석과 자료 처리가 파이썬 코드(`workspace/live_session.py`)로 자동 기록되어 같은 결과의 재실행과 검토가 가능
+- **재현 가능한 분석 기록**: 파일 불러오기부터 실행한 모든 명령(자료 처리·분석·직접 입력 명령·내보내기)이 파이썬 파일 하나(`workspace/command_log.py`)에 순서대로 쌓여 그대로 다시 실행 가능. Stata(.do)·R(.R) 코드는 필요할 때 변환하여 받음
 - **무료·로컬 실행**: MIT 라이선스로 무료 사용. 사용자 PC에서 실행되며 웹 화면은 127.0.0.1에만 연결. Windows·macOS·Linux 실행 파일 제공
 
 ## 🧭 개발 배경
@@ -23,7 +23,7 @@
 **기존 방식의 한계**
 
 - 기존 사회과학 통계 패키지(SPSS·Stata·SAS 등)는 AI와 직접 연결되는 기능이 제한적임. 패키지에서 작성한 코드와 결과를 AI 대화창에 복사해 붙여 넣고, AI가 고친 코드를 다시 패키지에 붙여 넣어 실행하는 과정의 반복이 일반적임
-- 패키지마다 명령 언어(SPSS 신택스, Stata do-file, SAS 프로그램 등)가 달라 AI가 해당 언어를 충분히 다루지 못하면 오류가 발생하며, 코드 입력·수정·재실행의 반복 작업을 연구자가 직접 수행해야 함
+- 패키지마다 명령 언어(SPSS Syntax, Stata do-file, SAS 프로그램 등)가 달라 AI가 해당 언어를 충분히 다루지 못하면 오류가 발생하며, 코드 입력·수정·재실행의 반복 작업을 연구자가 직접 수행해야 함
 
 **설계 원칙**
 
@@ -44,7 +44,7 @@
 ---
 
 <p align="center"><a href="docs/images/01_main_default.webp"><img src="docs/images/01_main_default.webp" alt="OpenStat Studio 기본 화면" width="100%"></a></p>
-<p align="center"><sub><b>기본 화면</b> — 왼쪽 위 변수 탐색기, 왼쪽 아래 명령어·신택스 편집기(실행한 분석의 코드 자동 기록), 오른쪽 분석 결과 시트</sub></p>
+<p align="center"><sub><b>기본 화면</b> — 왼쪽 위 변수 탐색기, 왼쪽 아래 명령 기록·코드 편집기(파일 불러오기부터 모든 명령 누적 기록), 오른쪽 분석 결과 시트</sub></p>
 
 ---
 
@@ -63,7 +63,7 @@
 </tr>
 <tr>
 <td width="50%" valign="top"><a href="docs/images/06_ai_live_sync.webp"><img src="docs/images/06_ai_live_sync.webp" alt="AI·파이썬 연동"></a><br><sub><b>AI·파이썬 연동</b> — 외부 파이썬 세션(Claude Code·SDK)에서 실행한 패널 고정효과 분석의 결과창 자동 반영, 오른쪽 실시간 코드 창의 재현 코드</sub></td>
-<td width="50%" valign="top"><a href="docs/images/07_stata_syntax.webp"><img src="docs/images/07_stata_syntax.webp" alt="Stata 명령 실행"></a><br><sub><b>Stata 명령 실행</b> — summarize·ttest·regress 등 Stata 명령을 신택스 편집기에 그대로 입력해 실행</sub></td>
+<td width="50%" valign="top"><a href="docs/images/07_stata_syntax.webp"><img src="docs/images/07_stata_syntax.webp" alt="Stata 명령 실행"></a><br><sub><b>Stata 명령 실행</b> — summarize·ttest·regress 등 Stata 명령을 명령 기록·코드 편집기에 그대로 입력해 실행</sub></td>
 </tr>
 <tr>
 <td width="50%" valign="top"><a href="docs/images/08_compare_modal.webp"><img src="docs/images/08_compare_modal.webp" alt="모형 비교표 설정"></a><br><sub><b>모형 비교표 설정</b> — 비교할 회귀모형 선택, 모형 이름·변수 이름·표시 통계량 지정</sub></td>
@@ -121,6 +121,16 @@ OpenStat Studio는 파이썬 초보자부터 데이터 사이언티스트까지 
 ## 🤖 2. Claude Code AI 에이전트로 분석하기
 
 터미널에서 AI 에이전트(Claude Code, Antigravity, Cursor 등)에게 말로 지시하여 데이터를 분석할 수 있습니다.
+
+### 🌟 Claude Code 데스크톱 앱에서 바로 실행·분석하기 (권장)
+
+1. Claude 데스크톱 앱의 **Code** 탭에서 새 세션을 만들고, 작업 폴더로 **이 프로그램 폴더**(압축을 푼 폴더)를 선택
+2. 입력창에 `프로그램 실행하여 분석 시작` 입력 → Claude가 폴더의 안내 파일(`CLAUDE.md` 0절) 절차대로 진행. 폴더 전체를 읽지 않고, 처음 한 번만 실행 환경을 설치(1~2분)한 뒤 **컴퓨터의 기본 브라우저**에서 프로그램을 엶
+3. 분석할 파일과 목적을 말로 지시 (예: *"D:\\연구\\설문.xlsx 열어서 연령대별 만족도 차이를 분산분석으로, 사후검정은 Games-Howell로"*) → 결과가 브라우저 화면에 바로 나타나고, 모든 명령이 `workspace/command_log.py`에 누적 기록됨
+4. *"결과를 한글(.hwpx)로 저장하고 명령 기록은 Stata do-file로도 줘"*처럼 내보내기·코드 변환 요청 가능
+5. 마칠 때 `프로그램 종료` 입력 → Claude가 실행한 프로그램(서버)을 끔
+
+### 🌟 터미널에서 사용하기
 
 ### 🌟 1회성 연동 설정
 폴더 안에 있는 **`SETUP_CLAUDE_CODE.bat`** (Mac/Linux는 `./SETUP_CLAUDE_CODE.sh`)을 더블클릭합니다.  

@@ -86,10 +86,40 @@ async def serve_multi(host: str, ports: list[int]):
     await asyncio.gather(*(srv.serve() for _, srv in servers))
 
 
+def _server_alive(port: int) -> bool:
+    import urllib.request
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/health", timeout=2) as r:
+            return r.status == 200
+    except Exception:
+        return False
+
+
+def _open_browser_when_ready(port: int) -> None:
+    """Open the program in the computer's default web browser once the server answers."""
+    import threading
+    import time
+    import webbrowser
+
+    def run():
+        for _ in range(240):
+            if _server_alive(port):
+                break
+            time.sleep(0.5)
+        url = f"http://localhost:{port}"
+        print(f"[OpenStat] Opening {url} in the default web browser", flush=True)
+        webbrowser.open(url, new=2)
+
+    threading.Thread(target=run, daemon=True).start()
+
+
 def main():
     parser = argparse.ArgumentParser(description="Start OpenStat Studio v3.0 On-Demand Web Server")
     parser.add_argument("--host", default="0.0.0.0", help="Bind host (default: 0.0.0.0)")
     parser.add_argument("--port", type=int, default=None, help="Single port override")
+    parser.add_argument("--open", action="store_true",
+                        help="open the program in the computer's default web browser when the server is ready "
+                             "(if it is already running, only open the browser)")
     args = parser.parse_args()
 
     if args.port:
@@ -98,6 +128,14 @@ def main():
         ports = [int(os.environ["PORT"])]
     else:
         ports = [8500, 8000]
+
+    if args.open:
+        if _server_alive(ports[0]):
+            import webbrowser
+            print(f"[OpenStat] Already running on port {ports[0]}; opening it in the default web browser", flush=True)
+            webbrowser.open(f"http://localhost:{ports[0]}", new=2)
+            return
+        _open_browser_when_ready(ports[0])
 
     asyncio.run(serve_multi(args.host, ports))
 

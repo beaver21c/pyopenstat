@@ -138,7 +138,7 @@ def generate_python_script(
     export_ops = list(export_ops or [])
     lines = [
         '"""',
-        "OpenStat Studio — Reproducible Analysis Command Script (.py, Stata .do-file equivalent)",
+        "OpenStat Studio — Reproducible Analysis Command Script (.py)",
         "Engine: openstat / pyjamovi v3.0 (100% Pure Python, MIT License)",
         "Analytical models, menu taxonomy & .omv format modeled with reference to jamovi (https://www.jamovi.org).",
         f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
@@ -189,7 +189,7 @@ def generate_python_script(
         "    return p",
         "",
         "# ==========================================================================",
-        "# [STEP 1] Load raw dataset (.csv, .xlsx, .omv)            — Stata: use \"...\", clear",
+        "# [STEP 1] Load raw dataset (.csv, .xlsx, .omv)",
         "# ==========================================================================",
         f"sess = ost.Session(_resolve_data_file({_portable_path(dataset_path)!r}))",
         "",
@@ -202,7 +202,7 @@ def generate_python_script(
             "# ==========================================================================",
         ])
         for i, op in enumerate(data_ops, start=1):
-            lines.append(f"# (2.{i}) {op.get('op')}  — Stata: {_STATA_EQUIV.get(op.get('op'), '')}")
+            lines.append(f"# (2.{i}) {op.get('op')}")
             lines.append(_format_op_call(op))
         lines.append("")
     lines.append("df = sess.df  # active (transformed) dataset")
@@ -253,7 +253,7 @@ def generate_python_script(
             "# ==========================================================================",
         ])
         for i, op in enumerate(export_ops, start=1):
-            lines.append(f"# (4.{i}) {op.get('op')}  — Stata: {_STATA_EQUIV.get(op.get('op'), '')}")
+            lines.append(f"# (4.{i}) {op.get('op')}")
             lines.append(_format_op_call(op))
         lines.append("")
     elif export_hint:

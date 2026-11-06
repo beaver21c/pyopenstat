@@ -742,17 +742,78 @@ def transpile_stata_line(line: str, ctx: Optional[dict] = None) -> Optional[str]
         return f"raise NotImplementedError({('Stata 명령 변환 미지원: ' + s)!r})"
 
 
+def _bracket_delta(line: str) -> int:
+    """Net count of opened ( [ { on a Python line, ignoring string contents and # comments (approximate)."""
+    depth, quote, i = 0, None, 0
+    while i < len(line):
+        ch = line[i]
+        if quote:
+            if ch == "\\":
+                i += 2
+                continue
+            if line.startswith(quote, i):
+                i += len(quote)
+                quote = None
+                continue
+        elif ch == "#":
+            break
+        elif line.startswith('"""', i) or line.startswith("'''", i):
+            quote = line[i:i + 3]
+            i += 3
+            continue
+        elif ch in "\"'":
+            quote = ch
+        elif ch in "([{":
+            depth += 1
+        elif ch in ")]}":
+            depth -= 1
+        i += 1
+    return depth
+
+
 def transpile_stata_script(script_text: str) -> str:
-    """Translates a full multi-line Stata .do script into Python syntax."""
-    py_lines = []
+    """Translates Stata command lines in a script into Python while keeping Python code as written.
+
+    A script that is already valid Python is returned unchanged. Otherwise each top-level line (outside
+    brackets, triple-quoted text and indented blocks) is converted when it is a Stata command; Python
+    lines keep their indentation, so multi-line calls, function definitions and loops still run."""
     ctx: dict = {"stored": []}                                         # eststo names across lines
     text = re.sub(r"/\*.*?\*/", " ", script_text, flags=re.S)          # /* block comments */
     text = re.sub(r"[ \t]*///[^\n]*\n[ \t]*", " ", text)                 # /// line continuation
-    for line in text.splitlines():
-        line = re.sub(r"\s+//\s.*$", "", line)                           # trailing // comments
-        transpiled = transpile_stata_line(line, ctx)
-        if transpiled is not None:
-            py_lines.append(transpiled)
+    try:
+        import ast
+        ast.parse(script_text)
+        bare_stata = [ln for ln in script_text.splitlines()
+                      if re.fullmatch(r"[A-Za-z_]\w*", ln.rstrip()) and transpile_stata_line(ln) not in (None, ln.strip())]
+        if not re.search(r"(?m)^\s*(\*|//)", script_text) and not bare_stata:
+            return script_text                                         # plain Python: nothing to translate
+    except SyntaxError:
+        pass
+    py_lines = []
+    depth = 0
+    in_triple = False
+    for raw in text.splitlines():
+        line = re.sub(r"\s+//\s.*$", "", raw) if not in_triple else raw  # trailing // comments
+        stripped = line.strip()
+        triple_count = line.count('"""') + line.count("'''")
+        top_level = depth <= 0 and not in_triple and not line[:1].isspace()
+        if not top_level or not stripped:
+            py_lines.append(line)
         else:
-            py_lines.append(f"# {line}")
+            transpiled = transpile_stata_line(line, ctx)
+            if transpiled is None:
+                py_lines.append(line if stripped.startswith("#") or not stripped else f"# {stripped}")
+            elif transpiled.startswith("raise NotImplementedError") and (
+                    _bracket_delta(line) > 0 or stripped.endswith((":", "\\", ",")) or triple_count % 2 == 1):
+                py_lines.append(line)                                  # first line of a multi-line Python statement
+            else:
+                py_lines.append(transpiled)
+        if in_triple:
+            if triple_count % 2 == 1:
+                in_triple = False
+        else:
+            if triple_count % 2 == 1:
+                in_triple = True
+            else:
+                depth += _bracket_delta(line)
     return "\n".join(py_lines)
