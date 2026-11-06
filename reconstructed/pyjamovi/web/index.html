@@ -536,9 +536,17 @@ input, textarea, select, .selectable, .jmv-results-sheet, .jmv-results-sheet * {
     border: 1px solid #ACACAC;
     margin-right: 4px;
     margin-bottom: 4px;
-    overflow-y: auto;
+    /* Column: view-switch bar on top, then data grid and/or results; each part scrolls on its own */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     position: relative;
     transition: background-color 0.15s;
+}
+
+#results-scroll-wrap,
+#right-grid-wrap {
+    min-height: 0;
 }
 
 #results-pane.has-selection {
@@ -558,6 +566,345 @@ body[data-split="data-only"] #main-splitter {
 }
 body[data-split="data-only"] #left-pane {
     width: calc(100% - 8px) !important;
+}
+
+/* --- Overlay dialogs that use .modal-backdrop (synthetic data generator, SEM builder) --- */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(15, 23, 42, 0.45);
+}
+
+.modal-dialog {
+    width: 100%;
+    max-height: calc(100vh - 32px);
+}
+
+/* --- Window layouts (창 배열). setLayoutMode sets body[data-layout]; no attribute = default.
+   default · syntax · quad: left column = variable explorer + syntax console, data opens on the right.
+   jamovi · data-only: left column = data grid (or the variable view on the 변수 tab). --- */
+#left-var-explorer,
+#left-syntax-console {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+#left-var-explorer {
+    flex: 0 0 42%;
+    min-height: 140px;
+    background: #FFFFFF;
+}
+
+#left-h-splitter {
+    flex: 0 0 6px;
+    background: #E2E8F0;
+    border-top: 1px solid #CBD5E1;
+    border-bottom: 1px solid #CBD5E1;
+    cursor: row-resize;
+}
+
+#left-h-splitter:hover {
+    background: var(--ost-accent);
+}
+
+#left-syntax-console {
+    flex: 1 1 auto;
+    min-height: 160px;
+    background: #0F172A;
+    color: #E2E8F0;
+}
+
+body:not([data-layout]) #spreadsheet-container,
+body:not([data-layout]) #variables-container,
+body[data-layout="default"] #spreadsheet-container,
+body[data-layout="default"] #variables-container,
+body[data-layout="syntax"] #spreadsheet-container,
+body[data-layout="syntax"] #variables-container,
+body[data-layout="quad"] #spreadsheet-container,
+body[data-layout="quad"] #variables-container,
+body[data-layout="syntax"] #left-var-explorer,
+body[data-layout="syntax"] #left-h-splitter,
+body[data-layout="jamovi"] #left-var-explorer,
+body[data-layout="jamovi"] #left-h-splitter,
+body[data-layout="jamovi"] #left-syntax-console,
+body[data-layout="data-only"] #left-var-explorer,
+body[data-layout="data-only"] #left-h-splitter,
+body[data-layout="data-only"] #left-syntax-console {
+    display: none !important;
+}
+
+body[data-layout="syntax"] #left-pane {
+    width: 46%;
+}
+
+body[data-layout="results-only"] #left-pane,
+body[data-layout="results-only"] #main-splitter,
+body[data-layout="data-only"] #results-pane,
+body[data-layout="data-only"] #options-pane,
+body[data-layout="data-only"] #main-splitter {
+    display: none !important;
+}
+
+body[data-layout="data-only"] #left-pane {
+    width: calc(100% - 8px) !important;
+}
+
+/* Left pane box headers and the variable explorer */
+.left-box-hdr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+    padding: 6px 10px;
+    background: #F1F5F9;
+    border-bottom: 1px solid #E2E8F0;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1E293B;
+    flex-shrink: 0;
+}
+
+.left-box-hdr.dark-hdr {
+    background: #1E293B;
+    color: #F8FAFC;
+    border-bottom-color: #334155;
+}
+
+.left-box-title {
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.badge-pill {
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-size: 10.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    background: #E2E8F0;
+    color: #475569;
+}
+
+.badge-pill.green {
+    background: #064E3B;
+    color: #6EE7B7;
+}
+
+.left-box-tools {
+    margin-left: auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 5px;
+}
+
+.left-box-tools .py-btn {
+    white-space: nowrap;
+}
+
+#left-var-filter {
+    width: 120px;
+    padding: 3px 7px;
+    border: 1px solid #CBD5E1;
+    border-radius: 4px;
+    font-size: 11.5px;
+    font-family: inherit;
+}
+
+.left-small-icon-btn {
+    display: flex;
+    align-items: center;
+    padding: 3px 5px;
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.left-small-icon-btn img {
+    width: 14px;
+    height: 14px;
+}
+
+.left-small-icon-btn:hover {
+    background: #E2E8F0;
+}
+
+#left-var-list-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    background: #FFFFFF;
+}
+
+.left-var-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11.5px;
+}
+
+.left-var-table th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 5px 6px;
+    background: #F8FAFC;
+    border-bottom: 1px solid #E2E8F0;
+    color: #64748B;
+    font-weight: 600;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.left-var-table td {
+    padding: 4px 6px;
+    border-bottom: 1px solid #F1F5F9;
+    color: #334155;
+    white-space: nowrap;
+}
+
+.left-var-table tr:hover td {
+    background: #F0FDFA;
+}
+
+/* Integrated syntax console (Python / Stata) */
+.syntax-editor-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    background: #0F172A;
+    overflow: hidden;
+}
+
+#integrated-syntax-editor {
+    width: 100%;
+    height: 100%;
+    padding: 8px 10px;
+    background: #0B1120;
+    color: #E2E8F0;
+    border: none;
+    outline: none;
+    resize: none;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.stata-cmd-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: #1E293B;
+    border-top: 1px solid #334155;
+    flex-shrink: 0;
+}
+
+.stata-cmd-label {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #38BDF8;
+    white-space: nowrap;
+}
+
+#stata-inline-cmd {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 4px 8px;
+    background: #0F172A;
+    color: #F8FAFC;
+    border: 1px solid #475569;
+    border-radius: 3px;
+    font-size: 12px;
+    font-family: ui-monospace, Consolas, monospace;
+}
+
+#stata-inline-cmd:focus {
+    border-color: #38BDF8;
+    outline: none;
+}
+
+.stata-cmd-btn {
+    padding: 4px 10px;
+    background: #0284C7;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 3px;
+    font-size: 11.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.stata-cmd-btn:hover {
+    background: #0369A1;
+}
+
+/* Results pane view-switch bar */
+.right-pane-subbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px 10px;
+    padding: 5px 10px;
+    background: #F8FAFC;
+    border-bottom: 1px solid #E2E8F0;
+    flex-shrink: 0;
+}
+
+.view-switch-tabs,
+.subbar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.v-tab {
+    padding: 4px 10px;
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 4px;
+    font-size: 11.5px;
+    font-weight: 600;
+    font-family: inherit;
+    color: #475569;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.v-tab:hover {
+    background: #F1F5F9;
+}
+
+.v-tab.active {
+    background: var(--ost-accent);
+    border-color: var(--ost-accent-hover);
+    color: #FFFFFF;
+}
+
+.subbar-btn {
+    padding: 4px 9px;
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 4px;
+    font-size: 11.5px;
+    font-family: inherit;
+    color: #334155;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.subbar-btn:hover {
+    background: #F1F5F9;
 }
 
 /* --- Spreadsheet Grid --- */
@@ -1021,7 +1368,8 @@ table.jmv-grid td[contenteditable="true"]:focus {
 
 /* --- Right Results View (Authentic jamovi Output Document) --- */
 #welcome-screen {
-    height: 100%;
+    min-height: 100%;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -2223,8 +2571,8 @@ table.jmv-apa-table tbody tr.sec-break td {
                 <img src="assets/brand-logo-mark.svg" alt="OpenStat Studio" style="opacity:0.9;">
                 <div style="font-size:20px;color:#1E3A5F;font-weight:700;">OpenStat Studio <span style="font-size:12.5px;color:#0D9488;font-weight:600;">v3.0 순수 파이썬 통계 분석 &amp; 시각화 스튜디오 (MIT)</span></div>
                 <div style="margin-top:6px;font-size:13px;color:#334155;max-width:640px;line-height:1.6;">
-                    순수 파이썬(Pure Python) 기반 28종 통계 분석, Stata 수준 데이터 전처리(계산/재코딩/필터/병합), 15종 학술 차트 빌더, <strong>Claude Code</strong> 자연어 AI 연동, 그리고 <strong>한글(HWPX) / 엑셀(XLSX) / Word / PDF</strong> 출판용 리포트 자동 생성.<br>
-                    <span style="font-size:11.5px;color:#64748B;">자모비(jamovi)의 직관적 UI와 모형 체계를 참고하여 개발된 100% 클린룸 독자 오픈소스 소프트웨어입니다.</span>
+                    순수 파이썬(Pure Python) 기반 45종 통계 분석, Stata 수준 데이터 전처리(계산/재코딩/필터/병합), 15종 학술 차트 빌더, <strong>Claude Code</strong> 자연어 AI 연동, 그리고 <strong>한글(HWPX) / 엑셀(XLSX) / Word / PDF</strong> 출판용 리포트 자동 생성.<br>
+                    <span style="font-size:11.5px;color:#64748B;">메뉴 구성과 결과표 양식은 jamovi를 참고함 · 개인이 개발한 오픈소스(MIT), 무보증(AS IS) 제공 · <a href="user_guide.html#ch-disclaimer" target="_blank" style="color:#0F766E;">면책 고지</a></span>
                 </div>
                 <div class="welcome-quick-pills">
                     <span class="quick-pill" onclick="loadDatasetByName('ToothGrowth.csv')">ToothGrowth (T-검정 / ANOVA / 베이지안)</span>
@@ -2293,7 +2641,7 @@ table.jmv-apa-table tbody tr.sec-break td {
     <div style="font-size:11px;color:#475569;line-height:1.45;margin-top:8px;">
         <div><strong>Active Dataset:</strong> <span id="pop-ds-name">ToothGrowth.csv</span></div>
         <div><strong>Claude Sync File:</strong> <code>workspace/live_session.py</code></div>
-        <div><strong>License:</strong> MIT (Clean-Room Original Assets)</div>
+        <div><strong>License:</strong> MIT (AS IS, 무보증)</div>
     </div>
 </div>
 
@@ -2329,7 +2677,7 @@ table.jmv-apa-table tbody tr.sec-break td {
             <button class="silky-small-btn" onclick="toggleModulesModal(false)">Close</button>
         </div>
         <div style="padding:10px 16px;background:#F0FDFA;border-bottom:1px solid #CCFBF1;font-size:11.5px;color:#134E4A;">
-            <strong>Open-Source Notice (MIT License):</strong> Analytical models, menu organization, and <code>.omv</code> container compatibility were designed with reference to <a href="https://www.jamovi.org" target="_blank" style="color:#0F766E;font-weight:600;">The jamovi project</a>. All vector icons, branding, and Python statistical engines are 100% original clean-room implementations.
+            <strong>Open-Source Notice (MIT License):</strong> Analytical models, menu organization, and <code>.omv</code> container compatibility were designed with reference to <a href="https://www.jamovi.org" target="_blank" style="color:#0F766E;font-weight:600;">The jamovi project</a>. Provided AS IS without warranty; see the <a href="user_guide.html#ch-disclaimer" target="_blank" style="color:#0F766E;font-weight:600;">disclaimer</a>.
         </div>
         <div class="modules-list">
             <div class="module-card"><img src="assets/analysis-descriptives.svg" alt=""><div><strong>Core Parametric &amp; Non-Parametric</strong><div style="font-size:11.5px;color:#555;">Descriptives, T-Tests, Factorial/RM ANOVA, ANCOVA, 5 Post-Hoc tests, Regression, Logistic ROC, Contingency</div></div></div>
@@ -3461,6 +3809,7 @@ function setLanguage(lang) {
 function applyLanguage() {
     const lang = APP.lang || "ko";
     const dict = I18N[lang] || I18N.ko;
+    updateLayoutLabel();
 
     const btnKo = document.getElementById("btn-lang-ko");
     const btnEn = document.getElementById("btn-lang-en");
@@ -6648,7 +6997,7 @@ function selectResultCard(ev, analysisId) {
 }
 
 function handleResultsBackgroundClick(ev) {
-    if (ev.target.id === "results-pane" || ev.target.id === "results-list") {
+    if (["results-pane", "results-scroll-wrap", "results-list"].includes(ev.target.id)) {
         closeOptionsPanel();
     }
 }
@@ -7946,12 +8295,16 @@ function renderLeftVarExplorer() {
     if (!tbody) return;
     const isKo = (APP.lang || 'ko') !== 'en';
     const cols = APP.columns || [];
+    const countBadge = document.getElementById("left-var-count-badge");
+    if (countBadge) countBadge.textContent = isKo ? `${cols.length}개 변수` : `${cols.length} variables`;
     if (!cols.length) {
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#94A3B8;padding:12px;">${isKo ? '데이터가 없습니다' : 'No variables'}</td></tr>`;
         return;
     }
+    const query = (APP.leftVarFilter || "").toLowerCase();
     let html = "";
     cols.forEach((c, idx) => {
+        if (query && !String(c.name).toLowerCase().includes(query)) return;
         const icon = measureIcon(c.measureType);
         const missingCount = c.missing || 0;
         const dType = c.dataType || "Text";
@@ -7966,7 +8319,55 @@ function renderLeftVarExplorer() {
             </td>
         </tr>`;
     });
+    if (!html) {
+        html = `<tr><td colspan="6" style="text-align:center;color:#94A3B8;padding:12px;">${isKo ? '검색어와 일치하는 변수가 없습니다' : 'No matching variables'}</td></tr>`;
+    }
     tbody.innerHTML = html;
+}
+
+function filterLeftVariables(query) {
+    APP.leftVarFilter = String(query || "").trim();
+    renderLeftVarExplorer();
+}
+
+/* --- Synthetic data generator (POST /api/data/synthetic: Gaussian copula + optional DP noise) --- */
+function openSyntheticDataModal() {
+    const modal = document.getElementById("synthetic-modal");
+    if (modal) modal.style.display = "flex";
+}
+
+function closeSyntheticModal() {
+    const modal = document.getElementById("synthetic-modal");
+    if (modal) modal.style.display = "none";
+}
+
+async function runSyntheticGeneration() {
+    const n = parseInt(document.getElementById("synth-n-samples")?.value || "100", 10);
+    const epsVal = document.getElementById("synth-epsilon")?.value;
+    const eps = epsVal === "none" ? null : parseFloat(epsVal);
+    showToast("합성데이터 생성 중...");
+    try {
+        const res = await fetch("/api/data/synthetic", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                n_samples: n,
+                epsilon: eps,
+                dataset_name: "synthetic_" + (APP.datasetName || "dataset.csv"),
+                as_new_dataset: true
+            })
+        });
+        if (res.ok) {
+            applyDatasetPayload(await res.json());
+            closeSyntheticModal();
+            showToast(`합성데이터 생성 완료 (N=${n}, ${APP.columns.length}개 변수)`, 4000);
+        } else {
+            const err = await res.json().catch(() => ({}));
+            showToast("합성데이터 생성 오류: " + (err.detail || res.status), 5000);
+        }
+    } catch (e) {
+        showToast("통신 오류: " + e, 5000);
+    }
 }
 
 /* --- Window Layout Mode Switcher --- */
@@ -7990,72 +8391,40 @@ window.addEventListener("click", () => {
     if (sdd) sdd.style.display = "none";
 });
 
+// Window layouts: label text [ko, en]. Pane visibility comes from the body[data-layout] CSS rules.
+const LAYOUT_LABELS = {
+    "default": ["🏛️ 창 배열: 기본 모드 ▾", "🏛️ Layout: Default ▾"],
+    "jamovi": ["📊 창 배열: 자모비 모드 ▾", "📊 Layout: jamovi ▾"],
+    "syntax": ["📝 창 배열: 신택스 집중 ▾", "📝 Layout: Syntax ▾"],
+    "quad": ["▦ 창 배열: 4분할 모드 ▾", "▦ Layout: 4-Panes ▾"],
+    "results-only": ["📄 창 배열: 결과 전체화면 ▾", "📄 Layout: Results Only ▾"],
+    "data-only": ["📋 창 배열: 데이터 전체화면 ▾", "📋 Layout: Data Only ▾"]
+};
+
+function updateLayoutLabel() {
+    const labelEl = document.getElementById("current-layout-label");
+    const labels = LAYOUT_LABELS[APP.layoutMode] || LAYOUT_LABELS["default"];
+    if (labelEl) labelEl.textContent = labels[(APP.lang || "ko") === "en" ? 1 : 0];
+}
+
 function setLayoutMode(mode) {
+    if (!LAYOUT_LABELS[mode]) mode = "default";
     APP.layoutMode = mode;
     safeStorageSet("openstat_layout_mode", mode);
     closeLayoutMenu();
+    document.body.setAttribute("data-layout", mode);
 
-    const leftPane = document.getElementById("left-pane");
-    const leftVar = document.getElementById("left-var-explorer");
-    const leftSplitter = document.getElementById("left-h-splitter");
-    const leftSyntax = document.getElementById("left-syntax-console");
-    const spreadsheet = document.getElementById("spreadsheet-container");
-    const resultsPane = document.getElementById("results-pane");
-    const labelEl = document.getElementById("current-layout-label");
-
-    document.querySelectorAll(".layout-dd-item").forEach(el => el.classList.remove("active"));
-    const activeItem = document.getElementById("layout-item-" + mode);
-    if (activeItem) activeItem.classList.add("active");
-
-    const isKo = (APP.lang || 'ko') !== 'en';
-
-    if (mode === "default") {
-        if (labelEl) labelEl.textContent = isKo ? "🏛️ 창 배열: 기본 모드 ▾" : "🏛️ Layout: Default ▾";
-        if (leftPane) leftPane.style.display = "flex";
-        if (leftVar) { leftVar.style.display = "flex"; leftVar.style.flex = "1 1 50%"; }
-        if (leftSplitter) leftSplitter.style.display = "block";
-        if (leftSyntax) { leftSyntax.style.display = "flex"; leftSyntax.style.flex = "1 1 50%"; }
-        if (spreadsheet) spreadsheet.style.display = "none";
-        if (resultsPane) resultsPane.style.display = "flex";
-        switchRightView("results");
-    } else if (mode === "jamovi") {
-        if (labelEl) labelEl.textContent = isKo ? "📊 창 배열: 자모비 모드 ▾" : "📊 Layout: jamovi ▾";
-        if (leftPane) leftPane.style.display = "flex";
-        if (leftVar) leftVar.style.display = "none";
-        if (leftSplitter) leftSplitter.style.display = "none";
-        if (leftSyntax) leftSyntax.style.display = "none";
-        if (spreadsheet) spreadsheet.style.display = "block";
-        if (resultsPane) resultsPane.style.display = "flex";
-        switchRightView("results");
-    } else if (mode === "syntax") {
-        if (labelEl) labelEl.textContent = isKo ? "📝 창 배열: 신택스 집중 ▾" : "📝 Layout: Syntax ▾";
-        if (leftPane) leftPane.style.display = "flex";
-        if (leftVar) leftVar.style.display = "none";
-        if (leftSplitter) leftSplitter.style.display = "none";
-        if (leftSyntax) { leftSyntax.style.display = "flex"; leftSyntax.style.flex = "1 1 100%"; }
-        if (spreadsheet) spreadsheet.style.display = "none";
-        if (resultsPane) resultsPane.style.display = "flex";
-        switchRightView("results");
-    } else if (mode === "quad") {
-        if (labelEl) labelEl.textContent = isKo ? "▦ 창 배열: 4분할 모드 ▾" : "▦ Layout: 4-Panes ▾";
-        if (leftPane) leftPane.style.display = "flex";
-        if (leftVar) { leftVar.style.display = "flex"; leftVar.style.flex = "1 1 50%"; }
-        if (leftSplitter) leftSplitter.style.display = "block";
-        if (leftSyntax) { leftSyntax.style.display = "flex"; leftSyntax.style.flex = "1 1 50%"; }
-        if (spreadsheet) spreadsheet.style.display = "none";
-        if (resultsPane) resultsPane.style.display = "flex";
-        switchRightView("split");
-    } else if (mode === "results-only") {
-        if (labelEl) labelEl.textContent = isKo ? "📄 창 배열: 결과 전체화면 ▾" : "📄 Layout: Results Only ▾";
-        if (leftPane) leftPane.style.display = "none";
-        if (resultsPane) resultsPane.style.display = "flex";
-        switchRightView("results");
-    } else if (mode === "data-only") {
-        if (labelEl) labelEl.textContent = isKo ? "📋 창 배열: 데이터 전체화면 ▾" : "📋 Layout: Data Only ▾";
-        if (leftPane) leftPane.style.display = "none";
-        if (resultsPane) resultsPane.style.display = "flex";
-        switchRightView("data");
+    // Drop inline sizes/visibility left by earlier versions or by dragging the left splitter.
+    for (const id of ["left-pane", "left-var-explorer", "left-h-splitter", "left-syntax-console", "results-pane"]) {
+        const el = document.getElementById(id);
+        if (el) { el.style.display = ""; el.style.flex = ""; }
     }
+
+    document.querySelectorAll(".layout-dd-item").forEach(el => {
+        el.classList.toggle("active", el.id === "layout-item-" + mode);
+    });
+    updateLayoutLabel();
+    switchRightView(mode === "quad" ? "split" : "results");
 }
 
 function switchRightView(view) {
@@ -8693,6 +9062,7 @@ function applySemBuilderToModel(runNow = false) {
 /* --- Bootstrap Application cleanly with ZERO event.target errors --- */
 window.addEventListener("DOMContentLoaded", async () => {
     switchRibbonTab("analyses");
+    setLayoutMode(safeStorageGet("openstat_layout_mode") || "default");
     updateReportStyleIndicators();
     await syncCatalogPlugins();
     try {

@@ -643,3 +643,30 @@ def test_web_ui_layout_menu_and_plugin_menu_contract():
     assert targets <= ko, f"plugin groups map to missing menus: {targets - ko}"
     ribbon_keys = set(re.findall(r"openRibbonMenu\(event, '([a-z_]+)'\)", html))
     assert ribbon_keys <= ko
+
+
+def test_web_ui_handlers_and_pane_styles_defined():
+    """Every inline event handler in web/index.html names a defined function, and the window-layout,
+    left-pane and overlay-dialog styles exist (they were missing after the v3.1 layout patch)."""
+    import re
+
+    html_path = os.path.join(ROOT_DIR, "reconstructed", "pyjamovi", "web", "index.html")
+    with open(html_path, encoding="utf-8") as f:
+        html = f.read()
+
+    defined = set(re.findall(r"(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(", html))
+    defined |= set(re.findall(r"(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=", html))
+    called = set(re.findall(
+        r'on(?:click|change|input|keydown|keyup|mousedown|dblclick)="(?:[^"]*?;\s*)?([A-Za-z_$][\w$]*)\(', html))
+    missing = sorted(called - defined - {"if", "event", "this", "document", "window", "alert", "confirm"})
+    assert not missing, f"inline handlers without a function: {missing}"
+
+    for selector in (".modal-backdrop", ".left-box-hdr", "#left-var-explorer", "#left-syntax-console",
+                     ".right-pane-subbar", ".v-tab", ".stata-cmd-bar"):
+        assert re.search(r"^" + re.escape(selector) + r"\s*[{,]", html, re.M), f"no CSS rule for {selector}"
+
+    results_rule = re.search(r"\n#results-pane \{(.*?)\}", html, re.S).group(1)
+    assert "display: flex" in results_rule and "flex-direction: column" in results_rule
+    assert 'document.body.setAttribute("data-layout", mode)' in html
+    for mode in ("default", "syntax", "quad", "jamovi", "results-only", "data-only"):
+        assert f'body[data-layout="{mode}"]' in html, mode
