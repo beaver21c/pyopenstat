@@ -7,7 +7,8 @@ Model:  y_it = sum_j a_j y_i,t-j + x_it b1 + w_it b2 + v_i + e_it
 method="difference"  Arellano–Bond (1991) difference GMM                        [xtabond]
 method="system"      Arellano–Bover (1995) / Blundell–Bond (1998) system GMM     [xtdpdsys]
 
-Own implementation (numpy / scipy.sparse) — library evaluated and not used as the core: pydynpd 0.2.2 (MIT) follows
+Implemented from the published estimators (Arellano & Bond 1991; Blundell & Bond 1998; Windmeijer 2005; Stata [XT]
+xtdpd Methods and formulas) with numpy / scipy.sparse — library evaluated and not used as the core: pydynpd 0.2.2 (MIT) follows
 xtabond2 conventions and was compared with Stata 19.5 on abdata: it reproduces two-step WC-robust difference GMM, but
 its one-step AR test differs (AR(1) -3.4929 vs Stata -3.5996), its one-step "Hansen" is the two-step statistic, it has
 no conventional VCE / Sargan, its system GMM uses xtabond2 instrument sets (L1.n 0.9028 vs xtdpdsys 0.8235), and it

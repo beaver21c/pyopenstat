@@ -26,7 +26,7 @@ OP_TITLES = {
     "convert_type": "변수 형식 변환", "encode": "문자→숫자 부호화(encode)", "decode": "숫자→문자(decode)",
     "set_value_labels": "값 라벨", "set_measure": "측정 수준", "standardize": "표준화", "rename_var": "변수 이름 변경",
     "drop_vars": "변수 삭제", "set_value": "셀 값 수정", "add_rows": "행 추가", "drop_rows": "행 삭제",
-    "add_var": "변수 추가", "set_label": "변수 라벨",
+    "add_var": "변수 추가", "set_label": "변수 라벨", "panel_predict": "패널 예측값(predict)",
 }
 
 HEADER = '''{marker} — 파일 불러오기부터 실행한 모든 명령을 순서대로 기록한 파일

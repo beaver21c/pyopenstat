@@ -10,7 +10,8 @@ Computation
 - Estimators, variance matrices, first-stage diagnostics (R², partial R², Shea's partial R², partial F), Durbin,
   Wu–Hausman, Wooldridge score / regression tests, Sargan, Basmann, Basmann F, Hansen's J and the GMM C statistic:
   linearmodels (IV2SLS, IVLIML, IVGMM; `debiased=True` is Stata's `small`).
-- Own code (Stata conventions the library does not provide): cluster `small` degrees of freedom G−1, GMM
+- Implemented from the published formulas (Stata [R] ivregress / [XT] xtivreg Methods and formulas; Stock & Yogo 2005;
+  Shea 1997; Baltagi 1981; Balestra & Varadharajan-Krishnakumar 1987) where the library does not provide them: cluster `small` degrees of freedom G−1, GMM
   `vce(unadjusted)` (Ŝ = W⁻¹), Anderson–Rubin N(κ−1), adjusted R², Shea's adjusted partial R², the minimum-eigenvalue
   (Cragg–Donald) statistic with Stock–Yogo critical values, and for xtivreg the data transformations, variance
   components (Swamy–Arora / Baltagi–Chang), the u_i F test and R² definitions. No Python library provides G2SLS /
@@ -296,7 +297,7 @@ class IVFit:
             for r in rows:
                 r["shea"] = r["shea_lm"]
                 r["shea_adj"] = 1 - (1 - r["shea"]) * (n - 1) / dn          # Stata estat firststage, all
-        # minimum eigenvalue (Cragg–Donald) statistic — not in linearmodels (own code, Stata formula)
+        # minimum eigenvalue (Cragg–Donald) statistic — not in linearmodels (Cragg & Donald 1993, Stata formula)
         Yh = _annih(self.X2, self.QX1) if self.k1 else self.X2
         Zh = _annih(self.Z2, self.QX1) if self.k1 else self.Z2
         QZh = _basis(Zh, "제외 도구변수")
@@ -1041,7 +1042,7 @@ class PanelIV(BaseAnalysis):
         self.syntax_r = "\n".join(r_code("panelIV", o) or [])
 
     def _re(self, y, X2, X1, Z2, gcodes, n_g, Ti, endog, exog, inst, method, var_method) -> Dict[str, Any]:
-        """Variance components (Stata xtivreg re; own code) and the GLS-transformed 2SLS (linearmodels IV2SLS)."""
+        """Variance components (Stata xtivreg re; Swamy & Arora 1972, Baltagi & Chang 1994 formulas) and the GLS-transformed 2SLS (linearmodels IV2SLS)."""
         N = len(y)
         gm = lambda A: self._means(A.reshape(N, -1), gcodes, n_g)
         rep = lambda A: gm(A)[gcodes]

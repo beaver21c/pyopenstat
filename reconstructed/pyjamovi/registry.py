@@ -203,6 +203,11 @@ def dispatch_analysis(analysis_type: str, df: pd.DataFrame, params: Dict[str, An
     plot_style = p.get("plotStyle") or p.get("plot_style")
     with use_plot_style(plot_style):
         res = _dispatch_inner(analysis_type, df, p)
+    try:
+        from .analyses.method_sources import attach
+        attach(res)          # 「계산 방식」 note: library or published method behind the estimates
+    except Exception:
+        pass
     if plot_style:
         res.options["plotStyle"] = plot_style
     return res

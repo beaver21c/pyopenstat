@@ -2451,7 +2451,7 @@ table.jmv-apa-table tbody tr.sec-break td {
                     <img class="rb-icon" src="assets/analysis-linearmodels.svg" alt="Panel & Mixed">
                     <span class="rb-label"><span data-i18n="ana_panel">패널 &amp; 혼합</span> <span class="rb-caret">▾</span></span>
                 </button>
-                <button class="ribbon-btn" id="rb-timeseries" onclick="openRibbonMenu(event, 'timeseries')" title="ARIMA·단위근 검정·자기상관 (Stata arima·dfuller·corrgram)">
+                <button class="ribbon-btn" id="rb-timeseries" onclick="openRibbonMenu(event, 'timeseries')" title="ARIMA·단위근 검정·자기상관·패널 단위근·공적분 (Stata arima·dfuller·corrgram·xtunitroot·xtcointtest)">
                     <img class="rb-icon" src="assets/analysis-timeseries.svg" alt="Time series">
                     <span class="rb-label"><span data-i18n="ana_timeseries">시계열</span> <span class="rb-caret">▾</span></span>
                 </button>
@@ -2714,6 +2714,10 @@ table.jmv-apa-table tbody tr.sec-break td {
                     <span class="quick-pill" onclick="loadDatasetByName('Dynamic_Panel_Welfare.csv')">📊 지역 복지지출 패널 (패널 회귀·동적 패널 GMM)</span>
                     <span class="quick-pill" onclick="loadDatasetByName('IV_Schooling.csv')">📊 교육 수익률 (도구변수 회귀 2SLS·LIML·GMM)</span>
                     <span class="quick-pill" onclick="loadDatasetByName('IV_Panel_CareStaff.csv')">📊 돌봄 인력 패널 (패널 도구변수 회귀)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('Panel_Nonlinear_Care.csv')">📊 노인 돌봄 패널 (비선형 패널 xtlogit·xtpoisson)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('Panel_HT_Wage.csv')">📊 임금 패널 (Hausman–Taylor)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('Panel_DiD_Policy.csv')">📊 지역 정책 패널 (이중차분·사건연구)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('Panel_UnitRoot_Regions.csv')">📈 지역 장기 패널 (패널 단위근·공적분)</span>
                     <span class="quick-pill" onclick="loadDatasetByName('TS_Monthly_Welfare.csv')">📈 월별 이용 시계열 (ARIMA·단위근 검정)</span>
                     <span class="quick-pill" onclick="loadDatasetByName('Count_HealthVisits.csv')">🏥 외래 방문 횟수 (포아송·음이항·영과잉)</span>
                     <span class="quick-pill" onclick="loadDatasetByName('LimDep_Employment_Wage.csv')">💼 취업·임금 (프로빗·Heckman 표본선택)</span>
@@ -3770,9 +3774,20 @@ const RIBBON_MENUS_I18N = {
         ],
         linearmodels: [
             { section: "패널 데이터 계량분석 (Panel Econometrics)" },
-            { id: "panel", label: "패널 회귀 (xtreg: 고정·확률·집단 간·1차 차분·PA)" },
+            { id: "panelDescribe", label: "패널 자료 요약 (xtdescribe·xtsum·xttab·xttrans)" },
+            { id: "panel", label: "패널 회귀 (xtreg: 고정·확률·상관 확률효과·집단 간·1차 차분·PA)" },
+            { id: "panelNonlinear", label: "비선형 패널 — 로짓·프로빗·포아송·음이항·토빗·순서형 (xtlogit·xtpoisson 등)", badge: "Stata" },
             { id: "dynPanel", label: "동적 패널 GMM (xtabond·xtdpdsys)", badge: "GMM" },
             { id: "panelIV", label: "패널 도구변수 회귀 — FE·RE(G2SLS·EC2SLS)·FD·BE (xtivreg)", badge: "Stata" },
+            { action: "openAnalysis('panelGLS', null, {method: 'xtgls'})", label: "패널 FGLS — 이분산·패널 간 상관·AR(1) (xtgls)", badge: "Stata" },
+            { action: "openAnalysis('panelGLS', null, {method: 'xtpcse'})", label: "패널 수정 표준오차 PCSE (xtpcse)", badge: "Stata" },
+            { action: "openAnalysis('panelGLS', null, {method: 'xtregar'})", label: "AR(1) 오차 고정·확률효과 (xtregar)", badge: "Stata" },
+            { id: "hausmanTaylor", label: "Hausman–Taylor · Amemiya–MaCurdy (xthtaylor)", badge: "Stata" },
+            { sep: true },
+            { section: "정책 효과 분석 (이중차분·사건연구)" },
+            { action: "openAnalysis('panelDiD', null, {method: 'twfe'})", label: "패널 이중차분 — 이원 고정효과 ATET·평행추세 검정 (xtdidregress)", badge: "Stata" },
+            { action: "openAnalysis('panelDiD', null, {method: 'event'})", label: "사건연구 — 선행·후행 처치효과 (event study)", badge: "Stata" },
+            { action: "openAnalysis('panelDiD', null, {method: 'hdid'})", label: "이질적 처치효과 이중차분 — 코호트·시점별 ATET (xthdidregress)", badge: "Stata" },
             { sep: true },
             { section: "다층모형 (Multilevel Models)" },
             { id: "mixedModel", label: "다층모형 · 선형 혼합모형 (2~4수준, Stata mixed)", badge: "Stata" },
@@ -3784,7 +3799,11 @@ const RIBBON_MENUS_I18N = {
             { sep: true },
             { section: "시계열 진단" },
             { id: "unitRoot", label: "단위근 검정 — ADF·Phillips–Perron·KPSS (dfuller·pperron)" },
-            { id: "corrgram", label: "자기상관·편자기상관·포트맨토 검정 (corrgram·wntestq)" }
+            { id: "corrgram", label: "자기상관·편자기상관·포트맨토 검정 (corrgram·wntestq)" },
+            { sep: true },
+            { section: "패널 시계열 검정" },
+            { id: "panelUnitRoot", label: "패널 단위근 검정 — LLC·HT·Breitung·IPS·Fisher·Hadri (xtunitroot)", badge: "Stata" },
+            { id: "panelCoint", label: "패널 공적분 검정 — Kao·Pedroni·Westerlund (xtcointtest)", badge: "Stata" }
         ],
         survival: [
             { id: "survival", label: "생존분석 (Kaplan-Meier & Cox 비례위험)" }
@@ -3948,9 +3967,20 @@ const RIBBON_MENUS_I18N = {
         ],
         linearmodels: [
             { section: "Panel Econometrics" },
-            { id: "panel", label: "Panel Regression (xtreg: FE / RE / BE / FD / PA)" },
+            { id: "panelDescribe", label: "Panel Data Description (xtdescribe / xtsum / xttab / xttrans)" },
+            { id: "panel", label: "Panel Regression (xtreg: FE / RE / CRE / BE / FD / PA)" },
+            { id: "panelNonlinear", label: "Nonlinear Panel — logit / probit / Poisson / NB / tobit / ordinal (xtlogit, xtpoisson, …)", badge: "Stata" },
             { id: "dynPanel", label: "Dynamic Panel GMM (Arellano–Bond / Blundell–Bond)", badge: "GMM" },
             { id: "panelIV", label: "Panel IV — FE / RE (G2SLS·EC2SLS) / FD / BE (xtivreg)", badge: "Stata" },
+            { action: "openAnalysis('panelGLS', null, {method: 'xtgls'})", label: "Panel FGLS — heteroskedastic / correlated / AR(1) (xtgls)", badge: "Stata" },
+            { action: "openAnalysis('panelGLS', null, {method: 'xtpcse'})", label: "Panel-corrected standard errors (xtpcse)", badge: "Stata" },
+            { action: "openAnalysis('panelGLS', null, {method: 'xtregar'})", label: "FE / RE with AR(1) disturbance (xtregar)", badge: "Stata" },
+            { id: "hausmanTaylor", label: "Hausman–Taylor / Amemiya–MaCurdy (xthtaylor)", badge: "Stata" },
+            { sep: true },
+            { section: "Policy Evaluation (DiD / Event Study)" },
+            { action: "openAnalysis('panelDiD', null, {method: 'twfe'})", label: "Panel DiD — TWFE ATET and parallel-trends tests (xtdidregress)", badge: "Stata" },
+            { action: "openAnalysis('panelDiD', null, {method: 'event'})", label: "Event study — leads and lags of treatment", badge: "Stata" },
+            { action: "openAnalysis('panelDiD', null, {method: 'hdid'})", label: "Heterogeneous DiD — ATT(g,t), Callaway–Sant'Anna / extended TWFE (xthdidregress)", badge: "Stata" },
             { sep: true },
             { section: "Multilevel Models" },
             { id: "mixedModel", label: "Multilevel linear mixed model (2–4 levels, Stata mixed)", badge: "Stata" },
@@ -3962,7 +3992,11 @@ const RIBBON_MENUS_I18N = {
             { sep: true },
             { section: "Diagnostics" },
             { id: "unitRoot", label: "Unit-Root Tests — ADF / Phillips–Perron / KPSS" },
-            { id: "corrgram", label: "Autocorrelations & Portmanteau Test (corrgram / wntestq)" }
+            { id: "corrgram", label: "Autocorrelations & Portmanteau Test (corrgram / wntestq)" },
+            { sep: true },
+            { section: "Panel Time-Series Tests" },
+            { id: "panelUnitRoot", label: "Panel Unit-Root Tests — LLC / HT / Breitung / IPS / Fisher / Hadri (xtunitroot)", badge: "Stata" },
+            { id: "panelCoint", label: "Panel Cointegration Tests — Kao / Pedroni / Westerlund (xtcointtest)", badge: "Stata" }
         ],
         survival: [
             { id: "survival", label: "Survival Analysis (Kaplan-Meier & Cox)" }
@@ -5870,7 +5904,7 @@ const ANALYSIS_SCHEMAS = {
     },
     panel: {
         title: "패널 회귀 (xtreg: 고정·확률·집단 간·1차 차분·모집단 평균)",
-        intro: "개체×시점 패널자료의 선형회귀입니다. Stata xtreg와 같은 추정 방법·표준오차 규칙(vce(robust) = 패널 군집)을 따르며, 집단 내·간·전체 R², sigma_u·sigma_e·rho, 개체효과 F 검정과 Hausman·Breusch–Pagan·Wooldridge·Pesaran CD·수정 Wald 진단을 제공합니다.",
+        intro: "개체×시점 패널자료의 선형회귀. Stata xtreg와 같은 추정 방법·표준오차 규칙(vce(robust) = 패널 군집)을 따르며, 집단 내·간·전체 R², sigma_u·sigma_e·rho, 개체효과 F 검정, 상관 확률효과(cre)의 Mundlak 검정, 시점 효과 결합검정과 Hausman(sigmamore·sigmaless)·Breusch–Pagan·Wooldridge·Pesaran CD·수정 Wald 진단 제공. 예측값(xb·u·e·ue·xbu·stdp) 저장은 명령어 입력줄에서 predict 새변수, u.",
         slots: [
             { key: "entity", label: "개체 변수 (패널 ID)", multi: false, req: true, prefer: "cat" },
             { key: "time", label: "시점 변수 (연도·차수)", multi: false, req: true, prefer: "any" },
@@ -5884,11 +5918,12 @@ const ANALYSIS_SCHEMAS = {
                     ["fixed", "고정효과 — 집단 내 추정 (xtreg, fe)"],
                     ["twoway", "이원 고정효과 — 개체 + 시점 더미 (xtreg y x i.t, fe)"],
                     ["random", "확률효과 GLS (xtreg, re)"],
+                    ["cre", "상관 확률효과 — Mundlak (xtreg, cre)"],
                     ["between", "집단 간 추정 (xtreg, be)"],
                     ["fd", "1차 차분 (regress D.y D.x)"],
                     ["pooled", "통합 OLS (regress)"],
                     ["pa", "모집단 평균 GEE (xtreg, pa)"]] },
-                { type: "select", key: "reMethod", label: "확률효과 분산성분", def: "default", showIf: { modelType: "random" }, options: [
+                { type: "select", key: "reMethod", label: "확률효과 분산성분", def: "default", showIf: { modelType: ["random", "cre"] }, options: [
                     ["default", "Stata 기본 (일치 추정, 조화평균 T)"], ["sa", "Swamy–Arora 소표본 (sa)"]],
                   help: "균형패널에서는 두 방법이 같음" },
                 { type: "check", key: "beWls", label: "가중최소제곱 (wls, 가중치 T_i)", def: false, showIf: { modelType: "between" } },
@@ -5896,7 +5931,8 @@ const ANALYSIS_SCHEMAS = {
                 { type: "select", key: "paCorr", label: "작업 상관 구조 corr()", def: "exchangeable", showIf: { modelType: "pa" }, options: [
                     ["exchangeable", "교환가능 (exchangeable)"], ["independent", "독립 (independent)"],
                     ["ar1", "1차 자기회귀 (ar 1)"], ["unstructured", "비구조 (unstructured)"]] },
-                { type: "check", key: "showTimeEffects", label: "시점 더미 계수 표 표시", def: true, showIf: { modelType: "twoway" } }
+                { type: "check", key: "showTimeEffects", label: "시점 더미 계수 표 표시", def: true, showIf: { modelType: "twoway" } },
+                { type: "check", key: "timeTest", label: "시점 효과 결합검정 (testparm i.시점)", def: true, showIf: { modelType: "twoway" } }
             ] },
             { title: "표준오차 (SE/Robust)", items: [
                 { type: "select", key: "covType", label: "표준오차", def: "unadjusted", span2: true, options: [
@@ -5909,6 +5945,9 @@ const ANALYSIS_SCHEMAS = {
             ] },
             { title: "진단 검정", items: [
                 { type: "check", key: "hausman", label: "Hausman 검정 (고정효과 대 확률효과)", def: true, span2: true },
+                { type: "select", key: "hausmanSigma", label: "Hausman 분산 기준", def: "none", showIf: { hausman: true }, options: [
+                    ["none", "각 모형의 분산 (Stata 기본)"], ["more", "확률효과 오차분산 공통 (sigmamore)"], ["less", "고정효과 오차분산 공통 (sigmaless)"]],
+                  help: "sigmamore·sigmaless는 V_b − V_B의 양정치성 확보에 도움; 군집 강건 비교는 상관 확률효과(cre)의 Mundlak 검정" },
                 { type: "check", key: "bpTest", label: "Breusch–Pagan LM 확률효과 검정 (xttest0)", def: false, span2: true },
                 { type: "check", key: "serialTest", label: "Wooldridge 1차 자기상관 검정 (xtserial)", def: false, span2: true },
                 { type: "check", key: "cdTest", label: "Pesaran CD 횡단면 의존성 검정 (xtcsd)", def: false, span2: true },
@@ -5917,6 +5956,350 @@ const ANALYSIS_SCHEMAS = {
             { title: "그래프·자료", collapsed: true, items: [
                 { type: "check", key: "plotTrends", label: "개체별 추이 그림", def: true },
                 { type: "number", key: "delta", label: "시점 간격 (xtset delta)", def: 1, min: 0.0001, step: 1 }
+            ] }
+        ]
+    },
+    panelDescribe: {
+        title: "패널 자료 요약 (xtdescribe · xtsum · xttab · xttrans)",
+        intro: "패널 구조(개체 수·시점 수·균형 여부·참여 형태), 연속변수의 전체·집단 간·집단 내 기술통계, 범주변수의 전체·집단 간·집단 내 빈도, 연속 관측 간 전이 확률을 Stata [XT] 정의대로 계산.",
+        slots: [
+            { key: "entity", label: "개체 변수 (패널 ID)", multi: false, req: true, prefer: "cat" },
+            { key: "time", label: "시점 변수 (패널 구조·전이표에 필요)", multi: false, req: false, prefer: "any" },
+            { key: "sumVars", label: "연속변수 — 전체·집단 간·집단 내 기술통계 (xtsum)", multi: true, req: false, prefer: "num" },
+            { key: "tabVars", label: "범주변수 — 전체·집단 간·집단 내 빈도 (xttab)", multi: true, req: false, prefer: "cat" },
+            { key: "transVars", label: "범주변수 — 전이 확률 (xttrans)", multi: true, req: false, prefer: "cat" }
+        ],
+        sections: [
+            { title: "표시", items: [
+                { type: "check", key: "describe", label: "패널 구조·참여 형태 (xtdescribe)", def: true, span2: true },
+                { type: "number", key: "patterns", label: "참여 형태 표시 개수 patterns()", def: 9, min: 0, max: 100, step: 1, showIf: { describe: true } },
+                { type: "check", key: "transFreq", label: "전이표에 빈도 표시 (freq)", def: false, showIf: { transVars: "__filled__" } },
+                { type: "number", key: "delta", label: "시점 간격 (xtset delta)", def: 1, min: 0.0001, step: 1 }
+            ] }
+        ]
+    },
+    panelGLS: {
+        title: "패널 FGLS · PCSE · AR(1) 오차 모형 (xtgls · xtpcse · xtregar)",
+        intro: "패널 간 이분산·동시 상관과 패널 내 AR(1) 자기상관을 고려한 선형 패널모형. xtgls는 실행 가능 일반화최소제곱(FGLS, 반복 GLS 포함), xtpcse는 OLS·Prais–Winsten 계수에 Beck–Katz 패널 수정 표준오차, xtregar는 Baltagi–Wu 방식의 AR(1) 오차 고정효과·확률효과(시점 간격이 불규칙한 패널 포함). Stata의 옵션·기본값·자유도 관례를 따르며 로그우도, Wald χ², rho, sigma_u·sigma_e, 수정 Durbin–Watson·LBI 검정 제공.",
+        slots: [
+            { key: "entity", label: "개체 변수 (패널 ID)", multi: false, req: true, prefer: "cat" },
+            { key: "time", label: "시점 변수 (xtgls 동분산·이분산·자기상관 없음이면 생략 가능)", multi: false, req: false, prefer: "any" },
+            { key: "dep", label: "종속변수", multi: false, req: true, prefer: "num" },
+            { key: "covs", label: "설명변수", multi: true, req: true, prefer: "num" }
+        ],
+        sections: [
+            { title: "추정 명령", items: [
+                { type: "select", key: "method", label: "추정 방법", def: "xtgls", span2: true, options: [
+                    ["xtgls", "FGLS — 패널 간 이분산·상관, AR(1) (xtgls)"],
+                    ["xtpcse", "OLS·Prais–Winsten + 패널 수정 표준오차 (xtpcse)"],
+                    ["xtregar", "AR(1) 오차 고정효과·확률효과 — Baltagi–Wu (xtregar)"]] }
+            ] },
+            { title: "xtgls 오차 구조", showIf: { method: "xtgls" }, items: [
+                { type: "select", key: "panels", label: "패널 간 오차 구조 panels()", def: "iid", span2: true, options: [
+                    ["iid", "동분산·무상관 (iid, Stata 기본)"],
+                    ["heteroskedastic", "패널별 이분산 (heteroskedastic)"],
+                    ["correlated", "이분산 + 패널 간 동시 상관 (correlated, 균형 패널 필요)"]],
+                  help: "correlated는 시점 수 < 패널 수이면 Σ̂가 특이행렬이 되어 일반화 역행렬 기반 결과" },
+                { type: "select", key: "corr", label: "패널 내 자기상관 corr()", def: "independent", span2: true, options: [
+                    ["independent", "자기상관 없음 (independent, Stata 기본)"],
+                    ["ar1", "공통 AR(1) (ar1)"],
+                    ["psar1", "패널별 AR(1) (psar1)"]] },
+                { type: "check", key: "igls", label: "반복 GLS (igls)", def: false,
+                  help: "corr(independent)에서는 최대우도 추정치로 수렴하며 로그우도 보고" },
+                { type: "number", key: "iterate", label: "최대 반복 횟수 iterate()", def: 300, min: 1, step: 1, showIf: { igls: true } },
+                { type: "number", key: "tolerance", label: "계수 수렴 기준 tolerance()", def: 0.0000001, min: 0, step: 0.0000001, showIf: { igls: true } },
+                { type: "check", key: "force", label: "시점 간격 불규칙 시에도 추정 (force: 패널 내 순서를 시차로 사용)", def: false, span2: true, showIf: { corr: ["ar1", "psar1"] } },
+                { type: "check", key: "nmk", label: "분산 분모 N − k (nmk; 기본 N)", def: false },
+                { type: "check", key: "constant", label: "상수항 포함", def: true }
+            ] },
+            { title: "xtpcse 공분산 구조", showIf: { method: "xtpcse" }, items: [
+                { type: "select", key: "pcse", label: "패널 간 공분산", def: "correlated", span2: true, options: [
+                    ["correlated", "동시 상관 + 이분산 — PCSE (Stata 기본)"],
+                    ["hetonly", "패널별 이분산만 (hetonly)"],
+                    ["independent", "독립·동분산 (independent)"]] },
+                { type: "select", key: "corr", label: "패널 내 자기상관 correlation()", def: "independent", span2: true, options: [
+                    ["independent", "자기상관 없음 — OLS (independent, Stata 기본)"],
+                    ["ar1", "공통 AR(1) — Prais–Winsten (ar1)"],
+                    ["psar1", "패널별 AR(1) — Prais–Winsten (psar1)"]] },
+                { type: "check", key: "pairwise", label: "불균형 패널 Σ 추정: 패널 쌍별 공통 시점 (pairwise; 기본 casewise)", def: false, span2: true, showIf: { pcse: "correlated" } },
+                { type: "check", key: "np1", label: "공통 rho 가중치 T_i (np1; 기본 연속 관측 쌍 수)", def: false, showIf: { corr: "ar1" } },
+                { type: "check", key: "nmk", label: "분산 분모 N − k (nmk)", def: false },
+                { type: "check", key: "constant", label: "상수항 포함", def: true }
+            ] },
+            { title: "xtregar 모형", showIf: { method: "xtregar" }, items: [
+                { type: "select", key: "model", label: "모형", def: "re", span2: true, options: [
+                    ["re", "확률효과 GLS — Baltagi–Wu (re, Stata 기본)"],
+                    ["fe", "고정효과 집단 내 추정 (fe)"]] },
+                { type: "text", key: "rhof", label: "rho 고정값 rhof() (빈칸 = 추정)", def: "" },
+                { type: "check", key: "twostep", label: "2단계 rho 추정 (twostep)", def: false },
+                { type: "check", key: "lbi", label: "수정 Bhargava et al. Durbin–Watson · Baltagi–Wu LBI 검정 (lbi)", def: false, span2: true }
+            ] },
+            { title: "rho 추정 방법 (rhotype)", collapsed: true, items: [
+                { type: "select", key: "rhotype", label: "rho 추정 방법", def: "default", showIf: { method: "xtgls", corr: ["ar1", "psar1"] }, options: [
+                    ["default", "기본 — 시차 회귀 (regress)"], ["dw", "Durbin–Watson (dw)"], ["freg", "선행 회귀 (freg)"],
+                    ["tscorr", "시계열 자기상관 (tscorr)"], ["theil", "Theil (theil)"], ["nagar", "Nagar (nagar)"]] },
+                { type: "select", key: "rhotype", label: "rho 추정 방법", def: "default", showIf: { method: "xtpcse", corr: ["ar1", "psar1"] }, options: [
+                    ["default", "기본 — 시차 회귀 (regress)"], ["dw", "Durbin–Watson (dw)"], ["freg", "선행 회귀 (freg)"],
+                    ["tscorr", "시계열 자기상관 (tscorr)"]],
+                  help: "xtpcse는 [−1, 1] 밖의 rho를 경계값으로 제한" },
+                { type: "select", key: "rhotype", label: "rho 추정 방법", def: "default", showIf: { method: "xtregar" }, options: [
+                    ["default", "기본 — Durbin–Watson (dw)"], ["regress", "시차 회귀 (regress)"], ["freg", "선행 회귀 (freg)"],
+                    ["tscorr", "시계열 자기상관 (tscorr, [−1, 1] 범위)"], ["theil", "Theil (theil)"], ["nagar", "Nagar (nagar)"],
+                    ["onestep", "Baltagi–Wu 1단계 (onestep)"]],
+                  help: "rhof()를 지정하면 무시; onestep과 twostep은 함께 지정 불가" }
+            ] },
+            { title: "자료", collapsed: true, items: [
+                { type: "number", key: "delta", label: "시점 간격 (xtset delta)", def: 1, min: 0.0001, step: 1 }
+            ] }
+        ]
+    },
+    hausmanTaylor: {
+        title: "Hausman–Taylor 추정 (xthtaylor: 개체효과와 상관된 설명변수가 있는 확률효과 모형)",
+        intro: "일부 설명변수가 관측되지 않는 개체효과 u_i와 상관된 확률효과 모형을 도구변수로 추정. 시간 변동 외생 변수(X1)의 집단 평균과 집단 내 편차를 도구로 사용하여 고정효과 추정에서 제거되는 시간 불변 변수(교육연수·성별 등)의 계수도 추정. Amemiya–MaCurdy 추정(균형 패널), 소표본 t·F, 패널 군집 강건 표준오차, xtreg, fe 대비 Hausman 검정 제공. 결과표는 Stata처럼 TVexogenous·TVendogenous·TIexogenous·TIendogenous 블록으로 구분.",
+        slots: [
+            { key: "entity", label: "개체 변수 (패널 ID)", multi: false, req: true, prefer: "cat" },
+            { key: "time", label: "시점 변수 (Amemiya–MaCurdy에 필요)", multi: false, req: false, prefer: "any" },
+            { key: "dep", label: "종속변수", multi: false, req: true, prefer: "num" },
+            { key: "covs", label: "설명변수 (시간 변동·시간 불변 모두; 구분은 자동 판별)", multi: true, req: true, prefer: "num" },
+            { key: "endog", label: "내생 변수 — u_i와 상관 (endog(), 필수)", multi: true, req: true, prefer: "num" },
+            { key: "constantVars", label: "시간 불변 변수 확인 constant() (선택: 판별 결과와 다르면 오류)", multi: true, req: false, prefer: "num" }
+        ],
+        sections: [
+            { title: "모형", items: [
+                { type: "check", key: "amacurdy", label: "Amemiya–MaCurdy 추정 (amacurdy: 균형 패널·공통 시작 시점)", def: false, span2: true,
+                  help: "X1의 모든 시점 값을 도구로 사용; 식별 조건 T·k1 ≥ g2" },
+                { type: "check", key: "constant", label: "상수항 포함", def: true },
+                { type: "check", key: "small", label: "소표본 통계량 t·F (small)", def: false }
+            ] },
+            { title: "표준오차·검정", items: [
+                { type: "select", key: "vce", label: "표준오차", def: "conventional", options: [
+                    ["conventional", "일반 (vce(conventional), Stata 기본)"],
+                    ["robust", "군집-강건 (vce(robust) = 패널 군집)"]] },
+                { type: "check", key: "hausman", label: "Hausman 검정 (xtreg, fe 대 xthtaylor)", def: true, span2: true,
+                  help: "자유도: 차이 분산행렬 계수(Stata 기본)와 과대식별 제약 수 k1 − g2 함께 표시" }
+            ] },
+            { title: "자료", collapsed: true, items: [
+                { type: "number", key: "delta", label: "시점 간격 (xtset delta)", def: 1, min: 0.0001, step: 1 }
+            ] }
+        ]
+    },
+    panelNonlinear: {
+        title: "비선형 패널 모형 (xtlogit·xtprobit·xtcloglog·xtpoisson·xtnbreg·xttobit·xtintreg·xtologit·xtoprobit)",
+        intro: "이항·빈도·검열·구간·순서형 결과변수의 패널 모형. 조건부 고정효과(fe), 정규분포 확률효과(re, 적응 Gauss–Hermite 구적법), 모집단 평균 GEE(pa)를 Stata xt 명령의 추정식·기본값·출력 배치대로 계산하고, 통합 모형 대비 LR 검정(chibar2(01)), Hausman 검정(fe 대 re), 평균 한계효과(margins, dydx(*)), 결과가 모두 같은 집단 제외 안내를 제공.",
+        slots: [
+            { key: "entity", label: "개체 변수 (패널 ID; clogit의 group())", multi: false, req: true, prefer: "cat" },
+            { key: "time", label: "시점 변수 (pa의 ar 1·unstructured 상관에 필요)", multi: false, req: false, prefer: "any" },
+            { key: "dep", label: "종속변수 (구간 회귀: 하한 변수, 결측 = 좌측 검열)", multi: false, req: true, prefer: "num" },
+            { key: "depUpper", label: "상한 변수 (xtintreg; 결측 = 우측 검열)", multi: false, req: true, prefer: "num", showIf: { family: "intreg" } },
+            { key: "covs", label: "설명변수", multi: true, req: true, prefer: "num" },
+            { key: "exposure", label: "노출 변수 exposure() (ln 변환 후 계수 1 고정, 선택)", multi: false, req: false, prefer: "num", showIf: { family: ["poisson", "nbreg"] } },
+            { key: "offset", label: "오프셋 변수 offset() (계수 1 고정, 선택)", multi: false, req: false, prefer: "num", showIf: { family: ["logit", "probit", "cloglog", "poisson", "nbreg", "tobit"] } },
+            { key: "clusterVar", label: "군집 변수 (vce(cluster), 패널을 포함하는 상위 단위)", multi: false, req: false, prefer: "cat", showIf: { covType: "cluster" } }
+        ],
+        sections: [
+            { title: "모형", items: [
+                { type: "select", key: "family", label: "결과변수 유형", def: "logit", span2: true, options: [
+                    ["logit", "이항 — 로짓 (xtlogit)"],
+                    ["probit", "이항 — 프로빗 (xtprobit)"],
+                    ["cloglog", "이항 — 보완 로그-로그 (xtcloglog)"],
+                    ["poisson", "빈도 — 포아송 (xtpoisson)"],
+                    ["nbreg", "빈도 — 음이항 (xtnbreg)"],
+                    ["tobit", "검열 연속 — 토빗 (xttobit)"],
+                    ["intreg", "구간 자료 — 구간 회귀 (xtintreg)"],
+                    ["ologit", "순서형 — 순서형 로짓 (xtologit)"],
+                    ["oprobit", "순서형 — 순서형 프로빗 (xtoprobit)"]] },
+                { type: "select", key: "model", label: "추정 방법", def: "re", span2: true, options: [
+                    ["re", "확률효과 (re, Stata 기본)"],
+                    ["fe", "조건부 고정효과 (fe: 로짓·포아송·음이항)"],
+                    ["pa", "모집단 평균 GEE (pa: 로짓·프로빗·cloglog·포아송·음이항)"]],
+                  help: "토빗·구간 회귀·순서형 모형은 확률효과만 지원 (Stata와 동일). 조건부 로짓은 결과가 모두 0 또는 모두 1인 집단을 제외" },
+                { type: "select", key: "reDist", label: "확률효과 분포", def: "gamma", showIf: { family: "poisson", model: "re" }, options: [
+                    ["gamma", "감마 (Stata 기본, 닫힌 형식 우도)"], ["normal", "정규 (normal, 구적법)"]] },
+                { type: "text", key: "ll", label: "좌측 검열 한계 ll() (숫자 또는 변수명, 빈칸 = 없음)", def: "0", showIf: { family: "tobit" } },
+                { type: "text", key: "ul", label: "우측 검열 한계 ul() (숫자 또는 변수명, 빈칸 = 없음)", def: "", showIf: { family: "tobit" } },
+                { type: "check", key: "constant", label: "상수항 포함", def: true, showIf: { family: ["logit", "probit", "cloglog", "poisson", "nbreg", "tobit", "intreg"] } },
+                { type: "select", key: "paCorr", label: "작업 상관 구조 corr()", def: "exchangeable", showIf: { model: "pa" }, options: [
+                    ["exchangeable", "교환가능 (exchangeable, Stata 기본)"], ["independent", "독립 (independent)"],
+                    ["ar1", "1차 자기회귀 (ar 1)"], ["unstructured", "비구조 (unstructured)"]] },
+                { type: "check", key: "force", label: "시점 간격이 불균등한 패널 포함 (force)", def: false, showIf: { model: "pa", paCorr: "ar1" },
+                  help: "미지정 시 Stata처럼 시점 간격이 불균등한 패널을 제외" }
+            ] },
+            { title: "적분 (정규분포 확률효과)", items: [
+                { type: "select", key: "intMethod", label: "적분 방법 intmethod()", def: "mvaghermite", showIf: { model: "re", family: ["logit", "probit", "cloglog", "poisson", "tobit", "intreg", "ologit", "oprobit"] }, options: [
+                    ["mvaghermite", "평균–분산 적응 Gauss–Hermite (mvaghermite, Stata 기본)"],
+                    ["ghermite", "비적응 Gauss–Hermite (ghermite)"]],
+                  help: "xtpoisson은 확률효과 분포가 정규(normal)일 때만 적용" },
+                { type: "number", key: "intPoints", label: "적분점 수 intpoints()", def: 12, min: 2, max: 195, step: 1, showIf: { model: "re", family: ["logit", "probit", "cloglog", "poisson", "tobit", "intreg", "ologit", "oprobit"] } }
+            ] },
+            { title: "표준오차 (SE/Robust)", items: [
+                { type: "select", key: "covType", label: "표준오차", def: "oim", span2: true, options: [
+                    ["oim", "OIM · 일반 (Stata 기본)"],
+                    ["robust", "강건 (vce(robust) = 패널 군집)"],
+                    ["cluster", "군집-강건 (vce(cluster 변수))"]],
+                  help: "Stata 허용 범위: xtlogit fe·xtnbreg·xttobit·xtintreg는 OIM만, xtpoisson fe와 pa는 robust까지, clogit·확률효과 로짓/프로빗/cloglog/포아송/순서형은 cluster까지" }
+            ] },
+            { title: "출력·사후 추정", items: [
+                { type: "check", key: "eform", label: "지수 변환 계수 (or · irr · eform)", def: false, showIf: { family: ["logit", "cloglog", "poisson", "nbreg", "ologit"] } },
+                { type: "check", key: "margins", label: "평균 한계효과 (margins, dydx(*): pa 모형·확률효과 이항 모형)", def: true, span2: true, showIf: { family: ["logit", "probit", "cloglog", "poisson", "nbreg"] } },
+                { type: "check", key: "hausman", label: "Hausman 검정 (fe 대 re)", def: true, span2: true, showIf: { family: ["logit", "poisson"], model: ["fe", "re"] } },
+                { type: "number", key: "ciLevel", label: "신뢰수준 (%)", def: 95, min: 50, max: 99.9, step: 0.5 }
+            ] }
+        ]
+    },
+    panelDiD: {
+        title: "패널 이중차분 · 사건연구 (xtdidregress · xthdidregress)",
+        intro: "정책 도입 전후와 처치·통제 집단을 비교하는 패널 이중차분(DiD). 이원 고정효과 ATET(xtdidregress)와 평행추세·예상효과 검정(estat ptrends·granger·grangerplot·trendplots), 선행·후행 처치 더미 사건연구, 도입 시점이 집단마다 다른 경우의 코호트·시점별 ATET(Callaway–Sant'Anna RA·IPW·AIPW, Wooldridge 확장 TWFE)와 전체·코호트·시점·노출 기간 집계(estat aggregation) 제공. 표준오차는 Stata와 같이 group() 변수 군집 기준.",
+        slots: [
+            { key: "entity", label: "개체 변수 (패널 ID)", multi: false, req: true, prefer: "cat" },
+            { key: "time", label: "시점 변수 (연도·차수)", multi: false, req: true, prefer: "any" },
+            { key: "dep", label: "결과변수", multi: false, req: true, prefer: "num" },
+            { key: "treat", label: "처치 변수 (0/1, 처치 시작 후 1)", multi: false, req: true, prefer: "num" },
+            { key: "covs", label: "공변량 (결과 모형)", multi: true, req: false, prefer: "num" },
+            { key: "tcovs", label: "처치 모형 공변량 (IPW·AIPW 성향점수)", multi: true, req: false, prefer: "num" },
+            { key: "group", label: "처치 단위 집단 변수 (빈칸 = 개체, 군집 기준)", multi: false, req: false, prefer: "cat" }
+        ],
+        sections: [
+            { title: "모형", items: [
+                { type: "select", key: "method", label: "분석 방법", def: "twfe", span2: true, options: [
+                    ["twfe", "이원 고정효과 DiD — 단일 ATET (xtdidregress)"],
+                    ["event", "사건연구 — 선행·후행 처치 더미 (xtreg ... i.t, fe)"],
+                    ["hdid", "이질적 처치효과 DiD — 코호트·시점별 ATET (xthdidregress)"]],
+                  help: "도입 시점이 집단마다 다르고 효과가 코호트·시점에 따라 다를 수 있으면 이질적 처치효과 DiD 권장" },
+                { type: "select", key: "estimator", label: "추정량", def: "ra", showIf: { method: "hdid" }, options: [
+                    ["ra", "회귀 조정 RA (Callaway–Sant'Anna)"],
+                    ["ipw", "역확률 가중 IPW (처치 모형 공변량 사용)"],
+                    ["aipw", "이중 강건 AIPW (결과·처치 모형)"],
+                    ["twfe", "확장 이원 고정효과 (Wooldridge)"]] },
+                { type: "select", key: "controlGroup", label: "통제집단 controlgroup()", def: "never", showIf: { method: "hdid" }, options: [
+                    ["never", "처치되지 않은 집단 (never)"], ["notyet", "아직 처치되지 않은 집단 (notyet)"]],
+                  help: "모든 집단이 결국 처치되면 notyet 필요 (마지막 코호트를 통제집단으로 사용)" },
+                { type: "select", key: "baseTime", label: "처치 전 기준 시점 basetime()", def: "adaptive", showIf: { method: "hdid", estimator: ["ra", "ipw", "aipw"] }, options: [
+                    ["adaptive", "직전 시점 t−1 (adaptive, Stata 기본)"], ["common", "공통 g−1 (common)"]] },
+                { type: "text", key: "cluster", label: "군집 변수 (빈칸 = 집단 변수)", def: "", showIf: { method: ["twfe", "event"] },
+                  help: "군집은 패널을 포함하는 상위 단위; 소표본 보정 (N−1)/(N−K)·G/(G−1), t 자유도 G−1" }
+            ] },
+            { title: "사건연구·선행·후행항", items: [
+                { type: "text", key: "nLeads", label: "선행 시점 수 (빈칸 = 전부)", def: "", showIf: { method: ["twfe", "event"] } },
+                { type: "text", key: "nLags", label: "후행 시점 수 (빈칸 = 전부)", def: "", showIf: { method: ["twfe", "event"] } },
+                { type: "check", key: "bin", label: "구간 끝점 묶음 (≤ −선행, ≥ 후행)", def: true, showIf: { method: "event" },
+                  help: "해제하면 구간 밖 처치집단 관측치 제외" },
+                { type: "number", key: "refPeriod", label: "기준 상대 시점", def: -1, step: 1, showIf: { method: "event" } },
+                { type: "text", key: "baseline", label: "grangerplot 기준 시점 baseline() (시점 값, 빈칸 = 처치 직전)", def: "", showIf: { method: "twfe" } }
+            ] },
+            { title: "사후 검정 (estat)", items: [
+                { type: "check", key: "trendPlots", label: "관측 평균 추이 그림 (estat trendplots)", def: true, showIf: { method: "twfe" } },
+                { type: "check", key: "ptrends", label: "평행추세 검정 (estat ptrends)", def: true, showIf: { method: ["twfe", "hdid"] } },
+                { type: "check", key: "granger", label: "예상효과 Granger 검정 (estat granger)", def: true, showIf: { method: "twfe" } },
+                { type: "check", key: "grangerPlot", label: "시점별 처치효과 그림 (estat grangerplot)", def: true, showIf: { method: "twfe" } },
+                { type: "check", key: "aggOverall", label: "전체 ATET (estat aggregation)", def: true, showIf: { method: "hdid" } },
+                { type: "check", key: "aggCohort", label: "코호트별 ATET (aggregation, cohort)", def: true, showIf: { method: "hdid" } },
+                { type: "check", key: "aggTime", label: "시점별 ATET (aggregation, time)", def: false, showIf: { method: "hdid" } },
+                { type: "check", key: "aggDynamic", label: "노출 기간별 ATET·그림 (aggregation, dynamic)", def: true, showIf: { method: "hdid" } },
+                { type: "check", key: "atetPlot", label: "코호트별 ATT(g,t) 그림 (estat atetplot)", def: false, showIf: { method: "hdid" } }
+            ] },
+            { title: "와일드 군집 부트스트랩", collapsed: true, items: [
+                { type: "check", key: "wildBootstrap", label: "제약 와일드 군집 부트스트랩 p값·신뢰구간 (wildbootstrap)", def: false, span2: true, showIf: { method: "twfe" } },
+                { type: "number", key: "wbReps", label: "반복 수 reps()", def: 1000, min: 99, step: 1, showIf: { wildBootstrap: true } },
+                { type: "select", key: "wbWeight", label: "오차 가중 errorweight()", def: "rademacher", showIf: { wildBootstrap: true }, options: [
+                    ["rademacher", "Rademacher (기본)"], ["mammen", "Mammen"], ["webb", "Webb (군집 수가 적을 때)"],
+                    ["normal", "정규"], ["gamma", "감마"]] },
+                { type: "number", key: "wbSeed", label: "난수 시드 rseed()", def: 12345, step: 1, showIf: { wildBootstrap: true } }
+            ] },
+            { title: "표시·자료", collapsed: true, items: [
+                { type: "check", key: "showControls", label: "공변량·시점효과 계수 표 (aequations)", def: false, showIf: { method: "twfe" } },
+                { type: "number", key: "level", label: "신뢰수준 (%)", def: 95, min: 50, max: 99.9, step: 0.5 },
+                { type: "number", key: "delta", label: "시점 간격 (xtset delta)", def: 1, min: 0.0001, step: 1 }
+            ] }
+        ]
+    },
+    panelUnitRoot: {
+        title: "패널 단위근 검정 (xtunitroot: LLC·HT·Breitung·IPS·Fisher·Hadri)",
+        intro: "패널 자료의 단위근(비정상성) 검정. LLC·HT·Breitung은 공통 AR 모수와 강한 균형 패널, IPS·Fisher형은 패널별 AR 모수와 불균형 패널 허용, Hadri LM은 모든 패널이 정상이라는 귀무가설 검정. 통계량·p값·표 구성은 Stata xtunitroot와 같고, 변수를 여러 개 지정하면 변수별 결과표 작성.",
+        slots: [
+            { key: "entity", label: "개체 변수 (패널 ID)", multi: false, req: true, prefer: "cat" },
+            { key: "time", label: "시점 변수 (연도·차수)", multi: false, req: true, prefer: "any" },
+            { key: "vars", label: "검정 변수 (여러 개면 변수별 결과)", multi: true, req: true, prefer: "num" }
+        ],
+        sections: [
+            { title: "검정", items: [
+                { type: "select", key: "test", label: "검정", def: "llc", span2: true, options: [
+                    ["llc", "Levin–Lin–Chu (llc) — 공통 AR, 균형 패널"],
+                    ["ht", "Harris–Tzavalis (ht) — T 고정·N 큼, 균형 패널"],
+                    ["breitung", "Breitung (breitung) — 공통 AR, 균형 패널"],
+                    ["ips", "Im–Pesaran–Shin (ips) — 패널별 AR, 불균형 허용"],
+                    ["fisher", "Fisher형 (fisher) — 패널별 ADF·PP p값 결합, 불균형·시점 간격 허용"],
+                    ["hadri", "Hadri LM (hadri) — 귀무가설: 모든 패널이 정상"]] },
+                { type: "select", key: "detCommon", label: "결정항", def: "constant", showIf: { test: ["llc", "ht", "breitung"] }, options: [
+                    ["constant", "패널별 평균 (기본)"], ["trend", "패널별 평균 + 추세 (trend)"], ["none", "없음 (noconstant)"]] },
+                { type: "select", key: "detSpecific", label: "결정항", def: "constant", showIf: { test: ["ips", "fisher", "hadri"] }, options: [
+                    ["constant", "패널별 평균 (기본)"], ["trend", "패널별 평균 + 추세 (trend)"]],
+                  help: "ips·hadri는 결정항 없음 미지원, fisher는 이 경우 p값이 없어 Stata도 불가" },
+                { type: "check", key: "demean", label: "횡단면 평균 제거 (demean)", def: false, span2: true,
+                  help: "시점별 패널 평균을 빼서 횡단면 상관 완화 (Levin, Lin & Chu 2002)" }
+            ] },
+            { title: "시차·장기분산", items: [
+                { type: "text", key: "adfLags", label: "ADF 시차 lags() — 정수 또는 aic·bic·hqic + 최대 시차 (예: aic 4)", def: "", span2: true,
+                  showIf: { test: ["llc", "ips"] },
+                  help: "비우면 llc 1시차, ips 시차 없음(t-bar·Z-t-tilde-bar). ips에서 시차 지정(0 포함) 시 W-t-bar, 최대 8" },
+                { type: "number", key: "breitungLags", label: "사전 백색화 시차 lags()", def: 0, min: 0, max: 20, step: 1, showIf: { test: "breitung" } },
+                { type: "number", key: "fisherLags", label: "패널별 검정 시차 lags() (필수)", def: 1, min: 0, max: 20, step: 1, showIf: { test: "fisher" },
+                  help: "dfuller: 차분 시차 수, pperron: Newey–West 시차 수" },
+                { type: "select", key: "llcKernel", label: "장기분산 커널", def: "bartlett", showIf: { test: "llc" }, options: [
+                    ["bartlett", "Bartlett (기본)"], ["parzen", "Parzen"], ["quadraticspectral", "Quadratic spectral"]] },
+                { type: "text", key: "llcKernelLags", label: "커널 시차 — 정수·nwest·llc (비우면 llc: int(3.21 T^⅓))", def: "", showIf: { test: "llc" } },
+                { type: "select", key: "hadriKernel", label: "장기분산 커널 kernel() (계열상관 강건)", def: "", showIf: { test: "hadri" }, options: [
+                    ["", "사용 안 함 (기본)"], ["bartlett", "Bartlett"], ["parzen", "Parzen"], ["quadraticspectral", "Quadratic spectral"]] },
+                { type: "text", key: "hadriKernelLags", label: "커널 시차 (비우면 1)", def: "", showIf: { test: "hadri", hadriKernel: ["bartlett", "parzen", "quadraticspectral"] } },
+                { type: "select", key: "fisherMethod", label: "패널별 검정", def: "dfuller", showIf: { test: "fisher" }, options: [
+                    ["dfuller", "ADF (dfuller)"], ["pperron", "Phillips–Perron (pperron)"]] },
+                { type: "check", key: "fisherDrift", label: "표류항 귀무가설 (drift: t 분포 p값)", def: false, showIf: { test: "fisher", fisherMethod: "dfuller" } }
+            ] },
+            { title: "강건·소표본", items: [
+                { type: "check", key: "breitungRobust", label: "횡단면 상관 강건 lambda* (robust)", def: false, showIf: { test: "breitung" },
+                  help: "T − 시차 − 1 ≥ 패널 수 필요 (Breitung & Das 2005)" },
+                { type: "check", key: "hadriRobust", label: "패널 간 이분산 강건 (robust)", def: false, showIf: { test: "hadri", hadriKernel: "" } },
+                { type: "check", key: "htAltt", label: "소표본 조정 — T 대신 T − 1 (altt)", def: false, showIf: { test: "ht" } }
+            ] },
+            { title: "그림", collapsed: true, items: [
+                { type: "check", key: "plotSeries", label: "패널별 시계열과 시점별 평균 그림", def: true }
+            ] }
+        ]
+    },
+    panelCoint: {
+        title: "패널 공적분 검정 (xtcointtest: Kao·Pedroni·Westerlund)",
+        intro: "I(1) 변수 사이의 장기 균형 관계 검정. 귀무가설은 모두 공적분 없음. Kao는 공통 공적분 벡터, Pedroni·Westerlund는 패널별 공적분 벡터 가정. 통계량·p값·표 구성은 Stata xtcointtest와 같음.",
+        slots: [
+            { key: "entity", label: "개체 변수 (패널 ID)", multi: false, req: true, prefer: "cat" },
+            { key: "time", label: "시점 변수 (연도·차수)", multi: false, req: true, prefer: "any" },
+            { key: "dep", label: "종속변수 (I(1))", multi: false, req: true, prefer: "num" },
+            { key: "covs", label: "설명변수 (I(1), Pedroni·Westerlund 최대 7개)", multi: true, req: true, prefer: "num" }
+        ],
+        sections: [
+            { title: "검정", items: [
+                { type: "select", key: "test", label: "검정", def: "kao", span2: true, options: [
+                    ["kao", "Kao (kao) — 공통 공적분 벡터, DF·ADF 통계량 5종"],
+                    ["pedroni", "Pedroni (pedroni) — 패널별 공적분 벡터, PP·ADF·분산비"],
+                    ["westerlund", "Westerlund (westerlund) — 분산비 검정"]] },
+                { type: "select", key: "detPedroni", label: "결정항", def: "constant", showIf: { test: "pedroni" }, options: [
+                    ["constant", "패널별 평균 (기본)"], ["trend", "패널별 평균 + 추세 (trend)"], ["none", "없음 (noconstant)"]] },
+                { type: "select", key: "detWesterlund", label: "결정항", def: "constant", showIf: { test: "westerlund" }, options: [
+                    ["constant", "패널별 평균 (기본)"], ["trend", "패널별 평균 + 추세 (trend)"]] },
+                { type: "select", key: "pedroniAr", label: "AR 모수 (대립가설)", def: "panelspecific", showIf: { test: "pedroni" }, options: [
+                    ["panelspecific", "패널별 — group-mean 통계량 (기본)"], ["same", "공통 — panel 통계량 (ar(same))"]] },
+                { type: "check", key: "westerlundAll", label: "대립가설: 모든 패널에서 공적분 (allpanels)", def: false, showIf: { test: "westerlund" },
+                  help: "기본(somepanels): 일부 패널에서 공적분" },
+                { type: "check", key: "demean", label: "횡단면 평균 제거 (demean)", def: false }
+            ] },
+            { title: "시차·장기분산", items: [
+                { type: "text", key: "coLags", label: "ADF 추가 시차 lags() — 정수 또는 aic·bic·hqic + 최대 시차", def: "", span2: true,
+                  showIf: { test: ["kao", "pedroni"] }, help: "비우면 1. 0은 Stata에서 오류 또는 해석 불가 값이라 1 이상만 허용" },
+                { type: "select", key: "coKernel", label: "장기분산 커널", def: "bartlett", showIf: { test: ["kao", "pedroni"] }, options: [
+                    ["bartlett", "Bartlett (기본)"], ["parzen", "Parzen"], ["quadraticspectral", "Quadratic spectral"]] },
+                { type: "text", key: "coKernelLags", label: "커널 시차 — 정수 (비우면 Newey–West 자동 선택)", def: "", showIf: { test: ["kao", "pedroni"] } }
+            ] },
+            { title: "고급", collapsed: true, items: [
+                { type: "check", key: "pedroniNw", label: "자동 시차를 패널마다 선택 (Stata 옵션 없음)", def: false, span2: true, showIf: { test: "pedroni" },
+                  help: "Stata 19.5는 첫 패널의 Newey–West 대역폭에서 정한 시차를 모든 패널에 적용 (기본값은 Stata와 같음)" }
             ] }
         ]
     },
@@ -6557,7 +6940,7 @@ function mlLevelSection(num, title, showIf) {
             { type: "subset", key: `slopes${num}`, from: "covs", label: `확률기울기 변수 (${num}수준 · Stata || 집단: 변수)`, def: [] },
             { type: "select", key: `covStruct${num}`, label: `공분산 구조 (${num}수준 · covariance())`, def: "independent",
               options: ML_COV_OPTIONS, showIf: { [`slopes${num}`]: "__filled__" },
-              help: "확률효과가 2개 이상일 때만 적용. 최상위 수준의 독립·비구조와 하위 수준의 독립 구조는 statsmodels MixedLM, 그 밖의 구조는 자체 구현 추정" },
+              help: "확률효과가 2개 이상일 때만 적용. 최상위 수준의 독립·비구조와 하위 수준의 독립 구조는 statsmodels MixedLM, 그 밖의 구조는 lme4 방식 프로파일 우도(Bates 외 2015)로 계산" },
             { type: "check", key: `noConstant${num}`, label: `확률절편 제외 (${num}수준 · noconstant)`, def: false,
               showIf: { [`slopes${num}`]: "__filled__" } }
         ]
@@ -7754,13 +8137,66 @@ function autoAssignVariablesIntoParams(type, params) {
         return;
     }
 
-    if (type === "panel" || type === "dynPanel") {
+    if (type === "panelDiD" && allNames.includes("treat2") && allNames.includes("cohort2")) {   // sample_data/Panel_DiD_Policy.csv
+        Object.assign(params, { entity: "region", time: "year", dep: "y2", treat: "treat2", covs: ["x1", "x2"],
+            method: params.method || "hdid" });
+        if (params.method !== "hdid") Object.assign(params, { dep: "y1", treat: "treat1", covs: ["x1"], group: "province" });
+        return;
+    }
+    if ((type === "panelUnitRoot" || type === "panelCoint") && allNames.includes("y_stat") && allNames.includes("y_coint")) {
+        // sample_data/Panel_UnitRoot_Regions.csv
+        Object.assign(params, { entity: "id", time: "year" });
+        if (type === "panelUnitRoot") params.vars = ["y_stat", "y_ur"];
+        else Object.assign(params, { dep: "y_coint", covs: ["x1", "x2"] });
+        return;
+    }
+    if (type === "panelNonlinear" && allNames.includes("pid") && allNames.includes("unmet")) {   // sample_data/Panel_Nonlinear_Care.csv
+        const fam = params.family || "logit";
+        const depBy = { poisson: "visits", nbreg: "visits", tobit: "carehrs", intreg: "oop_lo", ologit: "sat", oprobit: "sat" };
+        Object.assign(params, { entity: "pid", time: "wave", dep: depBy[fam] || "unmet", covs: ["adl", "alone", "female"] });
+        if (fam === "intreg") params.depUpper = "oop_hi";
+        if (fam === "poisson" || fam === "nbreg") params.exposure = "months";
+        return;
+    }
+    if (type === "hausmanTaylor" && allNames.includes("lwage") && allNames.includes("educ")) {   // sample_data/Panel_HT_Wage.csv
+        Object.assign(params, { entity: "id", time: "year", dep: "lwage",
+            covs: ["wks", "south", "occ", "exper", "union", "female", "rural", "educ"].filter(n => allNames.includes(n)),
+            endog: ["exper", "union", "educ"].filter(n => allNames.includes(n)) });
+        return;
+    }
+    if (type === "panel" || type === "dynPanel" || type === "panelDescribe" || type === "panelGLS" || type === "hausmanTaylor"
+        || type === "panelNonlinear" || type === "panelDiD" || type === "panelUnitRoot" || type === "panelCoint") {
         const timeRe = /^(연도|년도|시점|차수|조사차수|기간|year|time|wave|period|t)$/i;
         params.time = allNames.find(n => timeRe.test(n)) || allNames.find(n => /year|time|wave|연도|년도|시점/i.test(n)) || allNames[1] || allNames[0];
         params.entity = allNames.find(n => n !== params.time && /지역코드|^id$|_id$|firm|entity|기관|개체|code/i.test(n))
             || catCols.find(n => n !== params.time) || allNames.find(n => n !== params.time) || allNames[0];
         const skip = new Set([params.entity, params.time, "시도"]);
         const rem = numCols.filter(n => !skip.has(n));
+        if (type === "panelDescribe") {
+            params.sumVars = rem.slice(0, 3);
+            return;
+        }
+        if (type === "panelUnitRoot") {
+            params.vars = rem.slice(0, 1);
+            return;
+        }
+        if (type === "panelCoint") {
+            params.dep = rem[0] || numCols[0];
+            params.covs = rem.slice(1, 3);
+            return;
+        }
+        if (type === "panelDiD") {
+            params.dep = rem[0] || numCols[0];
+            params.treat = rem.find(n => /treat|처치|정책/i.test(n)) || rem[1] || "";
+            params.covs = rem.filter(n => n !== params.dep && n !== params.treat).slice(0, 1);
+            return;
+        }
+        if (type === "panelGLS" || type === "hausmanTaylor" || type === "panelNonlinear") {
+            params.dep = rem[0] || numCols[0];
+            params.covs = rem.slice(1, 3).length ? rem.slice(1, 3) : rem.slice(0, 1);
+            if (type === "hausmanTaylor") params.endog = params.covs.slice(-1);
+            return;
+        }
         if (allNames.includes("복지지출") && allNames.includes("실업률") && allNames.includes("재정자립도")) {
             // Dynamic_Panel_Welfare.csv: 200 regions x 2014-2023
             params.dep = "복지지출";

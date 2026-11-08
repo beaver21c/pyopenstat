@@ -175,6 +175,10 @@ def _op_stata(op: Dict[str, Any]) -> Optional[List[str]]:
         return [f"replace {op.get('col_name')} = {val} in {int(op.get('row_idx', 0)) + 1}"]
     if name == "add_rows":
         return [f"set obs `=_N + {int(op.get('n', 1))}'"]
+    if name == "panel_predict":
+        from .analyses.panel_module import predict_stata_lines
+        return [f"capture drop {v}" for v in (op.get("stats") or {}).values()] + \
+            predict_stata_lines(op.get("stats") or {}, op.get("params") or {})
     return None
 
 
@@ -219,6 +223,9 @@ def _op_r(op: Dict[str, Any]) -> Optional[List[str]]:
         v = op.get("value")
         val = v if isinstance(v, (int, float)) and not isinstance(v, bool) else _q(v)
         return [f"data[{int(op.get('row_idx', 0)) + 1}, {_q(op.get('col_name'))}] <- {val}"]
+    if name == "panel_predict":
+        from .analyses.panel_module import predict_r_lines
+        return predict_r_lines(op.get("stats") or {}, op.get("params") or {})
     return None
 
 

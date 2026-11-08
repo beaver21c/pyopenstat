@@ -23,7 +23,8 @@ times T/(T-1)*(N-1)/(N-K) = xtscc and StataNow xtreg, fe vce(dkraay bartlett #).
 
 Diagnostics: Hausman (linearmodels RandomEffectsResults.hausman), Pesaran CD (linearmodels pesaran_cd),
 F test u_i = 0 (linearmodels f_pooled), Wooldridge serial correlation (statsmodels OLS with cluster VCE, xtserial
-recipe); own implementation — no library found (searched linearmodels 7.1, statsmodels 0.15, arch 8.0): Breusch–Pagan
+recipe); implemented from the published formulas — no library found (searched linearmodels 7.1, statsmodels 0.15,
+arch 8.0): Breusch–Pagan (1980) /
 LM xttest0, modified Wald xttest3, Stata's R² between/overall, sigma_u, rho, corr(u_i, Xb), theta percentiles.
 
 Verified against Stata 19.5 (xtreg, regress, xtgee, hausman, xttest0 and the xtserial/xtcsd/xttest3 recipes written
@@ -42,11 +43,11 @@ from scipy import stats
 from .base import BaseAnalysis, ResultsTable, resolve_choice
 
 # ----------------------------------------------------------------------------- option helpers
-MODEL_TYPES = ("fixed", "twoway", "random", "between", "fd", "pooled", "pa")
+MODEL_TYPES = ("fixed", "twoway", "random", "cre", "between", "fd", "pooled", "pa")
 MODEL_ALIASES = {"fe": "fixed", "within": "fixed", "entity": "fixed", "re": "random", "gls": "random",
                  "be": "between", "pooling": "pooled", "ols": "pooled", "pool": "pooled", "regress": "pooled",
                  "firstdiff": "fd", "first_difference": "fd", "fdiff": "fd", "gee": "pa", "twoways": "twoway",
-                 "fe2": "twoway", "twfe": "twoway"}
+                 "fe2": "twoway", "twfe": "twoway", "mundlak": "cre", "correlated": "cre", "cre_re": "cre"}
 COV_TYPES = ("unadjusted", "robust", "clustered", "dk")
 COV_ALIASES = {"conventional": "unadjusted", "ols": "unadjusted", "classical": "unadjusted", "homoskedastic": "unadjusted",
                "cluster": "clustered", "dkraay": "dk", "driscoll": "dk", "driscoll-kraay": "dk", "scc": "dk",
@@ -60,14 +61,20 @@ MODEL_LABEL = {
     "fixed": "고정효과 (집단 내 추정)",
     "twoway": "이원 고정효과 (개체 + 시점)",
     "random": "확률효과 (GLS)",
+    "cre": "상관 확률효과 (Mundlak)",
     "between": "집단 간 추정",
     "fd": "1차 차분",
     "pooled": "통합 OLS",
     "pa": "모집단 평균 (GEE)",
 }
-STATA_CMD = {"fixed": "xtreg, fe", "twoway": "xtreg i.t, fe", "random": "xtreg, re", "between": "xtreg, be",
+STATA_CMD = {"fixed": "xtreg, fe", "twoway": "xtreg i.t, fe", "random": "xtreg, re", "cre": "xtreg, cre", "between": "xtreg, be",
              "fd": "regress D.y D.x", "pooled": "regress", "pa": "xtreg, pa"}
 COV_LABEL = {"unadjusted": "일반(동분산 가정)", "robust": "강건", "clustered": "군집-강건", "dk": "Driscoll–Kraay"}
+HAUSMAN_SIGMA = ("none", "more", "less")
+PREDICT_STATS = ("xb", "u", "e", "ue", "xbu", "stdp")
+PREDICT_LABEL = {"xb": "선형 예측 xb (상수 포함)", "u": "개체효과 u_i", "e": "개별 오차 e_it", "ue": "u_i + e_it (= y − xb)",
+                 "xbu": "xb + u_i", "stdp": "선형 예측의 표준오차"}
+PREDICT_MODELS = ("fixed", "twoway", "random", "cre")
 
 
 def _opt(p: Dict[str, Any], *keys: str, default: Any = None) -> Any:
@@ -165,7 +172,9 @@ class PanelData:
             dup = sub[sub.duplicated([entity, "_tpos"], keep=False)].head(3)
             raise ValueError(f"{label}: 같은 개체·시점 관측치 중복 (Stata: repeated time values within panel) — 예: "
                              f"{dup[[entity, time]].to_dict('records')}")
-        sub = sub.sort_values([entity, "_tpos"], kind="mergesort").reset_index(drop=True)
+        sub = sub.sort_values([entity, "_tpos"], kind="mergesort")
+        self.row_index = sub.index.to_numpy()      # row labels of the input data (for predictions)
+        sub = sub.reset_index(drop=True)
         self.df = sub
         self.entity, self.time, self.dep, self.covs = entity, time, dep, list(covs)
         self.g, self.entity_labels = pd.factorize(sub[entity], sort=True)
@@ -565,7 +574,76 @@ def fit_random(pd_: PanelData, X: np.ndarray, names: List[str], cov: str = "unad
         "s2u_raw": raw, "theta": th, "theta_obs": thr, "k": k, "method": method,
     })
     fit.resid_e = resid - u_hat[pd_.g]
+    fit.u = u_hat
+    s2_gls = getattr(res, "s2", None)            # Stata e(rmse)^2 of xtreg, re: transformed-regression SSR/(N-K)
+    fit.stats["rmse"] = float(np.sqrt(float(s2_gls))) if s2_gls is not None else float("nan")
     return fit
+
+
+# ----------------------------------------------------------------------------- correlated random effects (xtreg, cre)
+MEAN_PREFIX = "xt_means:"
+
+
+def cre_design(pd_: PanelData, X: np.ndarray, names: List[str]) -> Tuple[np.ndarray, List[str], List[str]]:
+    """[x_it, xbar_i] with panel means of the time-varying regressors (estimation-sample means, Wooldridge 2019);
+    time-invariant regressors keep no mean column (their mean equals the variable, as Stata omits it)."""
+    tv = []
+    for j in range(X.shape[1]):
+        dev = X[:, j] - pd_.group_mean(X[:, j])[pd_.g]
+        if np.max(np.abs(dev)) > 1e-10 * max(1.0, float(np.max(np.abs(X[:, j])))):
+            tv.append(j)
+    M = pd_.group_mean(X[:, tv])[pd_.g] if tv else np.zeros((pd_.N, 0))
+    return np.column_stack([X, M]), list(names) + [MEAN_PREFIX + names[j] for j in tv], [names[j] for j in tv]
+
+
+def fit_cre(pd_: PanelData, X: np.ndarray, names: List[str], cov: str = "unadjusted", cluster=None,
+            method: str = "default") -> Fit:
+    """xtreg, cre — random-effects GLS of y on x_it, xbar_i, z_i (Mundlak 1978; Wooldridge 2019; Stata [XT] xtreg
+    Methods and formulas, xtreg, cre), computed by fit_random on the extended design; Mundlak test H0: gamma = 0."""
+    if cov == "dk":
+        raise ValueError("상관 확률효과(cre)에는 Driscoll–Kraay 표준오차 미지원 (Stata xtreg, cre: conventional·robust·cluster)")
+    Xa, na, tv = cre_design(pd_, X, names)
+    if not tv:
+        raise ValueError("상관 확률효과(cre): 시점에 따라 변하는 설명변수 1개 이상 필요 (패널 평균이 모두 변수 자체와 같음)")
+    fit = fit_random(pd_, Xa, na, cov, cluster, None, method)
+    col = {nm: j for j, nm in enumerate(na)}
+    mean_i = [i for i, nm in enumerate(fit.names) if nm.startswith(MEAN_PREFIX)]
+    xit_i = [i for i, nm in enumerate(fit.names) if not nm.startswith(MEAN_PREFIX) and nm != "Intercept"]
+    fit.stats["test_idx"] = xit_i
+    fit.stats["mundlak"] = fit.wald(mean_i)
+    a = Xa[:, [col[fit.names[i]] for i in xit_i]] @ fit.b[xit_i] if xit_i else np.zeros(pd_.N)
+    # Stata e(corr) of xtreg, cre (xtreg_cre.ado): corr(x_it b, sum_j xbar_ij) — the panel means enter unweighted
+    fit.stats["corr_xit_means"] = _corr(a, pd_.group_mean(X).sum(axis=1)[pd_.g])
+    fit.stats["cre_tv"] = tv
+    fit.stats["cre_ti"] = [nm for nm in names if nm not in tv]
+    fit.X_used = Xa
+    fit.names_used = na
+    return fit
+
+
+def wald_pivot(b: np.ndarray, V: np.ndarray, rel_tol: float = 1e-10) -> Tuple[float, int, List[int]]:
+    """Wald statistic b' V_S^-1 b over a full-rank subset S of the restrictions, as Stata test reports it when the
+    VCE is singular ("Constraint # dropped"): S is chosen greedily by the largest remaining (Schur-complement) variance,
+    i.e. a pivoted Cholesky factorization of V (Golub & Van Loan 2013, sec. 4.2.8). Returns (W, |S|, dropped 1-based)."""
+    q = len(b)
+    A = (np.asarray(V, float) + np.asarray(V, float).T) / 2
+    d0 = float(np.max(np.diag(A))) if q else 0.0
+    avail, kept = list(range(q)), []
+    while avail and d0 > 0:
+        dg = np.array([A[j, j] for j in avail])
+        k = int(np.argmax(dg))
+        if dg[k] <= rel_tol * d0:
+            break
+        j = avail.pop(k)
+        kept.append(j)
+        c = A[:, j].copy()
+        A = A - np.outer(c, c) / c[j]
+    kept.sort()
+    if not kept:
+        return float("nan"), 0, list(range(1, q + 1))
+    bs = b[kept]
+    W = float(bs @ np.linalg.solve(V[np.ix_(kept, kept)], bs))
+    return W, len(kept), [j + 1 for j in range(q) if j not in kept]
 
 
 def fit_between(pd_: PanelData, X: np.ndarray, names: List[str], cov: str = "unadjusted", cluster=None,
@@ -762,8 +840,11 @@ def fit_pa(pd_: PanelData, X: np.ndarray, names: List[str], cov: str = "unadjust
 
 
 # ----------------------------------------------------------------------------- diagnostics
-def hausman_test(pd_: PanelData, X: np.ndarray, names: List[str]) -> Dict[str, Any]:
-    """hausman fe re — linearmodels RandomEffectsResults.hausman (each model's conventional VCE, generalized inverse)."""
+def hausman_test(pd_: PanelData, X: np.ndarray, names: List[str], sigma: str = "none") -> Dict[str, Any]:
+    """hausman fe re — linearmodels RandomEffectsResults.hausman (each model's conventional VCE, generalized inverse).
+
+    sigma='more' / 'less' (Stata hausman sigmamore / sigmaless): both VCEs use the disturbance SD of the efficient
+    (RE: e(rmse)) or of the consistent (FE: e(sigma_e)) estimator, V_b*(s_B/s_b)^2 or V_B*(s_b/s_B)^2 ([R] hausman)."""
     from linearmodels.panel import PanelOLS, RandomEffects
     N = pd_.N
     kept, _ = _kept_within(pd_, X, names)
@@ -781,6 +862,25 @@ def hausman_test(pd_: PanelData, X: np.ndarray, names: List[str]) -> Dict[str, A
             raise ValueError("확률효과 모형 추정 불가 — 집단 간 회귀의 잔차 자유도 부족 (집단 수 ≤ 설명변수 수, "
                              f"시점 더미 포함 시 흔함): {e}")
         h = re_.hausman(fe)
+    if sigma in ("more", "less"):
+        terms = list(h.estimates.index)
+        b0, b1 = fe.params[terms].to_numpy(), re_.params[terms].to_numpy()
+        V0, V1 = fe.cov.loc[terms, terms].to_numpy(), re_.cov.loc[terms, terms].to_numpy()
+        s0, s1 = float(np.sqrt(fe.s2)), float(np.sqrt(re_.s2))
+        if sigma == "more":
+            V0 = (s1 / s0) ** 2 * V0
+        else:
+            V1 = (s0 / s1) ** 2 * V1
+        Vd = V0 - V1
+        Vs = (Vd + Vd.T) / 2
+        ev = np.linalg.eigvalsh(Vs)
+        tol = max(1e-300, float(np.max(np.abs(ev)))) * 1e-12
+        rank = int(np.sum(np.abs(ev) > tol))
+        d = b0 - b1
+        chi2 = float(d @ np.linalg.pinv(Vs) @ d)
+        return {"chi2": chi2, "df": rank, "p": float(stats.chi2.sf(chi2, rank)) if chi2 >= 0 else float("nan"),
+                "pos_def": bool(np.all(ev > tol)), "terms": terms, "b_fe": b0, "b_re": b1,
+                "se_diff": np.sqrt(np.clip(np.diag(Vs), 0, None)), "sigma": sigma, "s_fe": s0, "s_re": s1}
     est = h.estimates
     terms = list(est.index)
     Vd = fe.cov.loc[terms, terms].to_numpy() - re_.cov.loc[terms, terms].to_numpy()
@@ -798,7 +898,7 @@ def hausman_test(pd_: PanelData, X: np.ndarray, names: List[str]) -> Dict[str, A
 
 
 def bp_lm_test(pd_: PanelData, X: np.ndarray) -> Dict[str, Any]:
-    """xttest0 (own glue — no library found: linearmodels, statsmodels, arch): Breusch–Pagan LM with the
+    """xttest0 (Breusch & Pagan 1980; no library found: linearmodels, statsmodels, arch): Breusch–Pagan LM with the
     Baltagi–Li unbalanced form on linearmodels PooledOLS residuals; 50:50 chi2(0)/chi2(1) mixture."""
     from linearmodels.panel import PooledOLS
     N, n = pd_.N, pd_.n
@@ -863,7 +963,7 @@ def mean_abs_corr(e: np.ndarray, g: np.ndarray, tpos: np.ndarray) -> float:
 
 
 def modified_wald(e: np.ndarray, g: np.ndarray, n_groups: int) -> Dict[str, Any]:
-    """xttest3 (own glue — no library found; Baum 2001, v1.0.8 formula): sum_i (s_i^2 - s^2)^2 / V_i, chi2(N_g)."""
+    """xttest3 (Greene 2000; Baum 2001, v1.0.8 formula — no library found): sum_i (s_i^2 - s^2)^2 / V_i, chi2(N_g)."""
     codes, _ = pd.factorize(g)
     n = int(codes.max()) + 1
     Ti = np.bincount(codes, minlength=n).astype(float)
@@ -910,6 +1010,8 @@ class PanelAnalysis(BaseAnalysis):
         het_test: bool = False,
         show_time_effects: bool = True,
         delta: float = 1.0,
+        hausman_sigma: str = "none",
+        time_test: bool = True,
     ):
         cov_list = _as_list(covs) if isinstance(covs, str) else list(covs or [])
         mt = resolve_choice("추정 방법(modelType)", model_type, MODEL_TYPES, MODEL_ALIASES, default="fixed")
@@ -917,6 +1019,8 @@ class PanelAnalysis(BaseAnalysis):
         rm = resolve_choice("확률효과 분산성분(reMethod)", re_method, RE_METHODS, {"swar": "sa", "swamy": "sa", "consistent": "default"},
                             default="default")
         pc = resolve_choice("작업 상관 구조(paCorr)", pa_corr, PA_CORRS, PA_ALIASES, default="exchangeable")
+        hs = resolve_choice("Hausman 분산 기준(hausmanSigma)", hausman_sigma or "none", HAUSMAN_SIGMA,
+                            {"sigmamore": "more", "sigmaless": "less", "": "none", "default": "none"}, default="none")
         if not cov_list:
             raise ValueError("패널 회귀: 설명변수(covs) 1개 이상 지정 필요")
         if dk_lags is not None and dk_lags != "":
@@ -935,7 +1039,8 @@ class PanelAnalysis(BaseAnalysis):
                 "reMethod": rm, "beWls": bool(be_wls), "fdConstant": bool(fd_constant), "paCorr": pc,
                 "hausman": bool(hausman), "bpTest": bool(bp_test), "serialTest": bool(serial_test),
                 "cdTest": bool(cd_test), "hetTest": bool(het_test), "showTimeEffects": bool(show_time_effects),
-                "delta": float(delta or 1.0), "plotTrends": bool(plot_trends),
+                "delta": float(delta or 1.0), "plotTrends": bool(plot_trends), "hausmanSigma": hs,
+                "timeTest": bool(time_test),
             },
         )
         self.entity_col, self.time_col, self.dep, self.covs = entity_col, time_col, dep, cov_list
@@ -949,7 +1054,8 @@ class PanelAnalysis(BaseAnalysis):
         o = self.options
         defaults = {"cluster": "", "dkLags": None, "reMethod": "default", "beWls": False, "fdConstant": True,
                     "paCorr": "exchangeable", "hausman": True, "bpTest": False, "serialTest": False, "cdTest": False,
-                    "hetTest": False, "showTimeEffects": True, "delta": 1.0, "plotTrends": True}
+                    "hetTest": False, "showTimeEffects": True, "delta": 1.0, "plotTrends": True,
+                    "hausmanSigma": "none", "timeTest": True}
         parts = [f"entity={o['entity']!r}", f"time={o['time']!r}", f"dep={o['dep']!r}", f"covs={o['covs']!r}",
                  f"modelType={o['modelType']!r}", f"covType={o['covType']!r}"]
         for k, dv in defaults.items():
@@ -977,6 +1083,8 @@ class PanelAnalysis(BaseAnalysis):
             fit = fit_within(P, X, names, ct, cluster, o["dkLags"])
         elif mt == "random":
             fit = fit_random(P, X, names, ct, cluster, o["dkLags"], o["reMethod"])
+        elif mt == "cre":
+            fit = fit_cre(P, X, names, ct, cluster, o["reMethod"])
         elif mt == "between":
             fit = fit_between(P, X, names, ct, cluster, o["beWls"])
         elif mt == "fd":
@@ -985,12 +1093,18 @@ class PanelAnalysis(BaseAnalysis):
             fit = fit_ols_panel(P, X, names, ct, cluster, o["dkLags"], diff=False, constant=True)
         else:
             fit = fit_pa(P, X, names, ct, o["paCorr"])
+        if not hasattr(fit, "X_used"):
+            fit.X_used, fit.names_used = X, names
         self.fit = fit
         self._summary_table(P, fit)
         self._coef_tables(P, fit, n_time_dummies)
+        if mt == "twoway" and o["timeTest"]:
+            self._safe(lambda: self._time_test_table(fit), "시점 효과 결합검정")
+        if mt == "cre":
+            self._mundlak_table(fit)
         if mt in ("fixed", "twoway"):
             self._u_test_table(fit)
-        if mt == "random":
+        if mt in ("random", "cre"):
             self._re_variance_table(P, fit)
         if mt == "pa":
             self._pa_corr_table(fit)
@@ -1044,8 +1158,8 @@ class PanelAnalysis(BaseAnalysis):
         rows.append(("집단당 관측치 최대", int(Ti_used.max()), "integer"))
         st = fit.stats
         slope_idx = [i for i, nm in enumerate(fit.names) if nm != "Intercept"]
-        test = fit.wald(slope_idx)
-        if mt in ("fixed", "twoway", "random", "between"):
+        test = fit.wald(fit.stats.get("test_idx", slope_idx))
+        if mt in ("fixed", "twoway", "random", "cre", "between"):
             rows += [("R² 집단 내 (within)", st.get("r2_w"), "zto"), ("R² 집단 간 (between)", st.get("r2_b"), "zto"),
                      ("R² 전체 (overall)", st.get("r2_o"), "zto")]
         if mt in ("fd", "pooled"):
@@ -1053,9 +1167,11 @@ class PanelAnalysis(BaseAnalysis):
         if mt in ("fixed", "twoway"):
             rows += [("sigma_u", st["sigma_u"], ""), ("sigma_e", st["sigma_e"], ""),
                      ("rho (u_i 분산 비중)", st["rho"], "zto"), ("corr(u_i, Xb)", st["corr_u_xb"], "")]
-        if mt == "random":
+        if mt in ("random", "cre"):
             rows += [("sigma_u", st["sigma_u"], ""), ("sigma_e", st["sigma_e"], ""),
                      ("rho (u_i 분산 비중)", st["rho"], "zto")]
+        if mt == "cre":
+            rows.append(("corr(xit_vars*b, xt_means) — Stata e(corr)", st["corr_xit_means"], ""))
         if mt == "between":
             rows.append(("sd(u_i + avg(e_i.))", st["rmse"], ""))
         if mt == "pa":
@@ -1071,9 +1187,18 @@ class PanelAnalysis(BaseAnalysis):
                 r["_rowfmt"] = fmt
             t.add_row(r)
         t.add_note(f"추정: {MODEL_LABEL[mt]} — Stata {STATA_CMD[mt]}")
-        if mt == "random":
+        if mt in ("random", "cre"):
             t.add_note("분산성분: " + ("Swamy–Arora 소표본 추정 (Stata sa 옵션, Baltagi–Chang)" if st["method"] == "sa"
-                                    else "Stata 기본 일치 추정 (집단 간 회귀 SSR, 조화평균 T)") + "; corr(u_i, X) = 0 가정")
+                                    else "Stata 기본 일치 추정 (집단 간 회귀 SSR, 조화평균 T)")
+                       + ("; corr(u_i, X) = 0 가정" if mt == "random" else ""))
+        if mt == "cre":
+            t.add_note("계산 방식: Mundlak (1978)·Wooldridge (2019) 상관 확률효과 — 시변 설명변수의 패널 평균(추정 표본 기준)을 "
+                       "추가한 확률효과 GLS (Stata [XT] xtreg, cre Methods and formulas); 시변 변수 계수는 고정효과 추정치와 같음")
+            if st.get("cre_ti"):
+                t.add_note("시불변 변수(패널 평균 제외): " + ", ".join(st["cre_ti"]))
+            t.add_note("모형 Wald 검정: xit_vars 계수(시변·시불변 변수) = 0, 패널 평균 계수 제외 (Stata 동일)")
+            t.add_note("corr(xit_vars*b, xt_means): Stata e(corr)와 같은 계산 — x_it·b와 패널 평균 변수 합(Σ x̄_j)의 상관 "
+                       "(Stata 출력 표기는 xt_means*γ이나 계산에는 γ를 곱하지 않음, xtreg_cre.ado)")
         if mt == "fd":
             t.add_note("1차 차분은 시점 값 기준 (t-1 시점이 없으면 차분 결측, Stata D. 연산자와 동일)"
                        + ("; 상수항 포함 (regress D.y D.x)" if self.options["fdConstant"] else "; 상수항 제외 (noconstant)"))
@@ -1090,7 +1215,7 @@ class PanelAnalysis(BaseAnalysis):
                         ("r2", "R2"), ("r2_adj", "R2_adj")):
             if st.get(k_) is not None and not (isinstance(st.get(k_), float) and np.isnan(st[k_])):
                 ms[key] = float(st[k_])
-        if mt in ("fixed", "twoway", "random"):
+        if mt in ("fixed", "twoway", "random", "cre"):
             ms["Var_between"] = float(st["sigma_u"] ** 2)
             ms["Var_within"] = float(st["sigma_e"] ** 2)
         if test is not None and test[0] is not None:
@@ -1116,6 +1241,12 @@ class PanelAnalysis(BaseAnalysis):
             tt = ResultsTable(name="time_effects", title=f"시점 더미 계수 (i.{self.time_col})")
             for c in t.columns:
                 tt.columns.append(dict(c))
+        mtab = None
+        if self.model_type == "cre":
+            t.title = "계수 추정치 — 설명변수 (xit_vars)"
+            mtab = ResultsTable(name="cre_means", title="계수 추정치 — 패널 평균 (xt_means)")
+            for c in t.columns:
+                mtab.columns.append(dict(c))
         prefix = "D." if self.model_type == "fd" else ""
         for i, nm in enumerate(fit.names):
             row = {"var": nm if nm == "Intercept" else prefix + nm, "b": float(fit.b[i]), "se": float(fit.se[i]),
@@ -1123,6 +1254,9 @@ class PanelAnalysis(BaseAnalysis):
             if nm in time_names:
                 if tt is not None:
                     tt.add_row(row)
+            elif mtab is not None and nm.startswith(MEAN_PREFIX):
+                row["var"] = nm[len(MEAN_PREFIX):]
+                mtab.add_row(row)
             else:
                 t.add_row(row)
         t.add_note(f"표준오차: {fit.vce_label}" + self._vce_note(fit))
@@ -1134,6 +1268,9 @@ class PanelAnalysis(BaseAnalysis):
             t.add_note(nt)
         t.mark_coefficients(estimate="b", se="se", p="p", stat="t", ci=("cil", "ciu"), label="var")
         self.add_table(t)
+        if mtab is not None and mtab.rows:
+            mtab.add_note("패널 평균 x̄_i의 계수 γ (Mundlak 회귀); 표준오차 " + fit.vce_label)
+            self.add_table(mtab)
         if tt is not None and tt.rows:
             tt.add_note(f"기준 시점: 첫 시점 (Stata i.{self.time_col} 기준 범주); 표준오차 {fit.vce_label}")
             self.add_table(tt)
@@ -1142,7 +1279,7 @@ class PanelAnalysis(BaseAnalysis):
 
     def _vce_note(self, fit: Fit) -> str:
         mt, ct = self.model_type, self.cov_type
-        if ct == "robust" and mt in ("fixed", "twoway", "random"):
+        if ct == "robust" and mt in ("fixed", "twoway", "random", "cre"):
             return " — Stata xtreg의 vce(robust)는 패널 변수 군집과 동일, 소표본 보정 (N-1)/(N-K)·G/(G-1)"
         if ct == "robust" and mt in ("fd", "pooled"):
             return " — Stata regress vce(robust), 보정 N/(N-K)"
@@ -1153,6 +1290,73 @@ class PanelAnalysis(BaseAnalysis):
         if ct in ("robust", "clustered") and mt == "pa":
             return " — 보정 G/(G-1) (Stata [P] robust 관례)"
         return ""
+
+    def _time_test_table(self, fit: Fit):
+        """testparm i.t after xtreg y x i.t, fe."""
+        idx = [i for i, nm in enumerate(fit.names) if nm.endswith("." + self.time_col)]
+        if not idx:
+            return
+        W, q, dropped = wald_pivot(fit.b[idx], fit.V[np.ix_(idx, idx)])
+        t = ResultsTable(name="time_test", title=f"시점 효과 결합검정 (testparm i.{self.time_col})")
+        z = fit.dist == "z" or fit.df_r is None
+        t.add_column("stat", "χ²" if z else "F", col_type="number")
+        t.add_column("df1", "df1", col_type="integer")
+        if not z:
+            t.add_column("df2", "df2", col_type="integer")
+        t.add_column("p", "p", col_type="number", fmt="pvalue")
+        if q == 0 or not np.isfinite(W):
+            t.add_note("검정 불가: 시점 더미 분산행렬 계수(rank) 0")
+            self.add_table(t)
+            return
+        if z:
+            t.add_row({"stat": W, "df1": q, "p": float(stats.chi2.sf(W, q))})
+        else:
+            F = W / q
+            t.add_row({"stat": F, "df1": q, "df2": int(fit.df_r), "p": float(stats.f.sf(F, q, fit.df_r))})
+        t.add_note(f"H0: 시점 더미 {len(idx)}개 계수 = 0; 표준오차 {fit.vce_label} 기준 Wald 검정 (Stata testparm)")
+        if dropped:
+            t.add_note(f"분산행렬 계수 부족으로 제약 {len(dropped)}개 제외 (Stata 'Constraint # dropped'): "
+                       + ", ".join(str(d) for d in dropped) + " — 남은 분산이 큰 제약부터 선택하는 피벗 콜레스키 방식")
+        self.add_table(t)
+
+    def _mundlak_table(self, fit: Fit):
+        mu = fit.stats.get("mundlak")
+        t = ResultsTable(name="mundlak", title="Mundlak 검정 (xt_means = 0)")
+        t.add_column("chi2", "χ²", col_type="number")
+        t.add_column("df", "df", col_type="integer")
+        t.add_column("p", "p", col_type="number", fmt="pvalue")
+        t.add_column("decision", "판단", col_type="text")
+        if mu is None or mu[0] is None:
+            t.add_note("검정 불가: 패널 평균 계수 분산행렬의 계수(rank) 부족")
+        else:
+            dec = "확률효과 가정(corr(u_i, x) = 0) 기각 — 고정효과·상관 확률효과 선호 (p < .05)" if mu[3] < 0.05 \
+                else "확률효과 가정 기각 안 됨 (p ≥ .05)"
+            t.add_row({"chi2": mu[0], "df": mu[1], "p": mu[3], "decision": dec})
+        t.add_note("H0: 패널 평균 계수 γ = 0 (Mundlak 1978); 본 모형의 표준오차(" + fit.vce_label + ") 사용 — "
+                   "군집 강건 분산에서도 적용 가능한 Hausman 대안 검정 (Wooldridge 2010, 10.7.3; Stata xtreg, cre)")
+        self.add_table(t)
+
+    def predictions(self, which: Sequence[str] = PREDICT_STATS) -> pd.DataFrame:
+        """Stata predict after xtreg (fe, re, cre): xb, u, e, ue, xbu, stdp — indexed by the input-data rows."""
+        mt, fit, P = self.model_type, self.fit, self.panel
+        if mt not in PREDICT_MODELS:
+            raise ValueError(f"예측값 저장: 고정효과·이원 고정효과·확률효과·상관 확률효과 모형만 지원 (현재: {MODEL_LABEL[mt]})")
+        bad = [w for w in which if w not in PREDICT_STATS]
+        if bad:
+            raise ValueError(f"예측 통계 미지원: {bad} — 가능: {list(PREDICT_STATS)}")
+        col = {nm: j for j, nm in enumerate(fit.names_used)}
+        slope = [i for i, nm in enumerate(fit.names) if nm != "Intercept"]
+        Z = np.column_stack([fit.X_used[:, [col[fit.names[i]] for i in slope]], np.ones(P.N)])
+        order = slope + [fit.names.index("Intercept")]
+        b, V = fit.b[order], fit.V[np.ix_(order, order)]
+        xb = Z @ b
+        u = np.asarray(fit.u, float)[P.g]
+        # stdp: after xtreg, cre Stata uses the first equation only (xit_vars and _cons, without xt_means)
+        sel = [j for j, i in enumerate(order) if not fit.names[i].startswith(MEAN_PREFIX)]
+        Zs, Vs = Z[:, sel], V[np.ix_(sel, sel)]
+        out = {"xb": xb, "u": u, "ue": P.y - xb, "e": P.y - xb - u, "xbu": xb + u,
+               "stdp": np.sqrt(np.clip(np.einsum("ij,jk,ik->i", Zs, Vs, Zs), 0, None))}
+        return pd.DataFrame({w: out[w] for w in which}, index=P.row_index)
 
     def _u_test_table(self, fit: Fit):
         Fu = fit.stats.get("F_u")
@@ -1214,7 +1418,8 @@ class PanelAnalysis(BaseAnalysis):
         self.add_table(t)
 
     def _hausman_table(self, P: PanelData, X: np.ndarray, names: List[str]):
-        h = hausman_test(P, X, names)
+        sig = self.options.get("hausmanSigma", "none")
+        h = hausman_test(P, X, names, sig)
         t = ResultsTable(name="hausman", title="Hausman 검정 (Hausman Specification Test: FE vs RE)")
         t.add_column("chi2", "χ²", col_type="number")
         t.add_column("df", "df", col_type="integer")
@@ -1225,11 +1430,18 @@ class PanelAnalysis(BaseAnalysis):
         else:
             dec = "고정효과 선호 (p < .05)" if h["p"] < 0.05 else "확률효과 일관성 기각 안 됨 (p ≥ .05)"
         t.add_row({"chi2": h["chi2"], "df": h["df"], "p": h["p"], "decision": dec})
+        if sig == "more":
+            t.add_note(f"sigmamore: 두 분산행렬을 확률효과 모형의 오차 표준편차(e(rmse) = {h['s_re']:.6g})로 계산 "
+                       "— V_b·(s_B/s_b)², Stata [R] hausman")
+        elif sig == "less":
+            t.add_note(f"sigmaless: 두 분산행렬을 고정효과 모형의 오차 표준편차(sigma_e = {h['s_fe']:.6g})로 계산 "
+                       "— V_B·(s_b/s_B)², Stata [R] hausman")
         t.add_note("Stata hausman fe re: 두 모형의 일반 분산(동분산 가정)으로 계산, (V_b − V_B)의 일반화 역행렬, df = rank(V_b − V_B)")
         if not h["pos_def"]:
             t.add_note("V_b − V_B가 양정치 아님 (Stata: V_b-V_B is not positive definite)")
         if self.cov_type != "unadjusted":
-            t.add_note("본 모형의 강건 표준오차와 무관하게 일반 분산으로 재추정 (Stata hausman은 강건 분산 미지원)")
+            t.add_note("본 모형의 강건 표준오차와 무관하게 일반 분산으로 재추정 (Stata hausman은 강건 분산 미지원; "
+                       "군집 강건 비교는 상관 확률효과(xtreg, cre)의 Mundlak 검정)")
         if self.model_type == "twoway":
             t.add_note("이원 모형: 두 추정에 같은 시점 더미 포함")
         self.add_table(t)
@@ -1274,7 +1486,8 @@ class PanelAnalysis(BaseAnalysis):
         mt = self.model_type
         if fit.cd_result is not None:
             src = {"fixed": "현재 모형의 e_it 잔차 (Stata predict, e)", "twoway": "현재 모형의 e_it 잔차 (Stata predict, e)",
-                   "random": "현재 모형의 e_it 잔차 (Stata predict, e)", "fd": "1차 차분 회귀 잔차",
+                   "random": "현재 모형의 e_it 잔차 (Stata predict, e)", "cre": "현재 모형의 e_it 잔차 (Stata predict, e)",
+                   "fd": "1차 차분 회귀 잔차",
                    "pooled": "현재 모형 잔차 (y − Xb)"}[mt]
             return fit.cd_result, fit.resid_e, (fit.g_rows if mt == "fd" else P.g), (fit.t_rows if mt == "fd" else P.tpos), src
         fe = fit_within(P, X, names)
@@ -1302,7 +1515,7 @@ class PanelAnalysis(BaseAnalysis):
         else:
             fe = fit_within(P, X, names)
             e, note = fe.resid_e, "고정효과 모형 잔차로 계산 (xttest3는 xtreg, fe 후 명령)"
-        note = (note + "; " if note else "") + "자체 구현(라이브러리 없음, xttest3 v1.0.8 공식)"
+        note = (note + "; " if note else "") + "계산 방식: Greene (2000) 수정 Wald, xttest3 v1.0.8 공식 (해당 파이썬 라이브러리 없음)"
         r = modified_wald(e, P.g, P.n)
         t = ResultsTable(name="het", title="집단별 이분산 수정 Wald 검정 (xttest3)")
         t.add_column("chi2", "χ²", col_type="number")
@@ -1319,7 +1532,7 @@ class PanelAnalysis(BaseAnalysis):
     def _narrative(self, P: PanelData, fit: Fit):
         mt = self.model_type
         slope_idx = [i for i, nm in enumerate(fit.names) if nm != "Intercept"]
-        test = fit.wald(slope_idx)
+        test = fit.wald(fit.stats.get("test_idx", slope_idx))
         n_g = self.model_stats.get("Groups", P.n)
         txt = f"{MODEL_LABEL[mt]} 패널 회귀 (개체 {n_g}개, 관측치 {self.model_stats.get('N')}개)"
         if test is not None and test[0] is not None:
@@ -1332,6 +1545,10 @@ class PanelAnalysis(BaseAnalysis):
             txt += f", 집단 내 R² = {fit.stats['r2_w']:.3f}"
         elif "r2" in fit.stats:
             txt += f", R² = {fit.stats['r2']:.3f}"
+        mu = self.get_table("mundlak")
+        if mu is not None and mu.rows:
+            mp = mu.rows[0]["p"]
+            txt += f"; Mundlak χ²({mu.rows[0]['df']}) = {mu.rows[0]['chi2']:.2f}, " + ("p < .001" if mp < 0.001 else f"p = {mp:.3f}")
         h = self.get_table("hausman")
         if h is not None and h.rows:
             hr = h.rows[0]
@@ -1364,6 +1581,8 @@ def _params_to_kwargs(df: pd.DataFrame, p: Dict[str, Any]) -> Dict[str, Any]:
         het_test=_flag(p, "hetTest", "het_test", "xttest3", default=False),
         show_time_effects=_flag(p, "showTimeEffects", "show_time_effects", default=True),
         delta=float(_opt(p, "delta", default=1.0)),
+        hausman_sigma=str(_opt(p, "hausmanSigma", "hausman_sigma", default="none") or "none"),
+        time_test=_flag(p, "timeTest", "time_test", "testparm", default=True),
     )
 
 
@@ -1371,6 +1590,39 @@ def dispatch(t: str, df: pd.DataFrame, params: Dict[str, Any]):
     if t != "panel":
         return None
     return PanelAnalysis(df, **_params_to_kwargs(df, params or {}))
+
+
+def predict_columns(df: pd.DataFrame, stats_map: Dict[str, str], params: Dict[str, Any]) -> pd.DataFrame:
+    """Data step of sess.panel_predict: refit the panel model and add Stata predict statistics as new variables
+    ({statistic: new variable}); rows outside the estimation sample get missing values (Stata predict, e(sample))."""
+    if not stats_map:
+        raise ValueError("예측값 저장: {통계: 새 변수 이름} 지정 필요 (예: {'u': 'u_hat'})")
+    kw = _params_to_kwargs(df, params or {})
+    kw.update(hausman=False, plot_trends=False, bp_test=False, serial_test=False, cd_test=False, het_test=False)
+    res = PanelAnalysis(df, **kw)
+    pred = res.predictions(list(stats_map))
+    out = df.copy()
+    for stat, name in stats_map.items():
+        if not re.fullmatch(r"[^\W\d]\w*", str(name)):
+            raise ValueError(f"예측값 저장: 변수 이름 '{name}' 사용 불가 (문자·숫자·밑줄, 첫 글자는 문자)")
+        out[name] = pred[stat].reindex(df.index)
+    return out
+
+
+def predict_stata_lines(stats_map: Dict[str, str], params: Dict[str, Any]) -> List[str]:
+    p = dict(params or {}, hausman=False, bpTest=False, serialTest=False, cdTest=False, hetTest=False, timeTest=False)
+    lines = stata_code("panel", p) or []
+    if lines:
+        lines[-1] = "quietly " + lines[-1]
+    return lines + [f"predict double {name}, {stat}" for stat, name in stats_map.items()]
+
+
+def predict_r_lines(stats_map: Dict[str, str], params: Dict[str, Any]) -> List[str]:
+    p = dict(params or {}, hausman=False, bpTest=False, serialTest=False, cdTest=False, hetTest=False, timeTest=False)
+    lines = [ln for ln in (r_code("panel", p) or []) if not ln.startswith(("summary(", "lmtest::"))]
+    want = ", ".join(f"{k}→{v}" for k, v in stats_map.items())
+    return lines + [f"# 예측값({want}): fitted(fit)·residuals(fit)·plm::fixef(fit, type = \"dmean\") 등으로 계산 — "
+                    "Stata predict u는 관측치 가중 평균 기준이므로 불균형 패널에서는 정의 확인 필요"]
 
 
 # ----------------------------------------------------------------------------- code export
@@ -1420,8 +1672,12 @@ def stata_code(t: str, p: Dict[str, Any]) -> Optional[List[str]]:
             out.append(f"xtreg {y} {x}, fe{vce}")
         elif mt == "twoway":
             out.append(f"xtreg {y} {x} i.{tm}, fe{vce}")
+            if kw["time_test"]:
+                out.append(f"testparm i.{tm}")
         elif mt == "random":
             out.append(f"xtreg {y} {x}, re{' sa' if kw['re_method'] == 'sa' else ''}{vce} theta")
+        elif mt == "cre":
+            out.append(f"xtreg {y} {x}, cre{' sa' if kw['re_method'] == 'sa' else ''}{vce}   // Stata 19 이상")
         elif mt == "between":
             if ct != "unadjusted":
                 out.append("* xtreg, be는 vce(robust)·vce(cluster) 미지원 — 일반 표준오차로 출력")
@@ -1437,8 +1693,9 @@ def stata_code(t: str, p: Dict[str, Any]) -> Optional[List[str]]:
             out.append(f"xtreg {y} {x}, pa corr({corr}){vce_pa}")
     if kw["hausman"]:
         rhs = x + (f" i.{tm}" if mt == "twoway" else "")
+        hopt = {"more": ", sigmamore", "less": ", sigmaless"}.get(kw["hausman_sigma"], "")
         out += [f"quietly xtreg {y} {rhs}, fe", "estimates store fe", f"quietly xtreg {y} {rhs}, re",
-                "estimates store re", "hausman fe re"]
+                "estimates store re", f"hausman fe re{hopt}"]
     if kw["bp_test"]:
         rhs = x + (f" i.{tm}" if mt == "twoway" else "")
         out += [f"quietly xtreg {y} {rhs}, re", "xttest0"]
@@ -1471,12 +1728,16 @@ def r_code(t: str, p: Dict[str, Any]) -> Optional[List[str]]:
                 f"fit <- geepack::geeglm({f}, id = {e}, data = data, family = gaussian, corstr = {q(corr)})",
                 "summary(fit)  # geepack 기본 표준오차는 강건(sandwich) 분산"]
     else:
-        model = {"fixed": "within", "twoway": "within", "random": "random", "between": "between",
+        model = {"fixed": "within", "twoway": "within", "random": "random", "cre": "random", "between": "between",
                  "fd": "fd", "pooled": "pooling"}[mt]
         extra = ', effect = "twoways"' if mt == "twoway" else ""
-        if mt == "random":
+        fm = f
+        if mt == "cre":
+            fm = f + " + " + " + ".join(f"Between({v})" for v in kw["covs"])
+            out.append("# 상관 확률효과(Mundlak): 패널 평균 Between(x) 추가 — 시불변 변수의 Between()은 제외할 것")
+        if mt in ("random", "cre"):
             extra += ', random.method = "swar"'
-        out.append(f"fit <- plm::plm({f}, data = pdata, model = {q(model)}{extra})")
+        out.append(f"fit <- plm::plm({fm}, data = pdata, model = {q(model)}{extra})")
         if ct == "unadjusted":
             out.append("summary(fit)")
         elif ct == "dk":
@@ -1490,12 +1751,18 @@ def r_code(t: str, p: Dict[str, Any]) -> Optional[List[str]]:
         else:
             out.append("lmtest::coeftest(fit, vcov = plm::vcovHC(fit, method = \"arellano\", type = \"HC1\"))"
                        "  # Stata 소표본 보정과 차이 있을 수 있음")
-        if mt == "random" and kw["re_method"] == "default":
+        if mt == "cre":
+            out.append("lmtest::waldtest(fit, " + ", ".join(f'"Between({v})"' for v in kw["covs"])
+                       + ")  # Mundlak 검정 (강건 분산이면 vcov = 인수 지정)")
+        if mt == "twoway" and kw["time_test"]:
+            out.append(f"plm::pFtest(fit, plm::plm({f}, data = pdata, model = \"within\"))  # 시점 효과 F 검정 (일반 분산 testparm과 같음)")
+        if mt in ("random", "cre") and kw["re_method"] == "default":
             out.append("# 불균형 패널에서 Stata 기본 분산성분(조화평균 T)은 plm swar(= Stata sa)와 다름")
     if kw["hausman"]:
         efx = ', effect = "twoways"' if mt == "twoway" else ""
         out += [f"fe <- plm::plm({f}, data = pdata, model = \"within\"{efx})",
-                f"re <- plm::plm({f}, data = pdata, model = \"random\"{efx})", "plm::phtest(fe, re)"]
+                f"re <- plm::plm({f}, data = pdata, model = \"random\"{efx})", "plm::phtest(fe, re)"
+                + ("  # sigmamore·sigmaless 옵션에 해당하는 인수 없음" if kw["hausman_sigma"] != "none" else "")]
     if kw["bp_test"]:
         out.append(f"plm::plmtest(plm::plm({f}, data = pdata, model = \"pooling\"), type = \"bp\")")
     if kw["serial_test"]:
@@ -1591,9 +1858,9 @@ def transpile(line: str) -> Optional[str]:
             mt = "pa"
         for key in ("fe", "re", "be", "pa", "mle", "cre"):
             if key in opts:
-                if key in ("mle", "cre"):
-                    return _err(f"xtreg, {key} 미지원 — " + s)
-                mt = {"fe": "fixed", "re": "random", "be": "between", "pa": "pa"}[key]
+                if key == "mle":
+                    return _err("xtreg, mle 미지원 (확률효과는 re 옵션: GLS) — " + s)
+                mt = {"fe": "fixed", "re": "random", "be": "between", "pa": "pa", "cre": "cre"}[key]
                 opts.pop(key)
         mt = mt or "random"     # Stata xtreg default = re
         kw = [f"dep={dep!r}", f"covs={covs!r}"]
@@ -1667,9 +1934,29 @@ def transpile(line: str) -> Optional[str]:
     if m:
         return (f"res = sess.run('panel', {_xt_index_args()}, dep={m.group(1)!r}, covs={m.group(2).split()!r}, "
                 f"modelType='fd', serialTest=True, hausman=False)  # [Stata] {s}")
-    if re.match(r"^hausman\s+fe\s+re\b", low):
-        return (f"res = sess.run('panel', **dict({_LAST_PANEL}.options, hausman=True))"
-                f"  # [Stata] {s} → Hausman 검정은 패널 모형 결과에 포함")
+    m = re.match(r"^hausman\s+fe\s+re\b\s*(?:,\s*(.*))?$", low)
+    if m:
+        hopts = set((m.group(1) or "").replace(",", " ").split())
+        sig = "more" if "sigmamore" in hopts else "less" if "sigmaless" in hopts else "none"
+        other = hopts - {"sigmamore", "sigmaless", "constant", "alleqs"}
+        if other:
+            return _err(f"hausman 옵션 미지원: {', '.join(sorted(other))} (sigmamore·sigmaless 지원) — " + s)
+        if sig != "none":
+            return (f"res = sess.run('panel', **dict({_LAST_PANEL}.options, hausman=True, hausmanSigma={sig!r}))"
+                    f"  # [Stata] {s} → Hausman 검정은 선형 패널 모형 결과에 포함")
+        return ("_h = next(a for a in reversed(sess.history) if getattr(a, 'name', '') in ('panel', 'panelNonlinear'))\n"
+                f"res = sess.run(_h.name, **dict(_h.options, hausman=True))"
+                f"  # [Stata] {s} → 직전 패널 모형(xtreg·xtlogit·xtpoisson) 결과에 Hausman 검정 포함")
+    m = re.match(r"^testparm\s+i\.(\w+)\s*$", s, re.IGNORECASE)
+    if m:
+        return (f"res = sess.run('panel', **dict({_LAST_PANEL}.options, timeTest=True))"
+                f"  # [Stata] {s} → 이원 고정효과(xtreg ... i.{m.group(1)}, fe) 결과의 시점 효과 결합검정")
+    m = re.match(r"^predict\s+(?:double\s+|float\s+)?([A-Za-z_]\w*)\s*(?:,\s*(\w+)\s*)?$", s, re.IGNORECASE)
+    if m:
+        stat = (m.group(2) or "xb").lower()
+        if stat not in PREDICT_STATS:
+            return _err(f"predict 옵션 미지원: {stat} (가능: {', '.join(PREDICT_STATS)}) — " + s)
+        return f"sess.predict({m.group(1)!r}, {stat!r})  # [Stata] {s}"
     return None
 
 

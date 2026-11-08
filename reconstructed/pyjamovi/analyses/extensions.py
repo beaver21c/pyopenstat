@@ -22,6 +22,11 @@ from typing import Any, Callable, Dict, List, Optional
 # module names under pyjamovi.analyses, loaded in this order
 EXTENSION_MODULES = (
     "panel_module",
+    "panel_describe",
+    "panel_nonlinear",
+    "panel_fgls",
+    "panel_unitroot",
+    "panel_did",
     "dynamic_panel",
     "iv_models",
     "time_series",

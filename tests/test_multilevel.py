@@ -24,6 +24,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "reconstructed"))
 
 from pyjamovi.analyses import multilevel as ml  # noqa: E402
+from pyjamovi.analyses.multilevel import GLMM_ENGINE, LMM_ENGINE  # noqa: E402
 from pyjamovi.registry import dispatch_analysis  # noqa: E402
 
 SAMPLE = os.path.join(ROOT, "sample_data", "Multilevel_School3L.csv")
@@ -303,9 +304,9 @@ def test_mixed_vs_stata(school, tag):
     ref = STATA[tag]
     data = four_level_data() if tag.startswith("four") else school
     r = run(data, **STATA_SPECS[tag])
-    assert r.engine == ("자체 구현 추정" if tag in OWN_ENGINE else "statsmodels MixedLM")
+    assert r.engine == (LMM_ENGINE if tag in OWN_ENGINE else "statsmodels MixedLM")
     if tag in OWN_ENGINE:
-        assert any("자체 구현 추정" in n for n in r.get_table("info").notes)
+        assert any("lme4 방식 프로파일 우도" in n for n in r.get_table("info").notes)
     fx = {row["name"]: row for row in r.get_table("fixed").rows}
     for name, b, se in ref["fixed"]:
         assert abs(fx[name]["est"] - b) < 5e-6 * max(1.0, abs(b)), (name, fx[name]["est"], b)
@@ -352,7 +353,7 @@ def test_glmm_laplace_vs_stata(school, kw, ll, chi2_c, fixed, var):
     rows = [row for row in r.get_table("random").rows]
     for row, (v, se) in zip(rows, var):
         assert abs(row["est"] / v - 1) < 2e-4 and abs(row["se"] / se - 1) < 2e-3
-    assert r.engine == "자체 구현 추정"
+    assert r.engine == GLMM_ENGINE
 
 
 def test_melogit_laplace_vs_stata(school):

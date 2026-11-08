@@ -26,7 +26,7 @@ from .renderers.html_renderer import render_jamovi_html_report
 DATA_OP_METHODS = (
     "compute", "recode", "filter_rows", "merge", "joinby", "append", "reshape", "collapse", "egen",
     "convert_type", "encode", "decode", "set_value_labels", "set_measure", "standardize",
-    "rename_var", "drop_vars", "set_value", "add_rows", "drop_rows",
+    "rename_var", "drop_vars", "set_value", "add_rows", "drop_rows", "panel_predict",
 )
 MEASURE_LEVELS = ("Continuous", "Ordinal", "Nominal", "ID")
 MERGE_RESULT_LABELS_REF = {1: "master only (1)", 2: "using only (2)", 3: "matched (3)", 4: "missing updated (4)", 5: "nonmissing conflict (5)"}
@@ -840,17 +840,40 @@ class JamoviSession:
         return match_keys(self.df[data_key], gdf[key])
 
     def xtset(self, panel_id: str, time_var: Optional[str] = None):
-        """Declare the panel structure (Stata xtset): default entity/time of panel, dynPanel, panelIV and
+        """Declare the panel structure (Stata xtset): default entity/time of the panel analyses (_PANEL_IDS) and
         idVar/timeVar of spatial panel models."""
         self.panel_spec = {"idVar": panel_id, "timeVar": time_var}
         return None
+
+    def panel_predict(self, stats: Dict[str, str], params: Optional[Dict[str, Any]] = None, **kwargs) -> "JamoviSession":
+        """Stata `predict` after xtreg (fe, i.t fe, re, cre): add xb, u, e, ue, xbu or stdp as new variables.
+
+        ``stats`` maps the statistic to the new variable name, e.g. ``{'u': 'u_hat', 'e': 'e_hat'}``; ``params`` are the
+        options of sess.run('panel', ...). The model is refitted inside this data step, so the step replays on its own."""
+        from .analyses.panel_module import predict_columns
+        self._require_df()
+        p = dict(params or {})
+        p.update(kwargs)
+        self._fill_declared_structure("panel", p)
+        return self._apply_data_op(predict_columns(self.df, dict(stats), p),
+                                   {"op": "panel_predict", "stats": dict(stats), "params": p})
+
+    def predict(self, newvar: str, statistic: str = "xb") -> "JamoviSession":
+        """Stata `predict newvar, statistic` after the last estimation (supported after the panel regression)."""
+        last = self.history[-1] if self.history else None
+        if getattr(last, "name", "") != "panel":
+            raise ValueError("predict: 직전 분석이 패널 회귀(xtreg)일 때 지원 — 직전 분석: "
+                             + (getattr(last, "title", "") or "없음"))
+        opts = {k: v for k, v in last.options.items()}
+        return self.panel_predict({statistic: newvar}, params=opts)
 
     def tsset(self, time_var: str):
         """Declare the time variable (Stata tsset): default time of arima, unitRoot and corrgram."""
         self.ts_spec = {"timeVar": time_var}
         return None
 
-    _PANEL_IDS = ("panel", "dynPanel", "panelIV")
+    _PANEL_IDS = ("panel", "dynPanel", "panelIV", "panelDescribe", "panelNonlinear", "panelGLS", "hausmanTaylor",
+                  "panelUnitRoot", "panelCoint", "panelDiD")
     _TS_IDS = ("arima", "unitRoot", "corrgram")
 
     def _fill_declared_structure(self, analysis_type: str, params: Dict[str, Any]) -> None:

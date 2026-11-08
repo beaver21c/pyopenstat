@@ -22,6 +22,13 @@ Mplus defaults implemented (User's Guide v8 chapters 16-18; Asparouhov & Muthén
     MLM: complete-data ML estimates, expected-information sandwich SE with the ADF Γ and Satorra–Bentler scaled χ²
          (lavaan estimator = "MLM", mimic = "Mplus"; equals Stata `sem …, vce(sbentler)` without observed covariates)
 
+Computation: numpy / scipy (optimization, derivatives) following the Mplus User's Guide (v8, ch. 16-18), Yuan &
+Bentler (2000) and Satorra & Bentler (1994) for MLR / MLM, and Asparouhov & Muthén (2018) for SRMR. Library evaluated:
+semopy 2.3.11 (installed, used for no estimate). It fits Wishart ML (obj='MLW'), FIML with means (ModelMeans,
+obj='ML'), ULS / GLS / WLS / DWLS, Satorra–Bentler chi-square, robust SEs and multiple groups, and reproduces the
+Mplus ex5.1 ML chi-square (3.896). It has no Yuan–Bentler (MLR) scaling with H0/H1 scaling correction factors, which
+is Mplus' robust default, and its WLS / DWLS treat ordinal data as continuous, so the Mplus defaults are computed here.
+
 Categorical (binary / ordinal) observed variables — Mplus CATEGORICAL ARE — are estimated in `sem_wls` with
 WLSMV (default), WLSM, WLS, ULSMV or ULS: `estimate(df, model, categorical=[...])`. Thresholds use `y | t1 + t2`
 (Mplus [y$1]); delta (default) or theta parameterization; observed covariates conditioned on (probit regressions).

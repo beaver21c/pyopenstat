@@ -13,7 +13,7 @@ Computation
 - statsmodels: SARIMAX (likelihood, Kalman filter, OPG / OIM / robust covariance, forecasts), acf, pacf (ols = Stata
   regression PAC, ywm = Yule–Walker), acorr_ljungbox.
 - arch: ADF, PhillipsPerron, KPSS (statistics, MacKinnon p-values, automatic lag selection, KPSS critical values).
-- Own code (Stata conventions): time index (tsset) checks, differencing of y and x and the regression constant
+- Implemented from Stata [TS] Methods and formulas (Stata conventions): time index (tsset) checks, differencing of y and x and the regression constant
   (ARMAX parameterization), level forecasts from the integrated model, /sigma and its delta-method SE, Fuller (1976)
   critical values interpolated in N as Stata reports them, the dfuller drift rule (t distribution), Stata output layout.
 """

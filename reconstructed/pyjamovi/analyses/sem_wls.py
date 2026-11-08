@@ -23,7 +23,8 @@ variances of y* fixed at 1, scale factors derived).
 Library components (checked numerically against lavaan 0.7.2)
     stage-1 probit regressions on x: statsmodels Probit (binary) / OrderedModel(distr="probit") (K ≥ 3)
     thresholds without x: scipy.stats.norm.ppf of cumulative proportions; minimization: scipy.optimize.least_squares
-    own code (no library equivalent found): bivariate normal CDF (Genz BVNU, identical to scipy's
+    implemented from the published methods (no library equivalent found; Genz 2004; Olsson 1979; Olsson, Drasgow &
+    Dorans 1982; Muthén, du Toit & Spisic 1997; Asparouhov & Muthén 2010, 2018): bivariate normal CDF (Genz BVNU, identical to scipy's
     multivariate_normal.cdf to 2e-16 but vectorized for per-case use), polychoric / polyserial two-step ML with fixed
     thresholds (semopy.polycorr fails on SciPy ≥ 1.18 and its polyserial standardizes by the variance), case-wise
     scores and Γ, categorical moment structure, sandwich SE, scaled-shifted / Satorra–Bentler χ², baseline, SRMR,

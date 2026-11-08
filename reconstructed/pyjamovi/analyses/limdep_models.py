@@ -8,14 +8,17 @@ Analysis ids, the Stata command they follow, and what computes them:
                 estat classification, estat gof group(), lroc (sklearn AUC) as glue
 - ordinalReg  : ologit / oprobit — statsmodels OrderedModel, thresholds converted to Stata cut1..cutK-1 (delta
                 method); predicted probabilities and AMEs per outcome as glue; Brant test of parallel lines:
-                K-1 statsmodels Logit fits + Brant (1990) covariance (own glue, no library found)
+                K-1 statsmodels Logit fits + Brant (1990) covariance (formula of Brant 1990; no library found)
 - multinomReg : mlogit — statsmodels MNLogit (base outcome by recoding), get_margeff for AMEs
-- tobitReg    : tobit ll()/ul() — own log likelihood as a statsmodels GenericLikelihoodModel (no maintained
+- tobitReg    : tobit ll()/ul() — censored-normal log likelihood (Tobin 1958; Stata [R] tobit) as a statsmodels
+                GenericLikelihoodModel (no maintained
                 library: py4etrics fails with statsmodels 0.15); t statistics with Stata's e(df_r)
-- truncReg    : truncreg ll()/ul() — own log likelihood, statsmodels GenericLikelihoodModel
-- heckman     : heckman ML — own log likelihood, statsmodels GenericLikelihoodModel; twostep — statsmodels
+- truncReg    : truncreg ll()/ul() — truncated-normal log likelihood (Hausman & Wise 1977; [R] truncreg),
+                statsmodels GenericLikelihoodModel
+- heckman     : heckman ML — selection log likelihood (Heckman 1979; [R] heckman), statsmodels GenericLikelihoodModel; twostep — statsmodels
                 Probit + OLS with the Heckman/Greene corrected covariance (glue), rho truncation as Stata rhosigma
-- heckprobit  : heckprobit — own log likelihood with a vectorised Genz bivariate normal CDF, GenericLikelihoodModel
+- heckprobit  : heckprobit — probit selection log likelihood (Van de Ven & Van Praag 1981; [R] heckprobit) with a
+                vectorised Genz (2004) bivariate normal CDF, GenericLikelihoodModel
 
 Standard errors: observed information (Stata vce(oim)); vce(robust) = statsmodels HC0 sandwich x N/(N-1);
 vce(cluster) = statsmodels cluster sandwich (no correction) x G/(G-1) — Stata's factors for ML estimators.
@@ -292,7 +295,7 @@ def _quiet():
 
 
 class _LLModel(GenericLikelihoodModel):
-    """statsmodels likelihood model with analytic per-observation scores (own log likelihood) and a Hessian from
+    """statsmodels likelihood model with analytic per-observation scores (log likelihood of the cited model) and a Hessian from
     central differences of the analytic score (statsmodels numdiff), steps scaled by the regressors."""
 
     def __init__(self, endog, exog, extra_names, step_scale, **kw):
@@ -544,7 +547,7 @@ def _margins_lib(res, X: np.ndarray, info: List[Dict[str, Any]], groups_f: Dict[
                  scale: Optional[np.ndarray] = None):
     """Marginal effects as Stata margins, dydx(*): continuous regressors from statsmodels get_margeff (delta-method
     SE scaled by the Stata covariance factor c); factor dummies as discrete change from the base level with the
-    other levels of that factor set to 0 (own glue; statsmodels' dummy=True holds the other dummies at their
+    other levels of that factor set to 0 (Stata margins convention; statsmodels' dummy=True holds the other dummies at their
     observed values, which differs from Stata for factors with 3+ levels). Returns (values, ses), terms x outcomes."""
     w = _quiet()
     try:

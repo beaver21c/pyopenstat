@@ -11,12 +11,12 @@ Computation
   Hessian, variance-component SEs from the numerical Hessian of statsmodels' (restricted) log likelihood in the
   log-SD / atanh-correlation / log-σ_e metric with β profiled out (Stata mixed, Methods and formulas), confidence
   intervals on that scale, LR test against linear regression, estat icc, BLUP tables, Stata/R code.
-- Own implementation (no library found; searched statsmodels MixedLM / BinomialBayesMixedGLM / PoissonBayesMixedGLM,
+- Implemented from the published methods (no library found; searched statsmodels MixedLM / BinomialBayesMixedGLM / PoissonBayesMixedGLM,
   pymer4 (needs R), bambi (Bayesian)): (a) linear models with an identity or exchangeable structure at the top level
   or a correlated (unstructured / exchangeable / identity) structure at a nested level — profiled ML/REML deviance in
   the lme4 formulation (Bates, Mächler, Bolker & Walker 2015) with a tree-structured Cholesky elimination;
   (b) generalized models (Bernoulli-logit, Poisson-log) by the Laplace approximation (Stata intmethod(laplace),
-  lme4 glmer nAGQ = 1). Both are labelled "자체 구현 추정" in the output and were checked against Stata 19.5 and lme4.
+  lme4 glmer nAGQ = 1). The output names the method and its source and were checked against Stata 19.5 and lme4.
 """
 
 from __future__ import annotations
@@ -31,6 +31,8 @@ from scipy import optimize, stats
 
 from .base import BaseAnalysis, ResultsTable, resolve_choice
 
+LMM_ENGINE = "lme4 방식 프로파일 우도 (Bates 외 2015)"
+GLMM_ENGINE = "라플라스 근사 (Stata intmethod(laplace)·lme4 nAGQ = 1 방식)"
 COV_STRUCTS = ("independent", "unstructured", "identity", "exchangeable")
 _COV_ALIASES = {"ind": "independent", "indep": "independent", "diag": "independent", "diagonal": "independent",
                 "un": "unstructured", "uns": "unstructured", "unstr": "unstructured", "full": "unstructured",
@@ -1452,7 +1454,7 @@ class MultilevelLinearModel(BaseAnalysis):
                 ll_own = -0.5 * of["deviance"]
                 if ll_own > smf_.ll + 1e-6:
                     use_sm = False
-                    engine_note = ("statsmodels MixedLM 최적화가 수렴하지 않아 자체 구현 추정(프로파일 우도, lme4 방식)으로 대체 "
+                    engine_note = ("statsmodels MixedLM 최적화가 수렴하지 않아 lme4 방식 프로파일 우도 추정(Bates 외 2015)으로 대체 "
                                    f"(로그우도 {smf_.ll:.4f} → {ll_own:.4f})")
                 elif of["converged"]:
                     sm_checked = ll_own - smf_.ll
@@ -1465,15 +1467,15 @@ class MultilevelLinearModel(BaseAnalysis):
             conv_ok = smf_.converged or sm_checked is not None
             conv_txt = f"statsmodels MixedLM ({smf_.method}, gtol 1e-8)"
             if sm_checked is not None:
-                engine_note = ("statsmodels가 수렴 신호를 내지 않음(경계 근처 해) — 자체 구현 추정의 최적값과 로그우도 일치 확인 "
+                engine_note = ("statsmodels가 수렴 신호를 내지 않음(경계 근처 해) — lme4 방식 프로파일 우도 추정의 최적값과 로그우도 일치 확인 "
                                f"(차이 {sm_checked:+.1e})")
             blup_fn = smf_.blups
             fitted_fn = smf_.fitted
         else:
-            engine = "자체 구현 추정"
+            engine = LMM_ENGINE
             if engine_note is None:
                 engine_note = ("이 확률효과 구조(상위 수준 동일·교환 구조 또는 하위 수준 비구조·동일·교환 구조)는 "
-                               "statsmodels MixedLM이 지원하지 않아 자체 구현 추정(프로파일 우도, lme4 방식; Stata·lme4와 대조 검증)으로 계산")
+                               "statsmodels MixedLM이 지원하지 않아 lme4 방식 프로파일 우도(Bates, Mächler, Bolker & Walker 2015 정식화; Stata·lme4와 대조 검증)로 계산")
                 own = _LMM(y, X, levs)
                 of = own.fit(reml, max_iter=self.max_iter)
             theta = of["theta"]
@@ -1487,7 +1489,7 @@ class MultilevelLinearModel(BaseAnalysis):
             phi, _, covs_abs = own.phi_hat(theta, reml)
             fneg = lambda x: -own.loglik_phi(x, reml)
             conv_ok = of["converged"]
-            conv_txt = f"자체 구현 (최대 경사 {of['gnorm']:.1e}, 함수 평가 {of['nfev']}회)"
+            conv_txt = f"lme4 방식 프로파일 우도 (최대 경사 {of['gnorm']:.1e}, 함수 평가 {of['nfev']}회)"
             blup_fn = lambda: own.blups(lams, beta, s2, cond_var=True)
 
             def fitted_fn():
@@ -1774,7 +1776,7 @@ class MultilevelLinearModel(BaseAnalysis):
         info.add_column("val", "값", col_type="text")
         info.add_row({"info": "분포 · 연결함수", "val": fam_lbl})
         info.add_row({"info": "적분 근사", "val": "라플라스 근사 (Stata intmethod(laplace), lme4 glmer nAGQ = 1)"})
-        info.add_row({"info": "계산", "val": "자체 구현 추정"})
+        info.add_row({"info": "계산", "val": GLMM_ENGINE})
         info.add_row({"info": "종속변수", "val": self.dep})
         info.add_row({"info": "관측치 수 (Number of obs)", "val": f"{n:,}"})
         info.add_row({"info": "수준 구조 (상위 → 하위)", "val": " > ".join(self.levels) + " > 관측치"})
@@ -1802,8 +1804,9 @@ class MultilevelLinearModel(BaseAnalysis):
             info.add_note(t)
         for t in derived:
             info.add_note(f"생성 변수: {t}")
-        info.add_note("자체 구현 추정: 최대우도 다층 GLM을 제공하는 파이썬 라이브러리가 없어(statsmodels의 혼합 GLM은 베이즈 "
-                      "변분·사후최빈 추정) 라플라스 근사 우도를 직접 계산 — Stata melogit, intmethod(laplace)와 로그우도·추정치 대조 검증")
+        info.add_note("계산 방식: 최대우도 다층 GLM을 제공하는 파이썬 라이브러리가 없어(statsmodels의 혼합 GLM은 베이즈 "
+                      "변분·사후최빈 추정) 라플라스 근사 우도를 Stata [ME] Methods and formulas·lme4 glmer(nAGQ = 1) 방식대로 계산 — "
+                      "Stata melogit, intmethod(laplace)와 로그우도·추정치 대조 검증")
         info.add_note("Stata melogit·mepoisson의 기본 적분법은 평균·분산 적응형 가우스-에르미트 7점(mvaghermite) — "
                       "라플라스 근사와 소수 셋째 자리 안팎의 차이 가능, 같은 조건 비교는 Stata intmethod(laplace)")
         if not fit["converged"]:
@@ -1917,7 +1920,7 @@ class MultilevelLinearModel(BaseAnalysis):
         if self.want["residPlot"]:
             self.get_table("info").add_note("잔차 진단 그림은 선형 혼합모형에서만 제공")
 
-        self.engine = "자체 구현 추정"
+        self.engine = GLMM_ENGINE
         self._fit["engine"] = self.engine
         self.model_stats = {"N": int(n), "Groups": int(levs[-1].G), "LL": float(ll), "AIC": float(aic), "BIC": float(bic)}
         if wald:
