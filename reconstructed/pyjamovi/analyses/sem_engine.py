@@ -19,6 +19,12 @@ Mplus defaults implemented (User's Guide v8 chapters 16-18; Asparouhov & Muthén
     multiple groups: loadings and indicator intercepts equal across groups (scalar), factor means free beyond group 1
     MLR: sandwich standard errors and Yuan–Bentler scaled chi-square with H0/H1 scaling correction factors
     fit: χ², RMSEA (N, √G), CFI/TLI against the Mplus baseline model, SRMR with means, AIC, BIC, SABIC
+    MLM: complete-data ML estimates, expected-information sandwich SE with the ADF Γ and Satorra–Bentler scaled χ²
+         (lavaan estimator = "MLM", mimic = "Mplus"; equals Stata `sem …, vce(sbentler)` without observed covariates)
+
+Categorical (binary / ordinal) observed variables — Mplus CATEGORICAL ARE — are estimated in `sem_wls` with
+WLSMV (default), WLSM, WLS, ULSMV or ULS: `estimate(df, model, categorical=[...])`. Thresholds use `y | t1 + t2`
+(Mplus [y$1]); delta (default) or theta parameterization; observed covariates conditioned on (probit regressions).
 """
 from __future__ import annotations
 
@@ -39,6 +45,8 @@ SECTION_LABELS = {
     "~~cov": "공분산",
     "~1": "절편·평균",
     "~~var": "분산·잔차분산",
+    "|": "문턱값",
+    "~*~": "척도요인",
 }
 INVARIANCE_LABELS = {
     "configural": "형태 동일성(제약 없음)",
@@ -131,28 +139,57 @@ def _parse_term(raw: str) -> Term:
     return Term(name, [_parse_mod_token(mod)])
 
 
-def _logical_lines(text: str) -> List[str]:
-    lines = []
-    for raw in str(text or "").replace(";", "\n").splitlines():
-        line = re.split(r"[#!]", raw, maxsplit=1)[0].strip()
-        if not line:
-            continue
-        if lines and (line.startswith("+") or re.search(r"(=~|~~|~|\+|\*|:=|==)\s*$", lines[-1])):
-            lines[-1] = lines[-1] + " " + line
+def _strip_comment(raw: str) -> str:
+    """Text before the first # or ! that is not inside a backtick-quoted name."""
+    out, quote = [], False
+    for ch in raw:
+        if ch == "`":
+            quote = not quote
+        elif not quote and ch in "#!":
+            break
+        out.append(ch)
+    return "".join(out)
+
+
+def _split_statements(line: str) -> List[str]:
+    """Split on ; outside backtick-quoted names."""
+    parts, cur, quote = [], [], False
+    for ch in line:
+        if ch == "`":
+            quote = not quote
+        if ch == ";" and not quote:
+            parts.append("".join(cur))
+            cur = []
         else:
-            lines.append(line)
+            cur.append(ch)
+    parts.append("".join(cur))
+    return parts
+
+
+def _logical_lines(text: str) -> List[str]:
+    # comments are removed line by line first, so a ; inside a comment is not a statement separator
+    lines = []
+    for raw in str(text or "").splitlines():
+        for piece in _split_statements(_strip_comment(raw)):
+            line = piece.strip()
+            if not line:
+                continue
+            if lines and (line.startswith("+") or re.search(r"(=~|~~|~|\||\+|\*|:=|==)\s*$", lines[-1])):
+                lines[-1] = lines[-1] + " " + line
+            else:
+                lines.append(line)
     return lines
 
 
 def parse_model(text: str) -> List[Statement]:
     stmts: List[Statement] = []
     for line in _logical_lines(text):
-        for op in (":=", "==", "=~", "~~", "~"):
+        for op in (":=", "==", "=~", "~*~", "~~", "~", "|"):
             if op in line:
                 lhs, rhs = line.split(op, 1)
                 break
         else:
-            raise SEMError(f"연산자(=~, ~, ~~, :=, ==) 없는 줄: '{line}'")
+            raise SEMError(f"연산자(=~, ~, ~~, |, ~*~, :=, ==) 없는 줄: '{line}'")
         lhs, rhs = lhs.strip(), rhs.strip()
         if not lhs or not rhs:
             raise SEMError(f"좌변 또는 우변 누락: '{line}'")
@@ -253,15 +290,25 @@ class ModelSpec:
     """Variables, roles and the parameter table of a (multiple-group) model."""
 
     def __init__(self, statements: List[Statement], columns: Sequence[str], n_groups: int = 1,
-                 invariance: str = "scalar"):
+                 invariance: str = "scalar", categorical: Optional[Dict[str, int]] = None,
+                 parameterization: str = "delta", conditional_x: bool = True):
         self.statements = statements
         self.G = int(n_groups)
         self.invariance = invariance
+        # categorical (binary / ordinal) observed variables: name -> number of categories (WLS estimators only)
+        self.categorical: Dict[str, int] = dict(categorical or {})
+        self.parameterization = parameterization
         cols = [str(c) for c in columns]
         meas = [s for s in statements if s.op == "=~"]
         regs = [s for s in statements if s.op == "~"]
         covs = [s for s in statements if s.op == "~~"]
         ints = [s for s in statements if s.op == "~1"]
+        thrs = [s for s in statements if s.op == "|"]
+        scls = [s for s in statements if s.op == "~*~"]
+        if thrs and not self.categorical:
+            raise SEMError("문턱값(|) 지정은 범주형 변수(categorical)에만 사용")
+        if scls and not self.categorical:
+            raise SEMError("척도요인(~*~, Mplus {y}) 지정은 범주형 변수(categorical)에만 사용")
         self.defined = [(s.lhs.strip(), s.expr) for s in statements if s.op == ":="]
         self.constraints = [(s.lhs.strip(), s.expr.strip()) for s in statements if s.op == "=="]
 
@@ -289,8 +336,41 @@ class ModelSpec:
         dependents = set(self.dep_reg) | self.indicators
         mentioned = {s.lhs for s in covs + ints} | {t.name for s in covs for t in s.terms}
         x_cand = [n for n in observed if n in self.predictors and n not in dependents]
-        self.x_joint = any(x in mentioned for x in x_cand)
+        self.x_joint = any(x in mentioned for x in x_cand) or (bool(self.categorical) and not conditional_x
+                                                               and bool(x_cand))
         self.ox = [] if self.x_joint else x_cand          # conditioned covariates (Mplus x)
+        if self.categorical:
+            unknown = [v for v in self.categorical if v not in observed]
+            if unknown:
+                raise SEMError(f"범주형 변수가 모형식에 없음: {', '.join(unknown)}")
+            exo_cat = [v for v in self.categorical if v not in dependents]
+            if exo_cat:
+                raise SEMError(f"범주형 변수는 종속변수(요인 지표 또는 회귀의 결과변수)로만 사용: {', '.join(exo_cat)} — "
+                               "이분형 공변량은 범주형 지정 없이 0/1 숫자 변수로 투입(Mplus 규칙)")
+            for s in thrs:
+                if s.lhs not in self.categorical:
+                    raise SEMError(f"문턱값(|) 지정 변수가 범주형 변수 목록에 없음: {s.lhs}")
+                for t in s.terms:
+                    m = re.match(r"^t(\d+)$", t.name)
+                    if not m or not 1 <= int(m.group(1)) < self.categorical[s.lhs]:
+                        raise SEMError(f"문턱값 이름 오류: {s.lhs} | {t.name} (t1 … t{self.categorical[s.lhs] - 1} 사용)")
+            for s in covs:
+                for t in s.terms:
+                    if t.name == s.lhs and s.lhs in self.categorical and parameterization != "theta":
+                        raise SEMError(f"범주형 변수 {s.lhs}의 잔차분산은 delta 모수화에서 모수가 아님 "
+                                       f"(Var(y*) = 1/척도요인²에서 계산) — 척도요인 '{s.lhs} ~*~ {s.lhs}'(Mplus "
+                                       f"{{{s.lhs}}}) 지정 또는 theta 모수화에서 '{s.lhs} ~~ {s.lhs}' 사용")
+            for s in scls:
+                for t in s.terms:
+                    if s.lhs not in self.categorical or t.name != s.lhs:
+                        raise SEMError(f"척도요인은 같은 범주형 변수에만 지정: '{s.lhs} ~*~ {s.lhs}' 형식 "
+                                       f"(입력: {s.lhs} ~*~ {t.name})")
+                    if parameterization == "theta":
+                        raise SEMError(f"theta 모수화에서는 척도요인 대신 잠재반응 잔차분산 '{s.lhs} ~~ {s.lhs}' 지정 "
+                                       "(Mplus 규칙)")
+            for s in ints:
+                if s.lhs in self.categorical:
+                    raise SEMError(f"범주형 변수 {s.lhs}의 절편은 지정 불가 (문턱값 '{s.lhs} | t1' 사용)")
         self.x_names = list(x_cand)                        # observed exogenous predictors (STDY rule)
         self.ov = [n for n in observed if n not in self.ox]
         self.obs = self.ov + self.ox
@@ -362,10 +442,31 @@ class ModelSpec:
                     raise SEMError("조건부 공변량의 평균 지정")
                 put(g, s.lhs, "~1", "", "M", self.idx[s.lhs], self.idx[s.lhs], _mod_for(s.terms[0], g, self.G),
                     True, 0.0, "intercept" if s.lhs not in self.latent else "mean", True)
+            for s in thrs:
+                for t in s.terms:
+                    k = int(t.name[1:])
+                    put(g, s.lhs, "|", t.name, "T", self.idx[s.lhs], k - 1, _mod_for(t, g, self.G), True, 0.0,
+                        "threshold", True)
+            for s in scls:
+                for t in s.terms:
+                    k = self.idx[s.lhs]
+                    put(g, s.lhs, "~*~", s.lhs, "D", k, k, _mod_for(t, g, self.G), True, 1.0, "scale", True)
             # Mplus defaults
             for v in self.ov + self.latent:
                 k = self.idx[v]
+                if v in self.categorical:
+                    # residual variance of y*: delta -> computed from Var(y*) = 1 (value filled by the WLS model),
+                    # theta -> fixed at 1
+                    put(g, v, "~~", v, "S", k, k, ("fixed", 1.0 if parameterization == "theta" else 0.0), False, 0.0,
+                        "cat_resvar", False)
+                    continue
                 put(g, v, "~~", v, "S", k, k, None, True, 0.0, "variance", False)
+            for v, ncat in self.categorical.items():
+                for k in range(1, ncat):
+                    put(g, v, "|", f"t{k}", "T", self.idx[v], k - 1, None, True, 0.0, "threshold", False)
+                if parameterization != "theta":
+                    # scale factor 1/SD(y*) (Mplus delta parameterization): fixed at 1 unless freed by 'v ~*~ v'
+                    put(g, v, "~*~", v, "D", self.idx[v], self.idx[v], ("fixed", 1.0), False, 1.0, "scale", False)
             for a_i, a in enumerate(self.exo_latent):
                 for b in self.exo_latent[a_i + 1:]:
                     put(g, a, "~~", b, "S", self.idx[a], self.idx[b], None, True, 0.0, "covariance", False)
@@ -376,6 +477,9 @@ class ModelSpec:
                 for b in self.final_dep[a_i + 1:]:
                     put(g, a, "~~", b, "S", self.idx[a], self.idx[b], None, True, 0.0, "covariance", False)
             for v in self.ov:
+                if v in self.categorical:
+                    put(g, v, "~1", "", "M", self.idx[v], self.idx[v], ("fixed", 0.0), False, 0.0, "intercept", False)
+                    continue
                 put(g, v, "~1", "", "M", self.idx[v], self.idx[v], None, True, 0.0, "intercept", False)
             if self.G > 1 and invariance in ("scalar", "strict") and g > 0:
                 for f in self.latent:
@@ -394,7 +498,9 @@ class ModelSpec:
                 elif invariance == "strict" and r.op == "~~" and r.lhs == r.rhs and r.lhs in self.indicators \
                         and r.lhs not in self.latent:
                     r.label = f".E.{r.lhs}"
-        self.rows: List[ParRow] = sorted(rows.values(), key=lambda r: (r.group, ["=~", "~", "~~", "~1"].index(r.op)))
+        self.rows: List[ParRow] = sorted(rows.values(),
+                                         key=lambda r: (r.group, ["=~", "~", "~~", "~1", "|", "~*~"].index(r.op),
+                                                        r.i if r.op == "~*~" else 0))
         self._apply_constraints()
         self._assign_ids()
 
@@ -664,7 +770,7 @@ class RAMModel:
                     A[r.i, r.j] = r.value
                 elif r.mat == "S":
                     S[r.i, r.j] = S[r.j, r.i] = r.value
-                else:
+                elif r.mat == "M":
                     M[r.i] = r.value
             if spec.qx:
                 xs = slice(spec.py, spec.p)
@@ -683,7 +789,7 @@ class RAMModel:
                 A[i, j] = v
             elif mat == "S":
                 S[i, j] = S[j, i] = v
-            else:
+            elif mat == "M":
                 M[i] = v
         return A, S, M
 
@@ -715,7 +821,7 @@ class RAMModel:
                         else:
                             D = np.outer(u, B[:p, j])
                             JS[:, :, pid] += D + D.T
-                    else:
+                    elif mat == "M":
                         Jmu[:, pid] += B[:p, i]
             out.append((mu, Sig, Jmu, JS))
         return out
@@ -856,7 +962,8 @@ class SEMModel:
         spec = self.spec
         bad = [c for c in spec.obs if not pd.api.types.is_numeric_dtype(df[c])]
         if bad:
-            raise SEMError(f"숫자형이 아닌 변수: {', '.join(bad)} — 범주형 지표(WLSMV)는 지원하지 않음. 숫자 부호화 후 연속형으로 분석")
+            raise SEMError(f"숫자형이 아닌 변수: {', '.join(bad)} — 이분·순서형 변수이면 categorical=[...]로 지정(WLSMV 추정), "
+                           "연속형이면 숫자로 변환")
         n_raw = len(df)
         self.n_input = n_raw
         if missing == "listwise":
@@ -977,24 +1084,28 @@ class SEMModel:
 
     def fit(self, start: Optional[np.ndarray] = None, polish: bool = True, max_iter: int = 2000) -> FitResult:
         th0 = self.start_values() if start is None else np.asarray(start, float).copy()
-        best = None
+        best, best_scale = None, None
         for attempt in range(3):
             if attempt == 1:
                 th0 = self.start_values() * 0.9 + 0.05
             elif attempt == 2:
                 th0 = self._alt_start()
+            # diagonal preconditioning by the expected information at the start values, so that BFGS (and its gtol)
+            # does not depend on the measurement scale of the variables (e.g. income with variance 1e7)
+            sc = self._param_scale(th0)
+            fun = lambda x, sc=sc: (lambda fg: (fg[0], fg[1] * sc))(self._negll(x * sc))
             try:
-                res = optimize.minimize(self._negll, th0, jac=True, method="BFGS",
+                res = optimize.minimize(fun, th0 / sc, jac=True, method="BFGS",
                                         options={"gtol": 1e-9, "maxiter": max_iter})
             except Exception:  # pragma: no cover
                 continue
             if best is None or res.fun < best.fun:
-                best = res
+                best, best_scale = res, sc
             if res.fun < 1e9 and np.max(np.abs(res.jac)) < 1e-5:
                 break
         if best is None or best.fun >= 1e9:
             raise SEMError("추정 실패: 모형 내재 공분산행렬이 양정치가 되지 않음 (모형 식별·시작값 확인)")
-        theta = best.x
+        theta = best.x * best_scale
         converged = bool(np.max(np.abs(best.jac)) < 1e-5)
         self.last_hessian = None
         if polish:
@@ -1015,10 +1126,20 @@ class SEMModel:
                     theta = cand
                 else:
                     break
-            converged = converged or np.max(np.abs(self.grad_ll(theta))) / self.N < 1e-6
+            converged = converged or np.max(np.abs(self.grad_ll(theta) * best_scale)) / self.N < 1e-6
         ll = loglik(self.ram.moments(theta, jac=False), self.data)[0]
         return FitResult(self.spec, self.ram, self.data, theta, ll, self.ll_x(), converged, int(best.nit),
                          str(best.message))
+
+    def _param_scale(self, theta: np.ndarray) -> np.ndarray:
+        """1/√(per-case expected information) of each parameter at theta (1 where unavailable)."""
+        try:
+            I = expected_info(self.ram.moments(theta), self.data)
+            d = np.diag(I) / self.N
+            sc = np.where(np.isfinite(d) & (d > 0), 1.0 / np.sqrt(np.where(d > 0, d, 1.0)), 1.0)
+            return np.clip(sc, 1e-6, 1e6)
+        except (np.linalg.LinAlgError, linalg.LinAlgError, ValueError, FloatingPointError):
+            return np.ones(len(theta))
 
     def _alt_start(self):
         th = self.start_values()
@@ -1156,9 +1277,63 @@ def srmr(sem: SEMModel, theta: np.ndarray, h1: Dict[str, Any]) -> float:
     return float(sum(v * n / N for v, n in vals))
 
 
-def estimate(df: pd.DataFrame, model: str, group: Optional[str] = None, estimator: str = "ml",
-             missing: str = "fiml", invariance: str = "scalar", information: str = "observed",
-             bootstrap: int = 0, seed: int = 20260, group_order: Optional[Sequence[Any]] = None) -> SEMResult:
+def identification_check(Info: np.ndarray, tol: float = 1e-8) -> Tuple[bool, int]:
+    """Scale-invariant rank check of an information matrix: eigenvalues of D^(-1/2) I D^(-1/2), D = diag(I), so that
+    variables on very different scales (e.g. age with variance 100 next to a slope variance of 0.04) do not make an
+    identified model look singular. Returns (identified, index of the parameter loading most on the null direction)."""
+    try:
+        if not np.all(np.isfinite(Info)):
+            return False, 0
+        dg = np.diag(Info).copy()
+        if np.any(dg <= 0):
+            return False, int(np.argmin(dg))
+        s_ = 1.0 / np.sqrt(dg)
+        w, U = np.linalg.eigh(Info * np.outer(s_, s_))
+        if w[0] <= tol * max(w[-1], 1.0):
+            return False, int(np.argmax(np.abs(U[:, 0])))
+        return True, -1
+    except np.linalg.LinAlgError:
+        return False, 0
+
+
+ML_ESTIMATORS = ("ml", "mlr", "mlm")
+WLS_ESTIMATORS = ("wlsmv", "wlsm", "wls", "ulsmv", "uls")
+ESTIMATOR_ALIASES = {"dwls": "wlsmv", "robust": "mlr", "ml_robust": "mlr", "satorra": "mlm", "sb": "mlm"}
+
+
+def estimate(df: pd.DataFrame, model: str, group: Optional[str] = None, estimator: Optional[str] = None,
+             missing: Optional[str] = None, invariance: str = "scalar", information: str = "observed",
+             bootstrap: int = 0, seed: int = 20260, group_order: Optional[Sequence[Any]] = None,
+             categorical: Optional[Sequence[str]] = None, parameterization: str = "delta",
+             conditional_x: bool = True, mimic: str = "mplus") -> SEMResult:
+    """Fit a SEM. Continuous data: ML / MLR (FIML) / MLM (listwise). Categorical variables (Mplus CATEGORICAL):
+    WLSMV (default) / WLSM / WLS / ULSMV / ULS with delta or theta parameterization (see sem_wls)."""
+    est = str(estimator or ("wlsmv" if categorical else "ml")).strip().lower()
+    est = ESTIMATOR_ALIASES.get(est, est)
+    if est not in ML_ESTIMATORS + WLS_ESTIMATORS:
+        raise SEMError(f"추정법: 알 수 없는 값 '{estimator}' (가능: {', '.join(ML_ESTIMATORS + WLS_ESTIMATORS)})")
+    cat = [str(c) for c in (categorical or [])]
+    if cat or est in WLS_ESTIMATORS:
+        if not cat:
+            raise SEMError(f"{est.upper()} 추정은 범주형 변수(categorical) 지정 모형에서 사용 — 연속형 변수만인 모형은 "
+                           "ML·MLR·MLM 사용")
+        if est in ML_ESTIMATORS:
+            raise SEMError(f"범주형 변수와 {est.upper()} 추정(수치 적분, 로짓·프로빗 링크)은 지원하지 않음 — "
+                           "estimator='wlsmv'(Mplus 범주형 변수 기본 추정법) 사용")
+        if bootstrap:
+            raise SEMError("붓스트랩은 ML 추정에서만 사용 (WLS 계열은 샌드위치 표준오차)")
+        from . import sem_wls
+        return sem_wls.estimate_wls(df, model, estimator=est, categorical=cat, parameterization=parameterization,
+                                    conditional_x=conditional_x, missing=missing or "listwise", group=group,
+                                    mimic=mimic)
+    if est == "mlm":
+        if missing not in (None, "listwise"):
+            raise SEMError("MLM은 완전 자료 전용(목록별 삭제, Mplus 규칙) — 결측 자료의 로버스트 추정은 MLR(FIML) 사용")
+        if bootstrap:
+            raise SEMError("붓스트랩은 ML 추정에서만 사용 (MLM 추정치는 ML과 같으므로 estimator='ml'로 지정)")
+        missing, information = "listwise", "expected"
+    missing = missing or "fiml"
+    estimator = est
     sem = SEMModel(df, model, group=group, estimator=estimator, missing=missing, invariance=invariance,
                    information=information, group_order=group_order)
     fit = sem.fit()
@@ -1176,17 +1351,9 @@ def estimate(df: pd.DataFrame, model: str, group: Optional[str] = None, estimato
             Info = -lh[1]
         else:
             Info = -numeric_hessian(sem.grad_ll, theta)
-    identified = True
-    try:
-        ev = np.linalg.eigvalsh(Info)
-        if ev.min() <= 1e-8 * max(ev.max(), 1.0):
-            identified = False
-    except np.linalg.LinAlgError:
-        identified = False
+    identified, worst = identification_check(Info)
     if not identified:
         V = np.full((q, q), np.nan)
-        w, U = np.linalg.eigh(Info)
-        worst = int(np.argmax(np.abs(U[:, 0])))
         bad = [r for r in sem.spec.rows if r.pid == worst]
         nm = f"{bad[0].lhs} {bad[0].op} {bad[0].rhs}".strip() if bad else str(worst)
         notes.append(f"모형 식별 문제: 정보행렬이 비정칙 — 표준오차 계산 불가 (관련 모수: {nm})")
@@ -1204,12 +1371,154 @@ def estimate(df: pd.DataFrame, model: str, group: Optional[str] = None, estimato
         if boot.shape[0] >= 2:
             V = np.cov(boot.T, ddof=1) if q > 1 else np.atleast_2d(np.var(boot[:, 0], ddof=1))
             notes.append(f"붓스트랩 표준오차: 유효 표본 {boot.shape[0]}/{bootstrap}회 (사례 재표집, 집단별)")
-    se = np.sqrt(np.clip(np.diag(V), 0, None))
     fs = fit_statistics(sem, fit, Info if identified else None)
+    if estimator == "mlm" and identified:
+        mlm = mlm_statistics(sem, theta, mimic=mimic)
+        V = mlm["V"]
+        _apply_mlm_tests(fs, mlm, sem)
+    if mimic == "mplus" and np.isfinite(fs.get("tli", float("nan"))):
+        fs["tli"] = min(fs["tli"], 1.0)        # Mplus prints TLI truncated at 1 (User's Guide example outputs)
+    se = np.sqrt(np.clip(np.diag(V), 0, None))
     for r in sem.spec.rows:
         if r.op == "~~" and r.lhs == r.rhs and r.free and theta[r.pid] < 0:
             notes.append(f"음의 (잔차)분산 추정: {r.lhs} = {theta[r.pid]:.3f} (부적절 해, 모형 수정 검토)")
     return SEMResult(sem, fit, V, se, fs, notes, boot, identified)
+
+
+# ================================================================== MLM (Satorra–Bentler, Mplus ESTIMATOR = MLM)
+def _vech_pairs(p: int) -> List[Tuple[int, int]]:
+    return [(i, j) for j in range(p) for i in range(j, p)]
+
+
+def _nt_weight(Sig: np.ndarray, x_idx: Sequence[int]) -> np.ndarray:
+    """Normal-theory weight per case for (mu, vech Sigma): blockdiag(Σ⁻¹, ½ D'(Σ⁻¹⊗Σ⁻¹)D), x part zeroed."""
+    p = Sig.shape[0]
+    Si = np.linalg.inv(Sig)
+    pairs = _vech_pairs(p)
+    D = np.zeros((p * p, len(pairs)))
+    for k, (i, j) in enumerate(pairs):
+        D[i + j * p, k] = 1.0
+        D[j + i * p, k] = 1.0
+    W22 = 0.5 * D.T @ np.kron(Si, Si) @ D
+    W = np.zeros((p + len(pairs), p + len(pairs)))
+    W[:p, :p] = Si
+    W[p:, p:] = W22
+    if len(x_idx):
+        xs = set(int(x) for x in x_idx)
+        zero = [k for k in range(p) if k in xs] + [p + k for k, (i, j) in enumerate(pairs) if i in xs and j in xs]
+        W[zero, :] = 0.0
+        W[:, zero] = 0.0
+    return W
+
+
+def _adf_gamma(X: np.ndarray, x_idx: Sequence[int]) -> np.ndarray:
+    """ADF Γ of (mean, vech cov) with N divisor (lavaan lav_samp_gamma, fixed.x branch when x present)."""
+    n, p = X.shape
+    pairs = _vech_pairs(p)
+    i1 = np.array([i for i, _ in pairs])
+    i2 = np.array([j for _, j in pairs])
+    Yc = X - X.mean(0)
+    if len(x_idx):
+        xi = np.asarray(x_idx, int)
+        yi = np.array([k for k in range(p) if k not in set(xi.tolist())], int)
+        Xm = np.column_stack([np.ones(n), X[:, xi]])
+        coef, *_ = np.linalg.lstsq(Xm, X[:, yi], rcond=None)
+        Yh = X.copy()
+        Yh[:, yi] = Xm @ coef
+        Yhc = Yh - Yh.mean(0)
+        Z = np.column_stack([X - Yh, Yc[:, i1] * Yc[:, i2] - Yhc[:, i1] * Yhc[:, i2]])
+    else:
+        Z = np.column_stack([X, Yc[:, i1] * Yc[:, i2]])
+    Zc = Z - Z.mean(0)
+    return Zc.T @ Zc / n
+
+
+def mlm_statistics(sem: SEMModel, theta: np.ndarray, mimic: str = "mplus") -> Dict[str, Any]:
+    """Robust (expected-information sandwich) covariance and Satorra–Bentler traces for model and baseline.
+
+    mimic = "mplus": weight from the sample covariance (h1 information) and Γ₁₁ × (N−1)/N with meat × N/(N−1)
+    (lavaan mimic = "Mplus"); mimic = "lavaan": weight from the model-implied covariance."""
+    spec = sem.spec
+    mom = sem.ram.moments(theta)
+    p = spec.p
+    pairs = _vech_pairs(p)
+    x_idx = list(range(spec.py, spec.p))
+    Ntot = sem.N
+    q = spec.q
+    Einfo = np.zeros((q, q))
+    meat = np.zeros((q, q))
+    blocks = []
+    for g, ((mu, Sig, Jmu, JS), gd) in enumerate(zip(mom, sem.data)):
+        X = gd.X
+        n = X.shape[0]
+        fg = n / Ntot
+        Delta = np.vstack([Jmu, np.array([JS[i, j, :] for i, j in pairs])])
+        S_obs = np.cov(X.T, bias=True)
+        W = _nt_weight(S_obs if mimic == "mplus" else Sig, x_idx)
+        Gam = _adf_gamma(X, x_idx)
+        Gv = Gam.copy()
+        if mimic == "mplus":
+            Gv[:p, :p] *= (n - 1) / n
+            fg1 = (n - 1) / Ntot
+        else:
+            fg1 = fg
+        WD = W @ Delta
+        Einfo += fg * Delta.T @ WD
+        meat += fg * fg / fg1 * WD.T @ Gv @ WD
+        # baseline (Mplus): means and variances of the dependent variables free, no covariances, x fixed at sample
+        py = spec.py
+        Db = np.zeros((p + len(pairs), 2 * py))
+        for k in range(py):
+            Db[k, k] = 1.0
+            Db[p + pairs.index((k, k)), py + k] = 1.0
+        if mimic == "mplus":
+            Wb = W
+        else:
+            Sb = np.zeros((p, p))
+            Sb[np.arange(py), np.arange(py)] = np.diag(S_obs)[:py]
+            if x_idx:
+                Sb[np.ix_(x_idx, x_idx)] = S_obs[np.ix_(x_idx, x_idx)]
+            Wb = _nt_weight(Sb, x_idx)
+        blocks.append((fg, W, Delta, Gam, Wb, Db))
+    Ei = np.linalg.inv(Einfo)
+    V = Ei @ meat @ Ei / Ntot
+
+    def trace_u(which):
+        Vs, Ds, Gs = [], [], []
+        for fg, W, Delta, Gam, Wb, Db in blocks:
+            Vs.append(fg * (W if which == "model" else Wb))
+            Ds.append(Delta if which == "model" else Db)
+            Gs.append(Gam / fg)
+        Vall = linalg.block_diag(*Vs)
+        Gall = linalg.block_diag(*Gs)
+        if which == "model":
+            Dall = np.vstack(Ds)
+        else:
+            Dall = linalg.block_diag(*Ds)
+        VD = Vall @ Dall
+        U = Vall - VD @ np.linalg.pinv(Dall.T @ VD) @ VD.T
+        return float(np.sum(U * Gall.T))
+
+    return {"V": V, "trUG": trace_u("model"), "trUG_base": trace_u("base")}
+
+
+def _apply_mlm_tests(fs: Dict[str, Any], mlm: Dict[str, Any], sem: SEMModel) -> None:
+    df, dfb = fs["df"], fs["df_base"]
+    T0, TB0 = fs["chi2"], max(2.0 * (fs["ll1"] - baseline_statistics(sem, False)["ll"]), 0.0)
+    c = mlm["trUG"] / df if df > 0 else float("nan")
+    cb = mlm["trUG_base"] / dfb if dfb > 0 else float("nan")
+    T = T0 / c if df > 0 and c > 0 else T0
+    TB = TB0 / cb if dfb > 0 and cb > 0 else TB0
+    fs.update({"scaling": c, "scaling_base": cb, "chi2_test": T, "chi2_base": TB,
+               "pvalue": float(stats.chi2.sf(T, df)) if df > 0 else float("nan"),
+               "p_base": float(stats.chi2.sf(TB, dfb)) if dfb > 0 else float("nan")})
+    N, G = fs["N"], fs["G"]
+    if df > 0:
+        fs["rmsea"], fs["rmsea_lo"], fs["rmsea_hi"], fs["rmsea_p"] = rmsea_ci(T, df, N, G)
+    num = max(T - df, 0.0)
+    den = max(T - df, TB - dfb, 0.0)
+    fs["cfi"] = 1.0 - num / den if den > 0 else 1.0
+    fs["tli"] = ((TB / dfb) - (T / df)) / ((TB / dfb) - 1.0) if (dfb > 0 and df > 0 and TB / dfb != 1) else 1.0
 
 
 def fit_statistics(sem: SEMModel, fit: FitResult, Info: Optional[np.ndarray]) -> Dict[str, float]:
@@ -1340,7 +1649,7 @@ class Derived:
                         out[n] = val / (di * dj)
                     else:
                         out[n] = val / math.sqrt(si * sj) if si > 0 and sj > 0 else float("nan")
-            elif r.op == "~1":
+            elif r.op in ("~1", "|"):
                 out[n] = val / scale(r.lhs, "dep")
         return out
 

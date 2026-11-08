@@ -171,8 +171,14 @@ BASE_ANALYSIS_CATALOG: List[Dict[str, Any]] = list(ANALYSIS_CATALOG)
 def refresh_analysis_catalog() -> List[Dict[str, Any]]:
     """Refreshes `ANALYSIS_CATALOG` in place with any newly added clean-room plugins in `pyjamovi/plugins/`."""
     from .plugins import get_plugin_catalog_entries
-    base_ids = {item["id"] for item in BASE_ANALYSIS_CATALOG}
-    merged = list(BASE_ANALYSIS_CATALOG)
+    from .analyses import extensions
+    ext_items = {item["id"]: item for item in extensions.catalog()}
+    # extension entries replace a built-in entry with the same id in place, new ids follow their group
+    merged = [ext_items.pop(item["id"], item) for item in BASE_ANALYSIS_CATALOG]
+    for item in ext_items.values():
+        pos = max((i for i, m in enumerate(merged) if m.get("group") == item.get("group")), default=len(merged) - 1)
+        merged.insert(pos + 1, item)
+    base_ids = {item["id"] for item in merged}
     for p_entry in get_plugin_catalog_entries():
         if p_entry["id"] not in base_ids:
             merged.append(p_entry)
@@ -264,7 +270,17 @@ def _dispatch_inner(analysis_type: str, df: pd.DataFrame, p: Dict[str, Any]) -> 
     }
     if t == "lpa" and p.get("vars") and not p.get("continuous"):
         p = dict(p, continuous=p.get("vars"))
-    t = alias_map.get(t, t)
+    from .analyses import extensions
+    ext_alias = extensions.aliases()
+    t = ext_alias.get(t, alias_map.get(t, t))
+
+    # extension modules (analyses/extensions.py) take precedence for the ids they declare
+    if t in extensions.ids():
+        typed = analysis_type.strip()
+        res = extensions.dispatch(t, df, p, alias=typed if typed != t else None)
+        if res is None:
+            raise ValueError(f"Unsupported analysis type: '{analysis_type}' (extension did not handle it)")
+        return res
 
     if t == "descriptives":
         return Descriptives(
@@ -686,38 +702,6 @@ def _dispatch_inner(analysis_type: str, df: pd.DataFrame, p: Dict[str, Any]) -> 
             mod=_as_single(p.get("mod")),
             simple_slopes=bool(p.get("simpleSlopes", True)),
             slope_plot=bool(p.get("slopePlot", True))
-        )
-
-    elif t == "panel":
-        return PanelAnalysis(
-            df,
-            entity_col=_as_single(p.get("entity") or p.get("entity_col")),
-            time_col=_as_single(p.get("time") or p.get("time_col")),
-            dep=_as_single(p.get("dep")),
-            covs=_as_list(p.get("covs")),
-            model_type=str(p.get("modelType", p.get("model_type", "fixed"))),
-            cov_type=str(p.get("covType", p.get("cov_type", "robust"))),
-            hausman=bool(p.get("hausman", True)),
-            plot_trends=bool(p.get("plotTrends", True))
-        )
-
-    elif t == "mixedModel":
-        dep_val = _as_single(p.get("dep"))
-        cluster_val = _as_single(p.get("cluster") or p.get("random") or p.get("group"))
-        covs_val = _as_list(p.get("covs"))
-        factors_val = _as_list(p.get("factors"))
-        _require_columns(
-            df, "Linear mixed model",
-            required={"dep": dep_val, "cluster": cluster_val},
-            optional={"covs": covs_val, "factors": factors_val},
-        )
-        return MixedLinearModel(
-            df,
-            dep=dep_val,
-            cluster=cluster_val,
-            covs=covs_val,
-            factors=factors_val,
-            reml=bool(p.get("reml", True))
         )
 
     elif t == "survival":

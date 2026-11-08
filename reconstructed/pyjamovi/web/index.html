@@ -2167,6 +2167,75 @@ table.jmv-apa-table tbody tr.sec-break td {
     background: #0D9488;
     color: #FFFFFF;
 }
+/* SEM 모형 예시 (교차지연·잠재성장·잠재변화) */
+.semtpl-grid { display: grid; grid-template-columns: 220px minmax(0, 1.05fr) minmax(0, 1fr); gap: 16px; min-height: 420px; }
+@media (max-width: 980px) { .semtpl-grid { grid-template-columns: minmax(0, 1fr); } .semtpl-list { max-height: 190px; } }
+.semtpl-list { border: 1px solid #CBD5E1; border-radius: 4px; background: #F8FAFC; overflow-y: auto; max-height: 62vh; }
+.semtpl-group { font-size: 11px; font-weight: 700; color: #475569; padding: 8px 10px 4px; text-transform: none; border-top: 1px solid #E2E8F0; }
+.semtpl-group:first-child { border-top: none; }
+.semtpl-item { display: block; width: 100%; text-align: left; padding: 6px 10px; border: none; background: transparent; cursor: pointer; font-family: inherit; }
+.semtpl-item b { display: block; font-size: 12.3px; color: #1E293B; font-weight: 600; }
+.semtpl-item small { display: block; font-size: 10.8px; color: #64748B; }
+.semtpl-item:hover { background: #F1F5F9; }
+.semtpl-item.on { background: #F0FDFA; box-shadow: inset 3px 0 0 #0F766E; }
+.semtpl-desc { font-size: 12px; color: #334155; line-height: 1.55; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 4px; padding: 8px 10px; margin-bottom: 12px; }
+.semtpl-desc b { color: #1E3A5F; }
+.semtpl-role { margin-bottom: 11px; }
+.semtpl-role > label { display: block; font-size: 12px; font-weight: 600; color: #1E293B; margin-bottom: 4px; }
+.semtpl-role > label .req { color: #B91C1C; margin-left: 2px; }
+.semtpl-role select, .semtpl-role input[type="text"], .semtpl-opt select, .semtpl-opt input[type="text"] {
+    width: 100%; box-sizing: border-box; padding: 4px 6px; border: 1px solid #94A3B8; border-radius: 3px; font-size: 12px; font-family: inherit; background: #FFFFFF; min-width: 0; }
+.semtpl-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; align-items: center; }
+.semtpl-chip { display: inline-flex; align-items: center; gap: 3px; font-size: 11.3px; padding: 1px 4px 1px 2px; border: 1px solid #CBD5E1; border-radius: 3px; background: #FFFFFF; color: #1E293B; }
+.semtpl-chip .w { font-size: 9.8px; background: #0F766E; color: #FFFFFF; border-radius: 2px; padding: 0 4px; }
+.semtpl-chip button { border: none; background: transparent; cursor: pointer; color: #64748B; font-size: 11px; padding: 0 2px; }
+.semtpl-chip button:hover { color: #0F766E; }
+.semtpl-add { width: auto !important; max-width: 160px; font-size: 11.3px !important; padding: 2px 4px !important; }
+.semtpl-gridtbl { border-collapse: collapse; margin-top: 5px; font-size: 11.2px; width: 100%; table-layout: fixed; }
+.semtpl-gridtbl th, .semtpl-gridtbl td { border: 1px solid #E2E8F0; padding: 2px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.semtpl-gridtbl th { background: #F1F5F9; color: #475569; font-weight: 600; }
+.semtpl-gridtbl td.rm { width: 22px; text-align: center; }
+.semtpl-gridtbl td.rm button { border: none; background: transparent; cursor: pointer; color: #B91C1C; }
+.semtpl-opts { display: grid; grid-template-columns: minmax(0, 1fr); gap: 7px; }
+.semtpl-opt { font-size: 12px; }
+.semtpl-opt > label.t { display: block; font-weight: 600; color: #1E293B; margin-bottom: 3px; }
+.semtpl-opt label.c { display: flex; align-items: flex-start; gap: 6px; cursor: pointer; color: #1E293B; }
+.semtpl-opt label.c input { margin: 2px 0 0; accent-color: #0F766E; }
+.semtpl-model { width: 100%; box-sizing: border-box; min-height: 250px; height: 34vh; resize: vertical; font-family: "Consolas", "SFMono-Regular", Menlo, monospace; font-size: 11.5px; line-height: 1.45;
+    padding: 6px 8px; border: 1px solid #CBD5E1; border-radius: 4px; background: #F8FAFC; color: #0F172A; white-space: pre; }
+.semtpl-stat { font-size: 11.5px; color: #0F766E; font-weight: 600; margin-left: 6px; }
+.semtpl-assump { margin: 4px 0 8px 16px; padding: 0; font-size: 11.8px; color: #1E293B; line-height: 1.5; }
+.semtpl-notes { margin: 0 0 0 16px; padding: 0; font-size: 11.2px; color: #64748B; line-height: 1.45; }
+.semtpl-refs { font-size: 10.8px; color: #64748B; margin-top: 8px; line-height: 1.45; }
+.semtpl-err { display: none; margin-top: 6px; padding: 7px 9px; font-size: 12px; color: #991B1B; background: #FEF2F2; border: 1px solid #FECACA; border-radius: 4px; }
+.semtpl-err.on { display: block; }
+.semtpl-tabs { display: flex; align-items: center; gap: 2px; border-bottom: 1px solid #CBD5E1; margin-bottom: 6px; flex-wrap: wrap; }
+.semtpl-tabs button { border: 1px solid transparent; border-bottom: none; background: transparent; padding: 4px 10px; font-size: 12px; font-family: inherit;
+    color: #475569; cursor: pointer; border-radius: 4px 4px 0 0; margin-bottom: -1px; }
+.semtpl-tabs button.on { background: #FFFFFF; border-color: #CBD5E1; color: #0F766E; font-weight: 700; }
+.semtpl-tabs .semtpl-stat { margin-left: auto; }
+.semtpl-diagram { border: 1px solid #CBD5E1; border-radius: 4px; background: #FFFFFF; height: 34vh; min-height: 250px; overflow: hidden; }
+.semtpl-diagram svg { width: 100%; height: 100%; display: block; }
+.semtpl-diagram .n-obs rect { fill: #FFFFFF; stroke: #1E3A5F; stroke-width: 1.2; }
+.semtpl-diagram .n-x rect { fill: #F1F5F9; stroke: #64748B; stroke-width: 1.1; }
+.semtpl-diagram .n-lat ellipse { fill: #F0FDFA; stroke: #0F766E; stroke-width: 1.3; }
+.semtpl-diagram text { font-size: 10px; fill: #0F172A; font-family: inherit; dominant-baseline: middle; text-anchor: middle; }
+.semtpl-diagram .e-path { stroke: #1E3A5F; stroke-width: 1; fill: none; }
+.semtpl-diagram .e-path.fixed0 { stroke: #94A3B8; stroke-dasharray: 3 3; }
+.semtpl-diagram .e-cov { stroke: #0F766E; stroke-width: 1; fill: none; }
+.semtpl-diagram .e-rescov { stroke: #94A3B8; stroke-width: 0.8; fill: none; }
+.semtpl-diagram .e-lab { font-size: 8.5px; fill: #B45309; paint-order: stroke; stroke: #FFFFFF; stroke-width: 3px; }
+.semtpl-diagram .zero { font-size: 8px; fill: #64748B; }
+.semtpl-legend { font-size: 10.8px; color: #64748B; margin: 4px 0 0; }
+.semtpl-diagram.big { position: fixed; inset: 5vh 3vw; height: auto; min-height: 0; z-index: 2300; box-shadow: 0 12px 40px rgba(15, 23, 42, 0.35); cursor: zoom-out; }
+.semtpl-code { width: 100%; box-sizing: border-box; min-height: 250px; height: 34vh; resize: vertical; font-family: "Consolas", "SFMono-Regular", Menlo, monospace;
+    font-size: 11.3px; line-height: 1.45; padding: 6px 8px; border: 1px solid #CBD5E1; border-radius: 4px; background: #F8FAFC; color: #0F172A; white-space: pre; }
+.semtpl-mc { border-collapse: collapse; margin-top: 5px; font-size: 11.3px; width: 100%; table-layout: fixed; }
+.semtpl-mc th, .semtpl-mc td { border: 1px solid #E2E8F0; padding: 2px 3px; vertical-align: middle; }
+.semtpl-mc th { background: #F1F5F9; color: #475569; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.semtpl-mc td.lat { color: #0F766E; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.semtpl-mc select { width: 100%; box-sizing: border-box; font-size: 11px; padding: 1px 2px; border: 1px solid #CBD5E1; border-radius: 2px; font-family: inherit; }
+.semtpl-mc th button { border: none; background: transparent; color: #B91C1C; cursor: pointer; font-size: 11px; padding: 0 2px; }
 </style>
 
 </head>
@@ -2366,9 +2435,9 @@ table.jmv-apa-table tbody tr.sec-break td {
                 <div class="ribbon-sep"></div>
 
                 <!-- Advanced Modules -->
-                <button class="ribbon-btn" id="rb-sem" onclick="openAnalysis('sem')">
+                <button class="ribbon-btn" id="rb-sem" onclick="openRibbonMenu(event, 'sem')" title="구조방정식 모형 · 대화형 빌더 · 교차지연·잠재성장 모형 예시">
                     <img class="rb-icon" src="assets/analysis-sem.svg" alt="SEM">
-                    <span class="rb-label" data-i18n="ana_sem">SEM / CFA</span>
+                    <span class="rb-label"><span data-i18n="ana_sem">SEM / CFA</span> <span class="rb-caret">▾</span></span>
                 </button>
                 <button class="ribbon-btn" id="rb-mixture" onclick="openRibbonMenu(event, 'mixture')" title="잠재계층·잠재프로파일·잠재전이·잠재계층 성장분석 (Mplus 기본 설정)">
                     <img class="rb-icon" src="assets/analysis-mixture.svg" alt="Mixture">
@@ -2381,6 +2450,10 @@ table.jmv-apa-table tbody tr.sec-break td {
                 <button class="ribbon-btn" id="rb-linearmodels" onclick="openRibbonMenu(event, 'linearmodels')">
                     <img class="rb-icon" src="assets/analysis-linearmodels.svg" alt="Panel & Mixed">
                     <span class="rb-label"><span data-i18n="ana_panel">패널 &amp; 혼합</span> <span class="rb-caret">▾</span></span>
+                </button>
+                <button class="ribbon-btn" id="rb-timeseries" onclick="openRibbonMenu(event, 'timeseries')" title="ARIMA·단위근 검정·자기상관 (Stata arima·dfuller·corrgram)">
+                    <img class="rb-icon" src="assets/analysis-timeseries.svg" alt="Time series">
+                    <span class="rb-label"><span data-i18n="ana_timeseries">시계열</span> <span class="rb-caret">▾</span></span>
                 </button>
                 <button class="ribbon-btn" id="rb-survival" onclick="openAnalysis('survival')">
                     <img class="rb-icon" src="assets/analysis-survival.svg" alt="Survival">
@@ -2638,6 +2711,18 @@ table.jmv-apa-table tbody tr.sec-break td {
                     <span class="quick-pill" onclick="loadDatasetByName('iris.csv')">Iris 붓꽃 (ANOVA / 회귀분석 / PCA)</span>
                     <span class="quick-pill" onclick="loadDatasetByName('SEM_Latent3Factor.csv')">SEM_Latent3Factor (구조방정식 SEM / CFA)</span>
                     <span class="quick-pill" onclick="loadDatasetByName('Grunfeld_Panel.csv')">Grunfeld_Panel (패널 고정효과 FE / 하우스만 검정)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('Dynamic_Panel_Welfare.csv')">📊 지역 복지지출 패널 (패널 회귀·동적 패널 GMM)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('IV_Schooling.csv')">📊 교육 수익률 (도구변수 회귀 2SLS·LIML·GMM)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('IV_Panel_CareStaff.csv')">📊 돌봄 인력 패널 (패널 도구변수 회귀)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('TS_Monthly_Welfare.csv')">📈 월별 이용 시계열 (ARIMA·단위근 검정)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('Count_HealthVisits.csv')">🏥 외래 방문 횟수 (포아송·음이항·영과잉)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('LimDep_Employment_Wage.csv')">💼 취업·임금 (프로빗·Heckman 표본선택)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('LimDep_Satisfaction_Service.csv')">⭐ 만족도·이용 서비스 (순서형·다항 로짓)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('LimDep_MedicalCost.csv')">🏥 본인부담 의료비 (토빗·절단 회귀)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('Multilevel_School3L.csv')">🏫 학생–학급–학교 3수준 (다층모형)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('SEM_Categorical_Care.csv')">🧭 돌봄 만족도 문항 (범주형 변수 SEM·WLSMV)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('SEM_Longitudinal_Panel.csv')">🧭 종단 패널 5시점 (교차지연·잠재성장 모형 예시)</span>
+                    <span class="quick-pill" onclick="loadDatasetByName('SEM_Longitudinal_Items.csv')">🧭 다중지표 종단 4시점 (잠재 교차지연·2차 요인 성장)</span>
                     <span class="quick-pill" onclick="loadDatasetByName('MedMod_WorkStress.csv')">MedMod_WorkStress (매개효과 / 조절효과)</span>
                     <span class="quick-pill" onclick="loadDatasetByName('Clinical_Survival.csv')">Clinical_Survival (생존분석 Kaplan-Meier / Cox)</span>
                     <span class="quick-pill" onclick="loadDatasetByName('Big5.csv')">Big5 성격검사 (신뢰도 α / 탐색적 요인분석 EFA)</span>
@@ -3013,6 +3098,55 @@ table.jmv-apa-table tbody tr.sec-break td {
 </div>
 
 <!-- Recode Variable Modal (Stata: recode ..., generate()) -->
+<!-- SEM 모형 예시 (교차지연·잠재성장·잠재변화): model strings come from POST /api/sem/template -->
+<div class="ost-modal-backdrop" id="semtpl-modal" onclick="if(event.target===this) closeSemTemplateModal()">
+    <div class="ost-modal-box" style="width:1120px;">
+        <div class="ost-modal-hdr">
+            <span id="semtpl-hdr">📐 SEM 모형 예시 (기본 가정 반영)</span>
+            <button class="silky-small-btn" id="semtpl-close" onclick="closeSemTemplateModal()">닫기</button>
+        </div>
+        <div class="ost-modal-body">
+            <div class="semtpl-grid">
+                <div class="semtpl-list" id="semtpl-list"></div>
+                <div>
+                    <div class="semtpl-desc" id="semtpl-desc"></div>
+                    <div class="cmp-step" id="semtpl-step1">1. 변수 지정 <small>(시점 순서대로)</small></div>
+                    <div id="semtpl-roles"></div>
+                    <div class="cmp-step" id="semtpl-step2" style="margin-top:12px;">2. 옵션</div>
+                    <div class="semtpl-opts" id="semtpl-options"></div>
+                </div>
+                <div>
+                    <div class="cmp-step" id="semtpl-step3">3. 생성된 모형</div>
+                    <div class="semtpl-tabs">
+                        <button type="button" class="on" data-tab="diagram" onclick="semTplTab('diagram')">경로 그림</button>
+                        <button type="button" data-tab="model" onclick="semTplTab('model')">모형식</button>
+                        <button type="button" data-tab="stata" onclick="semTplTab('stata')">Stata sem</button>
+                        <span class="semtpl-stat" id="semtpl-stat"></span>
+                        <button type="button" id="semtpl-zoom" title="경로 그림 크게 보기" onclick="semTplZoom()">⤢</button>
+                    </div>
+                    <div class="semtpl-diagram" id="semtpl-diagram"></div>
+                    <textarea class="semtpl-model" id="semtpl-model" readonly spellcheck="false" style="display:none;"></textarea>
+                    <textarea class="semtpl-code" id="semtpl-stata" readonly spellcheck="false" style="display:none;"></textarea>
+                    <div class="semtpl-legend" id="semtpl-legend"></div>
+                    <div class="semtpl-err" id="semtpl-err"></div>
+                    <div class="cmp-step" id="semtpl-step4" style="margin-top:10px;">모형에 반영된 기본 가정</div>
+                    <ul class="semtpl-assump" id="semtpl-assump"></ul>
+                    <ul class="semtpl-notes" id="semtpl-notes"></ul>
+                    <div class="semtpl-refs" id="semtpl-refs"></div>
+                </div>
+            </div>
+            <div class="cmp-foot">
+                <span class="cmp-summary" id="semtpl-summary"></span>
+                <div style="display:flex;gap:8px;">
+                    <button class="silky-small-btn" id="semtpl-cancel" onclick="closeSemTemplateModal()">취소</button>
+                    <button class="silky-small-btn" id="semtpl-copy" onclick="semTplCopy()">모형식 복사</button>
+                    <button class="py-btn run" id="semtpl-apply" onclick="semTplApply()" disabled>▶ 모형식에 넣기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="ost-modal-backdrop" id="recode-modal" onclick="if(event.target===this) closeRecodeModal()">
     <div class="ost-modal-box" style="width:620px;">
         <div class="ost-modal-hdr">
@@ -3341,6 +3475,7 @@ const I18N = {
         ana_mixture: "잠재계층",
         ana_medmod: "매개/조절",
         ana_panel: "패널 &amp; 혼합",
+        ana_timeseries: "시계열",
         ana_survival: "생존분석",
         ana_spatial: "공간분석 (GIS)",
         ana_text: "텍스트 분석",
@@ -3454,6 +3589,7 @@ const I18N = {
         ana_mixture: "Mixture",
         ana_medmod: "MedMod",
         ana_panel: "Panel &amp; Mixed",
+        ana_timeseries: "Time Series",
         ana_survival: "Survival",
         ana_spatial: "Spatial (GIS)",
         ana_text: "Text Mining",
@@ -3577,8 +3713,23 @@ const RIBBON_MENUS_I18N = {
             { sep: true },
             { id: "linReg", label: "다중선형회귀분석 (Linear Regression)" },
             { sep: true },
-            { section: "로지스틱 회귀분석 (Logistic)" },
+            { section: "도구변수 회귀 (IV)" },
+            { id: "ivReg", label: "도구변수 회귀 — 2SLS·LIML·GMM (ivregress)", badge: "Stata" },
+            { sep: true },
+            { section: "이항·순서·다항 선택모형" },
             { id: "logRegBin", label: "이항 로지스틱 회귀분석 (Binomial Logistic)" },
+            { id: "binaryReg", label: "이항 선택모형 (logit · probit · cloglog)", badge: "Stata" },
+            { id: "ordinalReg", label: "순서형 로짓·프로빗 (ologit · oprobit)" },
+            { id: "multinomReg", label: "다항 로짓 (mlogit)" },
+            { sep: true },
+            { section: "절단·검열·표본선택" },
+            { id: "tobitReg", label: "토빗 회귀 — 검열 자료 (tobit)" },
+            { id: "truncReg", label: "절단 회귀 (truncreg)" },
+            { id: "heckman", label: "Heckman 표본선택 모형 (heckman)" },
+            { id: "heckprobit", label: "표본선택 프로빗 (heckprobit)" },
+            { sep: true },
+            { section: "가산자료 회귀 (Count)" },
+            { id: "countReg", label: "가산자료 회귀 (포아송·음이항·영과잉·절단·허들)", badge: "poisson·nbreg·zip" },
             { sep: true },
             { section: "모형 비교 (Model Comparison)" },
             { action: "openCompareModal()", label: "모형 비교표 (여러 모형 나란히 · esttab)", badge: "비교" }
@@ -3586,6 +3737,23 @@ const RIBBON_MENUS_I18N = {
         frequencies: [
             { section: "분할표 및 범주형 데이터" },
             { id: "contTables", label: "교차분할표 독립성 검정 (χ² / Fisher)" }
+        ],
+        sem: [
+            { id: "sem", label: "구조방정식 모형 (CFA·SEM · 연속형·범주형 변수 · 모형식 직접 작성)", badge: "ML·WLSMV" },
+            { action: "openSemBuilderModal()", label: "대화형 SEM 빌더 (그림으로 작성)", badge: "빌더" },
+            { sep: true },
+            { section: "모형 예시 — 교차지연 (기본 가정 반영)" },
+            { action: "openSemTemplateModal('clpm')", label: "교차지연 패널모형 (CLPM)", badge: "예시" },
+            { action: "openSemTemplateModal('riclpm')", label: "무선절편 교차지연모형 (RI-CLPM)", badge: "예시" },
+            { action: "openSemTemplateModal('latent_clpm')", label: "다중지표 잠재 교차지연모형 (측정동일성)", badge: "예시" },
+            { section: "모형 예시 — 잠재성장·잠재변화" },
+            { action: "openSemTemplateModal('lgm_linear')", label: "선형 잠재성장모형", badge: "예시" },
+            { action: "openSemTemplateModal('lgm_quadratic')", label: "2차 잠재성장모형", badge: "예시" },
+            { action: "openSemTemplateModal('lgm_basis')", label: "잠재기저 성장모형 (자유 시간점수)", badge: "예시" },
+            { action: "openSemTemplateModal('lgm_conditional')", label: "조건부 잠재성장모형 (시간불변·시간가변 공변량)", badge: "예시" },
+            { action: "openSemTemplateModal('lgm_parallel')", label: "병행과정 잠재성장모형", badge: "예시" },
+            { action: "openSemTemplateModal('lgm_second_order')", label: "2차 요인 잠재성장모형 (다중지표·잠재변수)", badge: "예시" },
+            { action: "openSemTemplateModal('lcs_univariate')", label: "잠재변화점수 모형 (이중 변화점수)", badge: "예시" }
         ],
         factor: [
             { id: "reliability", label: "신뢰도 분석 (Cronbach's α & ω)" },
@@ -3602,10 +3770,21 @@ const RIBBON_MENUS_I18N = {
         ],
         linearmodels: [
             { section: "패널 데이터 계량분석 (Panel Econometrics)" },
-            { id: "panel", label: "패널 고정/확률효과 모형 (Within FE / RE / Hausman)" },
+            { id: "panel", label: "패널 회귀 (xtreg: 고정·확률·집단 간·1차 차분·PA)" },
+            { id: "dynPanel", label: "동적 패널 GMM (xtabond·xtdpdsys)", badge: "GMM" },
+            { id: "panelIV", label: "패널 도구변수 회귀 — FE·RE(G2SLS·EC2SLS)·FD·BE (xtivreg)", badge: "Stata" },
             { sep: true },
             { section: "다층모형 (Multilevel Models)" },
-            { id: "mixedModel", label: "선형 혼합모형 (Linear Mixed Model - REML & ICC)" }
+            { id: "mixedModel", label: "다층모형 · 선형 혼합모형 (2~4수준, Stata mixed)", badge: "Stata" },
+            { action: "openAnalysis('mixedModel', null, {family: 'binomial'})", label: "다층 로지스틱·포아송 (melogit · mepoisson)", badge: "GLMM" }
+        ],
+        timeseries: [
+            { section: "시계열 모형" },
+            { id: "arima", label: "ARIMA·계절 ARIMA·ARMAX (arima)", badge: "Stata" },
+            { sep: true },
+            { section: "시계열 진단" },
+            { id: "unitRoot", label: "단위근 검정 — ADF·Phillips–Perron·KPSS (dfuller·pperron)" },
+            { id: "corrgram", label: "자기상관·편자기상관·포트맨토 검정 (corrgram·wntestq)" }
         ],
         survival: [
             { id: "survival", label: "생존분석 (Kaplan-Meier & Cox 비례위험)" }
@@ -3715,8 +3894,23 @@ const RIBBON_MENUS_I18N = {
             { sep: true },
             { id: "linReg", label: "Linear Regression" },
             { sep: true },
-            { section: "Logistic Regression" },
+            { section: "Instrumental Variables" },
+            { id: "ivReg", label: "IV Regression — 2SLS / LIML / GMM (ivregress)", badge: "Stata" },
+            { sep: true },
+            { section: "Binary, Ordered & Multinomial Choice" },
             { id: "logRegBin", label: "2 Outcomes (Binomial)" },
+            { id: "binaryReg", label: "Binary Choice (logit · probit · cloglog)", badge: "Stata" },
+            { id: "ordinalReg", label: "Ordered Logit / Probit (ologit · oprobit)" },
+            { id: "multinomReg", label: "Multinomial Logit (mlogit)" },
+            { sep: true },
+            { section: "Truncation, Censoring & Sample Selection" },
+            { id: "tobitReg", label: "Tobit — Censored Regression (tobit)" },
+            { id: "truncReg", label: "Truncated Regression (truncreg)" },
+            { id: "heckman", label: "Heckman Selection Model (heckman)" },
+            { id: "heckprobit", label: "Probit with Sample Selection (heckprobit)" },
+            { sep: true },
+            { section: "Count Data Regression" },
+            { id: "countReg", label: "Count Regression (Poisson, NB, ZIP, ZINB, Truncated, Hurdle)", badge: "poisson·nbreg·zip" },
             { sep: true },
             { section: "Model Comparison" },
             { action: "openCompareModal()", label: "Model Comparison Table (side-by-side, esttab)", badge: "esttab" }
@@ -3724,6 +3918,23 @@ const RIBBON_MENUS_I18N = {
         frequencies: [
             { section: "Contingency Tables" },
             { id: "contTables", label: "Contingency Tables (χ² / Fisher)" }
+        ],
+        sem: [
+            { id: "sem", label: "Structural Equation Model (CFA / SEM · continuous & categorical · write the model)", badge: "ML·WLSMV" },
+            { action: "openSemBuilderModal()", label: "Interactive SEM Builder (draw the model)", badge: "Builder" },
+            { sep: true },
+            { section: "Model templates — cross-lagged (default assumptions)" },
+            { action: "openSemTemplateModal('clpm')", label: "Cross-Lagged Panel Model (CLPM)", badge: "Template" },
+            { action: "openSemTemplateModal('riclpm')", label: "Random-Intercept CLPM (RI-CLPM)", badge: "Template" },
+            { action: "openSemTemplateModal('latent_clpm')", label: "Multiple-Indicator Latent CLPM (invariance)", badge: "Template" },
+            { section: "Model templates — latent growth / change" },
+            { action: "openSemTemplateModal('lgm_linear')", label: "Linear Latent Growth Model", badge: "Template" },
+            { action: "openSemTemplateModal('lgm_quadratic')", label: "Quadratic Latent Growth Model", badge: "Template" },
+            { action: "openSemTemplateModal('lgm_basis')", label: "Latent Basis Growth Model (free time scores)", badge: "Template" },
+            { action: "openSemTemplateModal('lgm_conditional')", label: "Conditional LGM (time-invariant / time-varying covariates)", badge: "Template" },
+            { action: "openSemTemplateModal('lgm_parallel')", label: "Parallel-Process Latent Growth Model", badge: "Template" },
+            { action: "openSemTemplateModal('lgm_second_order')", label: "Second-Order (Curve-of-Factors) LGM", badge: "Template" },
+            { action: "openSemTemplateModal('lcs_univariate')", label: "Latent Change Score Model (dual change)", badge: "Template" }
         ],
         factor: [
             { id: "reliability", label: "Reliability Analysis (Cronbach's α & ω)" },
@@ -3737,10 +3948,21 @@ const RIBBON_MENUS_I18N = {
         ],
         linearmodels: [
             { section: "Panel Econometrics" },
-            { id: "panel", label: "Panel Fixed & Random Effects (Hausman)" },
+            { id: "panel", label: "Panel Regression (xtreg: FE / RE / BE / FD / PA)" },
+            { id: "dynPanel", label: "Dynamic Panel GMM (Arellano–Bond / Blundell–Bond)", badge: "GMM" },
+            { id: "panelIV", label: "Panel IV — FE / RE (G2SLS·EC2SLS) / FD / BE (xtivreg)", badge: "Stata" },
             { sep: true },
             { section: "Multilevel Models" },
-            { id: "mixedModel", label: "Linear Mixed Model (Multilevel ICC)", badge: "GAMLj" }
+            { id: "mixedModel", label: "Multilevel linear mixed model (2–4 levels, Stata mixed)", badge: "Stata" },
+            { action: "openAnalysis('mixedModel', null, {family: 'binomial'})", label: "Multilevel logistic / Poisson (melogit · mepoisson)", badge: "GLMM" }
+        ],
+        timeseries: [
+            { section: "Time-Series Models" },
+            { id: "arima", label: "ARIMA / Seasonal ARIMA / ARMAX (arima)", badge: "Stata" },
+            { sep: true },
+            { section: "Diagnostics" },
+            { id: "unitRoot", label: "Unit-Root Tests — ADF / Phillips–Perron / KPSS" },
+            { id: "corrgram", label: "Autocorrelations & Portmanteau Test (corrgram / wntestq)" }
         ],
         survival: [
             { id: "survival", label: "Survival Analysis (Kaplan-Meier & Cox)" }
@@ -5555,9 +5777,10 @@ const ANALYSIS_SCHEMAS = {
     },
     sem: {
         title: "구조방정식 모형 (CFA·SEM · Mplus 기본 설정)",
-        intro: "모형은 Python 문자열로 작성합니다(=~ 측정, ~ 회귀, ~~ 공분산, ~ 1 절편, a*x 라벨, 1*x 고정, := 정의 모수). 기본 설정은 Mplus를 따릅니다: ML 추정, 결측 FIML, 평균구조 포함, 각 요인의 첫 적재량 1 고정, 외생 관측변수 조건부 처리.",
+        intro: "모형은 Python 문자열로 작성합니다(=~ 측정, ~ 회귀, ~~ 공분산, ~ 1 절편, y | t1 문턱값, y ~*~ y 척도요인, a*x 라벨, 1*x 고정, := 정의 모수). 기본 설정은 Mplus를 따릅니다: 연속형 변수는 ML·결측 FIML, 이분·순서형 변수를 '범주형 변수' 칸에 넣으면 WLSMV(Mplus CATEGORICAL 기본)·delta 모수화·목록별 삭제로 추정합니다. 평균구조 포함, 각 요인의 첫 적재량 1 고정, 외생 관측변수 조건부 처리.",
         slots: [
             { key: "obsVars", label: "관측변수 후보 (더블클릭 시 모델에 추가)", multi: true, req: false, prefer: "num" },
+            { key: "categorical", label: "범주형 변수 (이분·순서형, Mplus CATEGORICAL)", multi: true, req: false, prefer: "any" },
             { key: "group", label: "다집단 변수 (선택, Mplus GROUPING)", multi: false, req: false, prefer: "cat" }
         ],
         sections: [
@@ -5569,10 +5792,26 @@ const ANALYSIS_SCHEMAS = {
                 ]
             },
             { title: "추정 (Mplus 기본 설정)", items: [
-                { type: "select", key: "estimator", label: "추정량", def: "ml", options: [["ml", "ML (Mplus 기본)"], ["mlr", "MLR 강건 표준오차·Yuan–Bentler 척도 χ²"]] },
-                { type: "select", key: "missing", label: "결측 처리", def: "fiml", options: [["fiml", "FIML · 가용 자료 전부 (Mplus 기본)"], ["listwise", "목록별 삭제"]] },
-                { type: "number", key: "bootstrap", label: "부트스트랩 반복 수 (0 = 사용 안 함)", def: 0, min: 0, max: 10000, step: 100 },
-                { type: "select", key: "ciType", label: "신뢰구간 (부트스트랩 사용 시)", def: "symmetric",
+                { type: "select", key: "estimator", label: "추정량", def: "auto", options: [
+                    ["auto", "자동 (연속형: ML, 범주형 변수 지정 시: WLSMV)"],
+                    ["ml", "ML (연속형 Mplus 기본)"],
+                    ["mlr", "MLR 강건 표준오차·Yuan–Bentler 척도 χ² (FIML)"],
+                    ["mlm", "MLM 강건 표준오차·Satorra–Bentler χ² (완전 자료)"],
+                    ["wlsmv", "WLSMV 평균·분산 보정 (범주형 Mplus 기본)"],
+                    ["wlsm", "WLSM 평균 보정 (범주형)"],
+                    ["wls", "WLS 전체 가중행렬 (범주형, 대표본)"],
+                    ["ulsmv", "ULSMV 비가중·평균·분산 보정 (범주형)"],
+                    ["uls", "ULS 비가중 (범주형, χ² 없음)"]] },
+                { type: "select", key: "missing", label: "결측 처리", def: "auto", options: [
+                    ["auto", "자동 (ML·MLR: FIML / MLM·WLS 계열: 목록별 삭제)"],
+                    ["fiml", "FIML · 가용 자료 전부 (ML·MLR)"],
+                    ["listwise", "목록별 삭제"]] },
+                { type: "select", key: "parameterization", label: "모수화 (범주형)", def: "delta", showIf: { categorical: "__filled__" },
+                  options: [["delta", "delta · Var(y*) = 1 (Mplus 기본)"], ["theta", "theta · y* 잔차분산 = 1"]] },
+                { type: "check", key: "conditionalX", label: "공변량(x)에 조건부 추정 (Mplus·lavaan 기본)", def: true, showIf: { categorical: "__filled__" } },
+                { type: "number", key: "bootstrap", label: "부트스트랩 반복 수 (0 = 사용 안 함, ML 전용)", def: 0, min: 0, max: 10000, step: 100,
+                  showIf: { estimator: ["auto", "ml"] } },
+                { type: "select", key: "ciType", label: "신뢰구간 (부트스트랩 사용 시)", def: "symmetric", showIf: { estimator: ["auto", "ml"] },
                   options: [["symmetric", "대칭 (Mplus CINTERVAL)"], ["percentile", "백분위 부트스트랩"], ["bc", "편향 교정 부트스트랩 (BCBOOTSTRAP)"]] },
                 { type: "select", key: "invariance", label: "다집단 동일성 제약", def: "scalar", showIf: { group: "__filled__" },
                   options: [["scalar", "적재량·절편 동일 (Mplus 다집단 기본)"], ["metric", "적재량만 동일"], ["configural", "제약 없음 (형태 동일성)"], ["strict", "적재량·절편·잔차분산 동일"]] },
@@ -5586,6 +5825,7 @@ const ANALYSIS_SCHEMAS = {
                 { type: "text", key: "indirect", label: "간접효과 (Mplus MODEL INDIRECT)", def: "", span2: true, placeholder: "예: GPA <- Visual  (여러 개는 ; 로 구분)" },
                 { type: "check", key: "modIndices", label: "수정지수 (MODINDICES)", def: false },
                 { type: "number", key: "miMin", label: "수정지수 표시 기준", def: 10, min: 0, max: 100, step: 1, showIf: { modIndices: [true, "true"] } },
+                { type: "check", key: "sampstat", label: "표본 통계량 (SAMPSTAT: 문턱값·다분상관)", def: false, showIf: { categorical: "__filled__" } },
                 { type: "check", key: "variances", label: "분산·공분산 표", def: false },
                 { type: "check", key: "pathDiagram", label: "경로 그림", def: true }
             ] }
@@ -5629,54 +5869,96 @@ const ANALYSIS_SCHEMAS = {
         ]
     },
     panel: {
-        title: "Panel Data Econometrics",
+        title: "패널 회귀 (xtreg: 고정·확률·집단 간·1차 차분·모집단 평균)",
+        intro: "개체×시점 패널자료의 선형회귀입니다. Stata xtreg와 같은 추정 방법·표준오차 규칙(vce(robust) = 패널 군집)을 따르며, 집단 내·간·전체 R², sigma_u·sigma_e·rho, 개체효과 F 검정과 Hausman·Breusch–Pagan·Wooldridge·Pesaran CD·수정 Wald 진단을 제공합니다.",
         slots: [
-            { key: "entity", label: "Entity ID (Firm / Panel)", multi: false, req: true, prefer: "cat" },
-            { key: "time", label: "Time Variable (Year / Wave)", multi: false, req: true, prefer: "any" },
-            { key: "dep", label: "Dependent Variable", multi: false, req: true, prefer: "num" },
-            { key: "covs", label: "Regressors / Covariates", multi: true, req: true, prefer: "num" }
+            { key: "entity", label: "개체 변수 (패널 ID)", multi: false, req: true, prefer: "cat" },
+            { key: "time", label: "시점 변수 (연도·차수)", multi: false, req: true, prefer: "any" },
+            { key: "dep", label: "종속변수", multi: false, req: true, prefer: "num" },
+            { key: "covs", label: "설명변수", multi: true, req: true, prefer: "num" },
+            { key: "cluster", label: "군집 변수 (선택, 패널을 포함하는 상위 단위)", multi: false, req: false, prefer: "cat" }
         ],
         sections: [
-            {
-                title: "Panel Estimator & Diagnostics",
-                singleCol: true,
-                items: [
-                    {
-                        type: "select", key: "modelType", label: "Estimator", def: "fixed",
-                        options: [
-                            ["fixed", "Entity Fixed Effects (Within)"],
-                            ["twoway", "Two-Way Fixed Effects (Entity + Time)"],
-                            ["random", "Random Effects (GLS)"],
-                            ["pooled", "Pooled OLS"]
-                        ]
-                    },
-                    {
-                        type: "select", key: "covType", label: "Standard Errors", def: "robust",
-                        options: [
-                            ["robust", "Heteroskedasticity-Robust"],
-                            ["clustered", "Entity-Clustered"],
-                            ["unadjusted", "Conventional"]
-                        ]
-                    },
-                    { type: "check", key: "hausman", label: "Hausman Test (FE vs RE)", def: true },
-                    { type: "check", key: "plotTrends", label: "Longitudinal trajectory plot", def: true }
-                ]
-            }
+            { title: "모형", items: [
+                { type: "select", key: "modelType", label: "추정 방법", def: "fixed", span2: true, options: [
+                    ["fixed", "고정효과 — 집단 내 추정 (xtreg, fe)"],
+                    ["twoway", "이원 고정효과 — 개체 + 시점 더미 (xtreg y x i.t, fe)"],
+                    ["random", "확률효과 GLS (xtreg, re)"],
+                    ["between", "집단 간 추정 (xtreg, be)"],
+                    ["fd", "1차 차분 (regress D.y D.x)"],
+                    ["pooled", "통합 OLS (regress)"],
+                    ["pa", "모집단 평균 GEE (xtreg, pa)"]] },
+                { type: "select", key: "reMethod", label: "확률효과 분산성분", def: "default", showIf: { modelType: "random" }, options: [
+                    ["default", "Stata 기본 (일치 추정, 조화평균 T)"], ["sa", "Swamy–Arora 소표본 (sa)"]],
+                  help: "균형패널에서는 두 방법이 같음" },
+                { type: "check", key: "beWls", label: "가중최소제곱 (wls, 가중치 T_i)", def: false, showIf: { modelType: "between" } },
+                { type: "check", key: "fdConstant", label: "상수항 포함 (선형 추세)", def: true, showIf: { modelType: "fd" } },
+                { type: "select", key: "paCorr", label: "작업 상관 구조 corr()", def: "exchangeable", showIf: { modelType: "pa" }, options: [
+                    ["exchangeable", "교환가능 (exchangeable)"], ["independent", "독립 (independent)"],
+                    ["ar1", "1차 자기회귀 (ar 1)"], ["unstructured", "비구조 (unstructured)"]] },
+                { type: "check", key: "showTimeEffects", label: "시점 더미 계수 표 표시", def: true, showIf: { modelType: "twoway" } }
+            ] },
+            { title: "표준오차 (SE/Robust)", items: [
+                { type: "select", key: "covType", label: "표준오차", def: "unadjusted", span2: true, options: [
+                    ["unadjusted", "일반 (vce(conventional), Stata 기본)"],
+                    ["robust", "강건 (vce(robust): xtreg는 패널 군집, regress는 HC1)"],
+                    ["clustered", "군집-강건 (vce(cluster 변수), 군집 변수 미지정 시 패널)"],
+                    ["dk", "Driscoll–Kraay (횡단면 의존·자기상관, xtscc / vce(dkraay))"]],
+                  help: "소표본 보정은 Stata와 같음: 군집 (N-1)/(N-K)·G/(G-1), t 검정 자유도 G-1" },
+                { type: "text", key: "dkLags", label: "Driscoll–Kraay 최대 시차 (빈칸 = 자동 floor(4(T/100)^(2/9)))", def: "", showIf: { covType: "dk" } }
+            ] },
+            { title: "진단 검정", items: [
+                { type: "check", key: "hausman", label: "Hausman 검정 (고정효과 대 확률효과)", def: true, span2: true },
+                { type: "check", key: "bpTest", label: "Breusch–Pagan LM 확률효과 검정 (xttest0)", def: false, span2: true },
+                { type: "check", key: "serialTest", label: "Wooldridge 1차 자기상관 검정 (xtserial)", def: false, span2: true },
+                { type: "check", key: "cdTest", label: "Pesaran CD 횡단면 의존성 검정 (xtcsd)", def: false, span2: true },
+                { type: "check", key: "hetTest", label: "집단별 이분산 수정 Wald 검정 (xttest3)", def: false, span2: true }
+            ] },
+            { title: "그래프·자료", collapsed: true, items: [
+                { type: "check", key: "plotTrends", label: "개체별 추이 그림", def: true },
+                { type: "number", key: "delta", label: "시점 간격 (xtset delta)", def: 1, min: 0.0001, step: 1 }
+            ] }
         ]
     },
-    mixedModel: {
-        title: "Linear Mixed Model (Multilevel)",
+    dynPanel: {
+        title: "동적 패널 GMM (xtabond 차분 GMM · xtdpdsys 시스템 GMM)",
+        intro: "종속변수의 과거값이 설명변수에 들어가는 동적 패널모형을 Arellano–Bond 차분 GMM 또는 Blundell–Bond 시스템 GMM으로 추정합니다. Stata xtabond·xtdpdsys의 도구변수 구성·가중행렬·Windmeijer 보정을 따르고 AR(1)·AR(2) 검정, Sargan·Hansen 검정, 도구변수 구성표를 제공합니다.",
         slots: [
-            { key: "dep", label: "Dependent Variable", multi: false, req: true, prefer: "num" },
-            { key: "cluster", label: "Cluster Variable (Random Intercept)", multi: false, req: true, prefer: "cat" },
-            { key: "covs", label: "Covariates", multi: true, req: false, prefer: "num" },
-            { key: "factors", label: "Fixed Factors", multi: true, req: false, prefer: "cat" }
+            { key: "entity", label: "개체 변수 (패널 ID)", multi: false, req: true, prefer: "cat" },
+            { key: "time", label: "시점 변수 (연도·차수)", multi: false, req: true, prefer: "any" },
+            { key: "dep", label: "종속변수 (시차가 설명변수로 포함)", multi: false, req: true, prefer: "num" },
+            { key: "exog", label: "강외생 설명변수 (차분값이 표준 도구변수)", multi: true, req: false, prefer: "num" },
+            { key: "pre", label: "선결(predetermined) 변수", multi: true, req: false, prefer: "num" },
+            { key: "endog", label: "내생 변수", multi: true, req: false, prefer: "num" }
         ],
         sections: [
-            {
-                title: "Estimation",
-                items: [{ type: "check", key: "reml", label: "REML estimation", def: true }]
-            }
+            { title: "모형", items: [
+                { type: "select", key: "method", label: "추정 방법", def: "difference", span2: true, options: [
+                    ["difference", "차분 GMM — Arellano–Bond (xtabond)"],
+                    ["system", "시스템 GMM — Blundell–Bond (xtdpdsys)"]] },
+                { type: "number", key: "lags", label: "종속변수 시차 수 lags()", def: 1, min: 1, max: 5, step: 1 },
+                { type: "number", key: "maxldep", label: "종속변수 도구 시차 최대 개수 maxldep() (0 = 전부)", def: 0, min: 0, step: 1 },
+                { type: "number", key: "maxlags", label: "선결·내생 도구 최대 시차 maxlags() (0 = 전부)", def: 0, min: 0, step: 1 },
+                { type: "number", key: "exogLags", label: "강외생 변수 시차 포함 (0 = 당기만)", def: 0, min: 0, max: 4, step: 1 },
+                { type: "check", key: "timeDummies", label: "시점 더미 포함", def: false },
+                { type: "check", key: "constant", label: "상수항 (수준식 오차로 식별)", def: true },
+                { type: "check", key: "twostep", label: "2단계 추정 (twostep)", def: false },
+                { type: "check", key: "collapse", label: "GMM 도구변수 축약 (xtabond2 collapse)", def: false,
+                  help: "도구변수 수 증가 억제; Stata xtabond·xtdpdsys에는 없는 옵션" }
+            ] },
+            { title: "선결·내생 변수 시차 구조 (lagstruct)", collapsed: true, items: [
+                { type: "number", key: "preLags", label: "선결변수 시차 포함 개수", def: 0, min: 0, max: 4, step: 1, showIf: { pre: "__filled__" } },
+                { type: "number", key: "preMaxLags", label: "선결변수 도구 시차 최대 개수 (0 = 전부)", def: 0, min: 0, step: 1, showIf: { pre: "__filled__" } },
+                { type: "number", key: "endogLags", label: "내생변수 시차 포함 개수", def: 0, min: 0, max: 4, step: 1, showIf: { endog: "__filled__" } },
+                { type: "number", key: "endogMaxLags", label: "내생변수 도구 시차 최대 개수 (0 = 전부)", def: 0, min: 0, step: 1, showIf: { endog: "__filled__" } }
+            ] },
+            { title: "표준오차·검정", items: [
+                { type: "select", key: "vce", label: "표준오차", def: "gmm", options: [
+                    ["gmm", "GMM 일반 (vce(gmm), Stata 기본)"],
+                    ["robust", "강건 (1단계: Arellano–Bond, 2단계: Windmeijer 보정)"]],
+                  help: "2단계 일반 표준오차는 하향 편의 — 2단계 추정에는 강건 권장" },
+                { type: "number", key: "artests", label: "AR 검정 최대 차수 artests()", def: 2, min: 1, max: 5, step: 1 }
+            ] }
         ]
     },
     survival: {
@@ -5695,6 +5977,662 @@ const ANALYSIS_SCHEMAS = {
         ]
     }
 };
+
+/* ===== Extension analyses (analyses/extensions.py): schemas added to ANALYSIS_SCHEMAS ===== */
+/* limdep — 제한종속변수 모형 (analyses/limdep_models.py) */
+const LIMDEP_SE_SECTION = {
+    title: "표준오차 (SE/Robust)",
+    items: [
+        {
+            type: "select", key: "covType", label: "표준오차 유형", def: "oim",
+            options: [
+                ["oim", "관측 정보행렬 OIM (Stata 기본)"],
+                ["robust", "강건 표준오차 vce(robust)"],
+                ["cluster", "군집 강건 표준오차 vce(cluster)"]
+            ]
+        },
+        { type: "info", text: "군집 강건 표준오차: 변수 칸 ‘군집 변수’ 지정 필요", showIf: { covType: "cluster" } }
+    ]
+};
+const LIMDEP_REPORT_SECTION = {
+    title: "보고 (Reporting)",
+    items: [{ type: "number", key: "ciWidth", label: "신뢰수준 (%)", def: 95, min: 50, max: 99.9, step: 0.5 }]
+};
+
+const LIMDEP_SCHEMAS = {
+    binaryReg: {
+        title: "이항 선택모형 (logit · probit · cloglog)",
+        slots: [
+            { key: "dep", label: "종속변수 (이항 0/1)", multi: false, req: true, prefer: "bin" },
+            { key: "covs", label: "공변량 (연속)", multi: true, req: false, prefer: "num" },
+            { key: "factors", label: "요인 (i. 더미, 최솟값 기준)", multi: true, req: false, prefer: "cat" },
+            { key: "clusterVar", label: "군집 변수 (vce(cluster))", multi: false, req: false, prefer: "any" }
+        ],
+        sections: [
+            {
+                title: "모형 (Model)",
+                items: [
+                    {
+                        type: "select", key: "link", label: "연결함수", def: "logit",
+                        options: [["logit", "로짓 (logit)"], ["probit", "프로빗 (probit)"], ["cloglog", "보완 로그-로그 (cloglog)"]]
+                    },
+                    { type: "check", key: "oddsRatio", label: "승산비 exp(b) 표시 (logit, or · cloglog, eform)", def: false,
+                      showIf: { link: ["logit", "cloglog"] } }
+                ]
+            },
+            LIMDEP_SE_SECTION,
+            {
+                title: "사후추정 (margins · estat)",
+                items: [
+                    { type: "check", key: "ame", label: "평균 한계효과 AME (margins, dydx(*))", def: true },
+                    { type: "check", key: "mem", label: "평균값 한계효과 MEM (margins, dydx(*) atmeans)", def: false },
+                    { type: "check", key: "classTable", label: "분류표 (estat classification)", def: false },
+                    { type: "number", key: "cutoff", label: "분류 기준값", def: 0.5, min: 0.01, max: 0.99, step: 0.05,
+                      showIf: { classTable: true } },
+                    { type: "check", key: "hosmer", label: "Hosmer–Lemeshow 검정 (estat gof, group())", def: false },
+                    { type: "number", key: "hlGroups", label: "집단 수", def: 10, min: 3, max: 50, step: 1, showIf: { hosmer: true } },
+                    { type: "check", key: "hlTable", label: "집단별 관측·기대 빈도표 (table)", def: false, showIf: { hosmer: true } },
+                    { type: "check", key: "roc", label: "ROC 곡선·AUC (lroc)", def: false }
+                ]
+            },
+            LIMDEP_REPORT_SECTION
+        ]
+    },
+    ordinalReg: {
+        title: "순서형 선택모형 (ologit · oprobit)",
+        slots: [
+            { key: "dep", label: "종속변수 (순서형, 범주 3개 이상)", multi: false, req: true, prefer: "cat" },
+            { key: "covs", label: "공변량 (연속)", multi: true, req: false, prefer: "num" },
+            { key: "factors", label: "요인 (i. 더미, 최솟값 기준)", multi: true, req: false, prefer: "cat" },
+            { key: "clusterVar", label: "군집 변수 (vce(cluster))", multi: false, req: false, prefer: "any" }
+        ],
+        sections: [
+            {
+                title: "모형 (Model)",
+                items: [
+                    { type: "select", key: "link", label: "연결함수", def: "logit",
+                      options: [["logit", "순서형 로짓 (ologit)"], ["probit", "순서형 프로빗 (oprobit)"]] },
+                    { type: "check", key: "oddsRatio", label: "승산비 exp(b) 표시 (ologit, or)", def: false, showIf: { link: "logit" } },
+                    { type: "info", text: "모수화: Pr(y ≤ k) = F(cut_k − xb), 상수항 없음 (Stata /cut1 … /cutK−1)" }
+                ]
+            },
+            LIMDEP_SE_SECTION,
+            {
+                title: "사후추정 (margins · 평행선 검정)",
+                items: [
+                    { type: "check", key: "predProbs", label: "범주별 평균 예측확률 (margins)", def: true },
+                    { type: "check", key: "ame", label: "범주별 평균 한계효과 (margins, dydx(*))", def: false },
+                    { type: "check", key: "brant", label: "Brant 평행선 검정 (brant, detail)", def: false, showIf: { link: "logit" } }
+                ]
+            },
+            LIMDEP_REPORT_SECTION
+        ]
+    },
+    multinomReg: {
+        title: "다항 로짓 (mlogit)",
+        slots: [
+            { key: "dep", label: "종속변수 (명목형, 범주 3개 이상)", multi: false, req: true, prefer: "cat" },
+            { key: "covs", label: "공변량 (연속)", multi: true, req: false, prefer: "num" },
+            { key: "factors", label: "요인 (i. 더미, 최솟값 기준)", multi: true, req: false, prefer: "cat" },
+            { key: "clusterVar", label: "군집 변수 (vce(cluster))", multi: false, req: false, prefer: "any" }
+        ],
+        sections: [
+            {
+                title: "모형 (Model)",
+                items: [
+                    { type: "text", key: "baseOutcome", label: "기준 범주 baseoutcome() — 빈칸: 최빈 범주 (Stata 기본)", def: "" },
+                    { type: "check", key: "rrr", label: "상대위험비 RRR = exp(b) 표시 (rrr)", def: false }
+                ]
+            },
+            LIMDEP_SE_SECTION,
+            {
+                title: "사후추정 (margins)",
+                items: [{ type: "check", key: "ame", label: "범주별 평균 한계효과 (margins, dydx(*))", def: true }]
+            },
+            LIMDEP_REPORT_SECTION
+        ]
+    },
+    tobitReg: {
+        title: "토빗 회귀 (tobit)",
+        slots: [
+            { key: "dep", label: "종속변수 (검열된 연속)", multi: false, req: true, prefer: "num" },
+            { key: "covs", label: "공변량 (연속)", multi: true, req: false, prefer: "num" },
+            { key: "factors", label: "요인 (i. 더미, 최솟값 기준)", multi: true, req: false, prefer: "cat" },
+            { key: "clusterVar", label: "군집 변수 (vce(cluster))", multi: false, req: false, prefer: "any" }
+        ],
+        sections: [
+            {
+                title: "검열 한계 (Censoring limits)",
+                items: [
+                    { type: "text", key: "ll", label: "하한 ll() — 숫자 또는 min, 빈칸: 하한 없음", def: "0" },
+                    { type: "text", key: "ul", label: "상한 ul() — 숫자 또는 max, 빈칸: 상한 없음", def: "" },
+                    { type: "info", text: "y ≤ 하한 → 좌측 검열, y ≥ 상한 → 우측 검열. 계수 검정은 t 분포 (Stata tobit)" }
+                ]
+            },
+            LIMDEP_SE_SECTION,
+            {
+                title: "사후추정 (margins, dydx(*) predict())",
+                items: [
+                    { type: "check", key: "meCensored", label: "관측 결과 기대값 E(y) — predict(ystar(ll,ul))", def: true },
+                    { type: "check", key: "meConditional", label: "조건부 기대값 E(y | ll<y<ul) — predict(e(ll,ul))", def: false },
+                    { type: "check", key: "meProb", label: "미검열 확률 Pr(ll<y<ul) — predict(pr(ll,ul))", def: false },
+                    { type: "check", key: "meLatent", label: "잠재변수 E(y*) = xb — predict(xb)", def: false }
+                ]
+            },
+            LIMDEP_REPORT_SECTION
+        ]
+    },
+    truncReg: {
+        title: "절단 회귀 (truncreg)",
+        slots: [
+            { key: "dep", label: "종속변수 (절단된 연속)", multi: false, req: true, prefer: "num" },
+            { key: "covs", label: "공변량 (연속)", multi: true, req: false, prefer: "num" },
+            { key: "factors", label: "요인 (i. 더미, 최솟값 기준)", multi: true, req: false, prefer: "cat" },
+            { key: "clusterVar", label: "군집 변수 (vce(cluster))", multi: false, req: false, prefer: "any" }
+        ],
+        sections: [
+            {
+                title: "절단 한계 (Truncation limits)",
+                items: [
+                    { type: "text", key: "ll", label: "하한 ll() — 숫자, 빈칸: 하한 없음", def: "0" },
+                    { type: "text", key: "ul", label: "상한 ul() — 숫자, 빈칸: 상한 없음", def: "" },
+                    { type: "info", text: "y ≤ 하한 또는 y ≥ 상한인 관측치는 절단으로 제외 (Stata truncreg)" }
+                ]
+            },
+            LIMDEP_SE_SECTION,
+            LIMDEP_REPORT_SECTION
+        ]
+    },
+    heckman: {
+        title: "Heckman 표본선택 모형 (heckman)",
+        slots: [
+            { key: "dep", label: "결과 변수 (선택된 관측치에서만 관측)", multi: false, req: true, prefer: "num" },
+            { key: "covs", label: "결과식 공변량", multi: true, req: false, prefer: "num" },
+            { key: "factors", label: "결과식 요인", multi: true, req: false, prefer: "cat" },
+            { key: "selectDep", label: "선택 지표 (0/1) — 비우면 결과 변수 비결측 = 선택", multi: false, req: false, prefer: "bin" },
+            { key: "selectCovs", label: "선택식 공변량 (배제 제약 변수 포함)", multi: true, req: true, prefer: "num" },
+            { key: "selectFactors", label: "선택식 요인", multi: true, req: false, prefer: "cat" },
+            { key: "clusterVar", label: "군집 변수 (vce(cluster), 최대우도만)", multi: false, req: false, prefer: "any" }
+        ],
+        sections: [
+            {
+                title: "추정 방법 (Estimator)",
+                items: [
+                    { type: "select", key: "method", label: "추정 방법", def: "ml",
+                      options: [["ml", "최대우도 (Stata 기본)"], ["twostep", "Heckman 2단계 (twostep)"]] },
+                    { type: "info", text: "선택식에는 결과식에 없는 변수를 1개 이상 포함 (배제 제약)" }
+                ]
+            },
+            {
+                title: "표준오차 (SE/Robust)",
+                items: [
+                    { type: "select", key: "covType", label: "표준오차 유형", def: "oim", showIf: { method: "ml" },
+                      options: [["oim", "관측 정보행렬 OIM (Stata 기본)"], ["robust", "강건 표준오차 vce(robust)"],
+                                ["cluster", "군집 강건 표준오차 vce(cluster)"]] },
+                    { type: "info", text: "2단계 추정: Heckman 보정 공분산만 가능 (Stata twostep과 같음)", showIf: { method: "twostep" } }
+                ]
+            },
+            LIMDEP_REPORT_SECTION
+        ]
+    },
+    heckprobit: {
+        title: "표본선택 프로빗 (heckprobit)",
+        slots: [
+            { key: "dep", label: "결과 변수 (이항, 선택된 관측치에서만 관측)", multi: false, req: true, prefer: "bin" },
+            { key: "covs", label: "결과식 공변량", multi: true, req: false, prefer: "num" },
+            { key: "factors", label: "결과식 요인", multi: true, req: false, prefer: "cat" },
+            { key: "selectDep", label: "선택 지표 (0/1) — 비우면 결과 변수 비결측 = 선택", multi: false, req: false, prefer: "bin" },
+            { key: "selectCovs", label: "선택식 공변량 (배제 제약 변수 포함)", multi: true, req: true, prefer: "num" },
+            { key: "selectFactors", label: "선택식 요인", multi: true, req: false, prefer: "cat" },
+            { key: "clusterVar", label: "군집 변수 (vce(cluster))", multi: false, req: false, prefer: "any" }
+        ],
+        sections: [LIMDEP_SE_SECTION, LIMDEP_REPORT_SECTION]
+    }
+};
+Object.assign(ANALYSIS_SCHEMAS, LIMDEP_SCHEMAS);
+
+/* limdep 기본 변수 지정 */
+const LIMDEP_TYPES = new Set(["binaryReg", "ordinalReg", "multinomReg", "tobitReg", "truncReg", "heckman", "heckprobit"]);
+const LIMDEP_PRESETS = {
+    "LimDep_Employment_Wage.csv": {
+        binaryReg: { dep: "취업여부", covs: ["연령", "교육연수", "미취학자녀수", "배우자소득"], factors: ["지역유형"], link: "probit" },
+        heckman: { dep: "시간당임금", covs: ["교육연수", "경력"], factors: ["지역유형"], selectDep: "취업여부",
+                   selectCovs: ["연령", "교육연수", "미취학자녀수", "배우자소득"], selectFactors: ["지역유형"] },
+        heckprobit: { dep: "고임금여부", covs: ["교육연수", "경력"], factors: [], selectDep: "취업여부",
+                      selectCovs: ["연령", "교육연수", "미취학자녀수", "배우자소득"], selectFactors: ["지역유형"] }
+    },
+    "LimDep_Satisfaction_Service.csv": {
+        ordinalReg: { dep: "서비스만족도", covs: ["연령", "여성", "독거", "일상생활장애", "월소득"], factors: ["지역유형"] },
+        multinomReg: { dep: "이용서비스", covs: ["연령", "여성", "독거", "일상생활장애", "월소득"], factors: ["지역유형"] },
+        binaryReg: { dep: "정책인지", covs: ["연령", "여성", "독거", "일상생활장애", "월소득"], factors: ["지역유형"] }
+    },
+    "LimDep_MedicalCost.csv": {
+        tobitReg: { dep: "본인부담의료비", covs: ["연령", "여성", "만성질환수", "민간보험", "월소득"], factors: ["지역유형"], ll: "0" },
+        truncReg: { dep: "본인부담의료비", covs: ["연령", "여성", "만성질환수", "민간보험", "월소득"], factors: ["지역유형"], ll: "0" }
+    }
+};
+
+function limdepAutoAssign(type, params, cols, numCols, catCols, binCols, allNames) {
+    const pre = (LIMDEP_PRESETS[APP.datasetName] || {})[type];
+    if (pre && allNames.includes(pre.dep)) {
+        Object.assign(params, JSON.parse(JSON.stringify(pre)));
+        return;
+    }
+    const meta = n => cols.find(c => c.name === n) || {};
+    const isId = n => /^(id|pid|hhid)$|(^|_)id$|식별|번호/i.test(n);
+    const nums = numCols.filter(n => !isId(n));
+    const fewLevels = n => { const m = meta(n); return m.unique >= 3 && m.unique <= 8; };
+    let dep = "";
+    if (type === "binaryReg" || type === "heckprobit") dep = binCols.find(n => !isId(n)) || "";
+    else if (type === "ordinalReg") dep = nums.find(n => fewLevels(n) && /만족|척도|평가|rating|score|level/i.test(n)) || nums.find(fewLevels) || "";
+    else if (type === "multinomReg") dep = cols.filter(c => c.dataType === "Text" && c.unique >= 3 && c.unique <= 8).map(c => c.name)[0] || catCols.find(fewLevels) || "";
+    else if (type === "tobitReg" || type === "truncReg") dep = nums.find(n => (meta(n).min === 0) && meta(n).unique > 10) || nums[0] || "";
+    else if (type === "heckman") dep = nums.find(n => (meta(n).missing || 0) > 0 && meta(n).unique > 10) || nums[0] || "";
+    params.dep = dep;
+    const covs = nums.filter(n => n !== dep).slice(0, 4);
+    if (type === "heckman" || type === "heckprobit") {
+        params.covs = covs.slice(0, 2);
+        params.selectCovs = covs.slice(0, 4);
+        params.selectDep = "";
+    } else {
+        params.covs = covs;
+        const fac = cols.filter(c => c.dataType === "Text" && c.unique >= 2 && c.unique <= 6 && c.name !== dep).map(c => c.name);
+        params.factors = fac.slice(0, 1);
+    }
+    if (type === "tobitReg" || type === "truncReg") params.ll = "0";
+}
+
+/* count — 가산자료 회귀 (analyses/count_models.py) */
+Object.assign(ANALYSIS_SCHEMAS, {
+    countReg: {
+        title: "가산자료 회귀 (Count Regression)",
+        intro: "횟수(0, 1, 2, …) 종속변수의 회귀모형. 포아송·음이항(NB2·NB1)·영과잉(zip·zinb)·절단(tpoisson·tnbreg)·허들 모형을 최우추정하며 표준오차·모수화는 Stata 기본(OIM, /lnalpha)을 따름. 허들 모형은 Stata 내장 명령이 없어 R pscl::hurdle 규약을 따름.",
+        slots: [
+            { key: "dep", label: "종속변수 (횟수: 0, 1, 2, …)", multi: false, req: true, prefer: "num" },
+            { key: "covs", label: "공변량 (연속)", multi: true, req: false, prefer: "num" },
+            { key: "factors", label: "요인 (범주 · 더미 코딩)", multi: true, req: false, prefer: "cat" },
+            { key: "inflate", label: "팽창·영 허들 방정식 변수 (비우면 상수항만)", multi: true, req: false, prefer: "any",
+              showIf: { family: ["zip", "zinb", "hurdle_poisson", "hurdle_nb"] } },
+            { key: "exposure", label: "노출 변수 exposure (관찰기간·인구 등)", multi: false, req: false, prefer: "num" },
+            { key: "offset", label: "offset 변수 (계수 1 고정, exposure와 택일)", multi: false, req: false, prefer: "num" },
+            { key: "clusterVar", label: "군집 변수 (군집 표준오차)", multi: false, req: false, prefer: "cat",
+              showIf: { covType: "cluster" } }
+        ],
+        sections: [
+            {
+                title: "모형",
+                singleCol: true,
+                items: [
+                    {
+                        type: "select", key: "family", label: "분포·모형", def: "poisson",
+                        options: [
+                            ["poisson", "포아송 (poisson)"],
+                            ["nb2", "음이항 NB2 · 평균 산포 (nbreg)"],
+                            ["nb1", "음이항 NB1 · 상수 산포 (nbreg, dispersion(constant))"],
+                            ["zip", "영과잉 포아송 (zip)"],
+                            ["zinb", "영과잉 음이항 (zinb)"],
+                            ["ztp", "절단 포아송 (tpoisson)"],
+                            ["ztnb", "절단 음이항 NB2 (tnbreg)"],
+                            ["ztnb1", "절단 음이항 NB1 (tnbreg, dispersion(constant))"],
+                            ["hurdle_poisson", "허들 포아송 (로짓 + 0-절단 포아송)"],
+                            ["hurdle_nb", "허들 음이항 (로짓 + 0-절단 NB2)"]
+                        ]
+                    },
+                    { type: "select", key: "inflateLink", label: "팽창·허들 방정식 연결함수", def: "logit",
+                      options: [["logit", "로짓 (Stata 기본)"], ["probit", "프로빗 (probit 옵션)"]],
+                      showIf: { family: ["zip", "zinb", "hurdle_poisson", "hurdle_nb"] } },
+                    { type: "info", text: "팽창 방정식 변수 칸이 비어 있으면 상수항만 사용 (Stata inflate(_cons)). 허들 모형의 이항 부분은 y > 0일 확률을 모형화.",
+                      showIf: { family: ["zip", "zinb", "hurdle_poisson", "hurdle_nb"] } },
+                    { type: "number", key: "truncPoint", label: "절단점 ll (y > ll인 관측만)", def: 0, min: 0, max: 50, step: 1,
+                      showIf: { family: ["ztp", "ztnb", "ztnb1"] } },
+                    { type: "info", text: "절단 모형은 모든 관측의 종속변수가 절단점보다 커야 함 (0이 있으면 필터로 먼저 제외).",
+                      showIf: { family: ["ztp", "ztnb", "ztnb1"] } },
+                    { type: "check", key: "constant", label: "상수항 포함", def: true },
+                    { type: "text", key: "refLevels", label: "요인 기준 범주", def: "", placeholder: "예: 지역유형=대도시; 소득분위=1 (비우면 가장 작은 값)" }
+                ]
+            },
+            {
+                title: "표준오차 (SE/Robust)",
+                items: [
+                    {
+                        type: "select", key: "covType", label: "표준오차", def: "oim",
+                        options: [
+                            ["oim", "관측 정보행렬 OIM (Stata 기본)"],
+                            ["robust", "강건 robust (vce(robust))"],
+                            ["cluster", "군집 강건 (vce(cluster))"],
+                            ["opg", "OPG (vce(opg))"]
+                        ]
+                    },
+                    { type: "info", text: "군집 변수 칸에 군집(예: 시군구·기관) 변수를 지정", showIf: { covType: "cluster" } }
+                ]
+            },
+            {
+                title: "보고 (Reporting)",
+                items: [
+                    { type: "number", key: "ciLevel", label: "신뢰수준 (%)", def: 95, min: 50, max: 99.9, step: 0.5 },
+                    { type: "check", key: "irr", label: "발생률비 IRR = exp(b) (irr)", def: false }
+                ]
+            },
+            {
+                title: "사후 추정 (Postestimation)",
+                items: [
+                    { type: "check", key: "margins", label: "평균 한계효과 AME (margins, dydx(*))", def: true },
+                    { type: "check", key: "predProbs", label: "관측·예측 빈도 비교 (countfit)", def: true },
+                    { type: "check", key: "predPlot", label: "관측·예측 빈도 그림", def: true, showIf: { predProbs: true } },
+                    { type: "number", key: "maxCount", label: "비교할 최대 횟수", def: 9, min: 1, max: 100, step: 1, showIf: { predProbs: true } },
+                    { type: "check", key: "gof", label: "적합도 검정 (estat gof · 포아송)", def: true, showIf: { family: "poisson" } },
+                    { type: "check", key: "vuong", label: "Vuong 검정 (영과잉·허들 대 기본 모형)", def: false,
+                      showIf: { family: ["zip", "zinb", "hurdle_poisson", "hurdle_nb"] } }
+                ]
+            }
+        ]
+    }
+});
+
+/* ivts — 도구변수·시계열 (analyses/iv_models.py, time_series.py) */
+Object.assign(ANALYSIS_SCHEMAS, {
+    ivReg: {
+        title: "도구변수 회귀 (Stata ivregress)",
+        intro: "내생 설명변수를 제외 도구변수로 식별하는 단일식 도구변수 추정. 2SLS·LIML·2단계 GMM, 1단계 진단(estat firststage), 내생성 검정(estat endogenous), 과대식별 검정(estat overid) 제공.",
+        slots: [
+            { key: "dep", label: "종속변수", multi: false, req: true, prefer: "num" },
+            { key: "endog", label: "내생 설명변수 (Instrumented)", multi: true, req: true, prefer: "num" },
+            { key: "instruments", label: "제외 도구변수 (Excluded instruments)", multi: true, req: true, prefer: "num",
+              hint: "내생 설명변수 수 이상. 외생 설명변수는 자동으로 도구변수에 포함" },
+            { key: "exog", label: "외생 설명변수 (Included exogenous)", multi: true, req: false, prefer: "num" },
+            { key: "clusterVar", label: "군집 변수 (군집 강건 표준오차·군집 가중행렬)", multi: false, req: false, prefer: "any",
+              hint: "표준오차 '군집 강건' 또는 GMM 가중행렬 '군집'일 때 사용" }
+        ],
+        sections: [
+            { title: "모형 (Model)", items: [
+                { type: "select", key: "estimator", label: "추정법", def: "2sls", options: [
+                    ["2sls", "2단계 최소제곱 (2SLS)"], ["liml", "제한정보 최우추정 (LIML)"], ["gmm", "2단계 효율적 GMM"]],
+                  help: "Stata 대응: ivregress 2sls | liml | gmm" },
+                { type: "check", key: "constant", label: "상수항 포함 (해제 = noconstant)", def: true }
+            ] },
+            { title: "GMM 가중행렬", showIf: { estimator: "gmm" }, items: [
+                { type: "select", key: "wmatrix", label: "가중행렬 (wmatrix)", def: "robust", options: [
+                    ["robust", "이분산 강건 (기본)"], ["cluster", "군집 강건 (군집 변수 필요)"], ["unadjusted", "동분산 (= 2SLS)"]] },
+                { type: "check", key: "center", label: "적률 중심화 (center)", def: false }
+            ] },
+            { title: "표준오차 (SE/Robust)", items: [
+                { type: "select", key: "covType", label: "표준오차", def: "default", options: [
+                    ["default", "Stata 기본 (2SLS·LIML: 통상, GMM: 가중행렬과 같음)"], ["unadjusted", "통상 (동분산)"],
+                    ["robust", "이분산 강건 (robust)"], ["cluster", "군집 강건 (cluster)"]] },
+                { type: "check", key: "small", label: "소표본 보정 — t·F 분포, 자유도 N−k (small)", def: false, span2: true }
+            ] },
+            { title: "사후 검정 (estat)", items: [
+                { type: "check", key: "firstStage", label: "1단계 진단 — R²·부분 R²·F·최소 고유값 (estat firststage)", def: true, span2: true },
+                { type: "check", key: "first", label: "1단계 회귀 계수표 (first)", def: false },
+                { type: "check", key: "endogTest", label: "내생성 검정 (estat endogenous)", def: true },
+                { type: "subset", key: "endogTestVars", from: "endog", label: "내생성 검정 대상 (선택 없으면 전체; 통상 표준오차에서만 일부 지정)", def: [], showIf: { endogTest: true } },
+                { type: "check", key: "overidTest", label: "과대식별 검정 (estat overid)", def: true }
+            ] },
+            { title: "보고 (Reporting)", collapsed: true, items: [
+                { type: "number", key: "ciWidth", label: "신뢰수준 (%)", def: 95, min: 50, max: 99.9, step: 0.5 }
+            ] }
+        ]
+    },
+    panelIV: {
+        title: "패널 도구변수 회귀 (Stata xtivreg)",
+        intro: "패널 자료의 도구변수 추정. 고정효과(within 2SLS)·1차 차분·집단 간·확률효과(G2SLS·EC2SLS) 모형과 σ_u·σ_e·ρ, 집단 내·간·전체 R² 제공.",
+        slots: [
+            { key: "dep", label: "종속변수", multi: false, req: true, prefer: "num" },
+            { key: "endog", label: "내생 설명변수 (Instrumented)", multi: true, req: true, prefer: "num" },
+            { key: "instruments", label: "제외 도구변수", multi: true, req: true, prefer: "num" },
+            { key: "exog", label: "외생 설명변수", multi: true, req: false, prefer: "num" },
+            { key: "entity", label: "패널 식별 변수 (xtset panelvar)", multi: false, req: true, prefer: "any" },
+            { key: "time", label: "시간 변수 (xtset timevar; 1차 차분 모형은 필수)", multi: false, req: false, prefer: "any" }
+        ],
+        sections: [
+            { title: "모형 (Model)", items: [
+                { type: "select", key: "model", label: "추정 모형", def: "fe", options: [
+                    ["fe", "고정효과 — within 2SLS (fe)"], ["re", "확률효과 — GLS 2SLS (re)"], ["fd", "1차 차분 2SLS (fd)"], ["be", "집단 간 2SLS (be)"]],
+                  help: "Stata 대응: xtivreg y x (w = z), fe | re | fd | be" },
+                { type: "select", key: "reMethod", label: "확률효과 추정법", def: "g2sls", showIf: { model: "re" }, options: [
+                    ["g2sls", "G2SLS (Balestra–Varadharajan-Krishnakumar, 기본)"], ["ec2sls", "EC2SLS (Baltagi, ec2sls)"]] },
+                { type: "select", key: "reVar", label: "분산 성분", def: "sa", showIf: { model: "re" }, options: [
+                    ["sa", "Swamy–Arora (기본)"], ["bc", "Baltagi–Chang (nosa)"]] }
+            ] },
+            { title: "표준오차·보고", items: [
+                { type: "select", key: "covType", label: "표준오차", def: "conventional", showIf: { model: ["fe", "fd"] }, options: [
+                    ["conventional", "통상 (conventional)"], ["cluster", "패널 군집 강건 (vce(robust))"]] },
+                { type: "check", key: "small", label: "t·F 분포 (small)", def: false },
+                { type: "check", key: "firstStage", label: "1단계 요약 (변환 자료 기준, first)", def: true },
+                { type: "number", key: "ciWidth", label: "신뢰수준 (%)", def: 95, min: 50, max: 99.9, step: 0.5 }
+            ] }
+        ]
+    },
+    arima: {
+        title: "ARIMA·ARMAX 모형 (Stata arima)",
+        intro: "ARMA 오차를 갖는 회귀(ARMAX)와 계절 ARIMA의 정확 최우추정(Kalman 필터). 차분 모형의 상수는 차분 계열의 평균(Stata 규약). 잔차 백색잡음 검정(wntestq), 잔차 ACF·PACF, 수준값 예측과 예측구간 제공.",
+        manualRun: true,
+        slots: [
+            { key: "dep", label: "시계열 변수", multi: false, req: true, prefer: "num" },
+            { key: "time", label: "시간 변수 (tsset; 숫자 또는 YYYY-MM 날짜)", multi: false, req: false, prefer: "any",
+              hint: "비우면 행 순서를 시간 순서로 사용" },
+            { key: "exog", label: "외생 회귀변수 (선택, ARMAX)", multi: true, req: false, prefer: "num",
+              hint: "예측에는 미래 시점 값(종속변수 결측 행)이 필요" }
+        ],
+        sections: [
+            { title: "ARIMA 차수 (Model)", items: [
+                { type: "number", key: "p", label: "AR 차수 p", def: 1, min: 0, max: 12, step: 1 },
+                { type: "number", key: "d", label: "차분 차수 d", def: 0, min: 0, max: 2, step: 1 },
+                { type: "number", key: "q", label: "MA 차수 q", def: 1, min: 0, max: 12, step: 1 },
+                { type: "text", key: "arLags", label: "AR 시차 직접 지정 (예: 1 4; 입력 시 p 대신 사용)", def: "", placeholder: "ar(1 4)" },
+                { type: "text", key: "maLags", label: "MA 시차 직접 지정 (예: 1 12)", def: "", placeholder: "ma(1 12)" },
+                { type: "check", key: "constant", label: "상수항 포함 (해제 = noconstant)", def: true },
+                { type: "check", key: "diffExog", label: "외생변수도 같은 차수로 차분 (arima(p,d,q) 규약; 해제 = arima D.y x)", def: true, span2: true,
+                  showIf: { exog: "__filled__" } }
+            ] },
+            { title: "계절 ARIMA (sarima)", collapsed: true, items: [
+                { type: "number", key: "P", label: "계절 AR 차수 P", def: 0, min: 0, max: 3, step: 1 },
+                { type: "number", key: "D", label: "계절 차분 D", def: 0, min: 0, max: 1, step: 1 },
+                { type: "number", key: "Q", label: "계절 MA 차수 Q", def: 0, min: 0, max: 3, step: 1 },
+                { type: "number", key: "s", label: "계절 주기 s (0 = 시간 변수 주기: 월 12·분기 4)", def: 0, min: 0, max: 52, step: 1 }
+            ] },
+            { title: "표준오차 (SE/Robust)", items: [
+                { type: "select", key: "covType", label: "표준오차", def: "opg", options: [
+                    ["opg", "OPG (Stata arima 기본)"], ["oim", "관측 정보행렬 (oim)"], ["robust", "준최우 강건 (robust)"]] }
+            ] },
+            { title: "진단·예측", items: [
+                { type: "number", key: "forecast", label: "예측 기간 (시점 수, 0 = 예측 없음)", def: 12, min: 0, max: 120, step: 1 },
+                { type: "number", key: "ciWidth", label: "신뢰·예측구간 (%)", def: 95, min: 50, max: 99.9, step: 0.5 },
+                { type: "number", key: "lbLags", label: "Ljung–Box 시차 (0 = Stata 기본 min(n/2−2, 40))", def: 0, min: 0, max: 60, step: 1 },
+                { type: "select", key: "residType", label: "진단용 잔차", def: "raw", options: [
+                    ["raw", "1단계 예측오차 (Stata predict, residuals)"], ["standardized", "표준화 예측오차×σ (R arima)"]] },
+                { type: "check", key: "plots", label: "그림 (적합·예측, 잔차, 잔차 ACF·PACF)", def: true }
+            ] }
+        ]
+    },
+    unitRoot: {
+        title: "단위근 검정 (Stata dfuller · pperron · KPSS)",
+        intro: "Augmented Dickey–Fuller, Phillips–Perron 단위근 검정과 KPSS 정상성 검정. 임계값은 Stata와 같은 Fuller (1976) 표 보간, p값은 MacKinnon (1994).",
+        slots: [
+            { key: "dep", label: "시계열 변수", multi: false, req: true, prefer: "num" },
+            { key: "time", label: "시간 변수 (tsset)", multi: false, req: false, prefer: "any" }
+        ],
+        sections: [
+            { title: "검정 (Model)", items: [
+                { type: "select", key: "test", label: "검정", def: "adf", options: [
+                    ["adf", "ADF (dfuller)"], ["pp", "Phillips–Perron (pperron)"], ["kpss", "KPSS (정상성 귀무가설)"], ["all", "세 검정 모두"]] },
+                { type: "select", key: "trend", label: "결정항", def: "constant", options: [
+                    ["constant", "상수항 (기본)"], ["trend", "상수항 + 추세 (trend)"], ["drift", "상수항, 표류 귀무가설 (drift; ADF만)"], ["none", "결정항 없음 (noconstant)"]] }
+            ] },
+            { title: "시차", items: [
+                { type: "number", key: "lags", label: "ADF 시차 차분 수 (lags)", def: 0, min: 0, max: 36, step: 1,
+                  showIf: { test: ["adf", "all"], lagSelect: "none" } },
+                { type: "select", key: "lagSelect", label: "ADF 시차 자동 선택", def: "none", showIf: { test: ["adf", "all"] }, options: [
+                    ["none", "직접 지정 (Stata dfuller)"], ["aic", "AIC 최소"], ["bic", "BIC 최소"]] },
+                { type: "number", key: "maxLag", label: "자동 선택 최대 시차 (0 = int(12(T/100)^¼))", def: 0, min: 0, max: 36, step: 1,
+                  showIf: { lagSelect: ["aic", "bic"] } },
+                { type: "text", key: "ppLags", label: "PP Newey–West 시차 (비우면 Stata 기본 int(4(T/100)^(2/9)))", def: "", showIf: { test: ["pp", "all"] } },
+                { type: "text", key: "kpssLags", label: "KPSS 시차 (비우면 자동 선택)", def: "", showIf: { test: ["kpss", "all"] } },
+                { type: "check", key: "regress", label: "ADF 회귀식 표시 (regress)", def: false, showIf: { test: ["adf", "all"] } }
+            ] }
+        ]
+    },
+    corrgram: {
+        title: "자기상관·편자기상관 (Stata corrgram · ac · pac · wntestq)",
+        intro: "표본 자기상관(AC)·편자기상관(PAC)·Ljung–Box Q 표와 그림, 백색잡음 포트맨토 검정.",
+        slots: [
+            { key: "dep", label: "시계열 변수", multi: false, req: true, prefer: "num" },
+            { key: "time", label: "시간 변수 (tsset)", multi: false, req: false, prefer: "any" }
+        ],
+        sections: [
+            { title: "옵션", items: [
+                { type: "number", key: "lags", label: "시차 수 (0 = Stata 기본 min(n/2−2, 40))", def: 0, min: 0, max: 120, step: 1 },
+                { type: "select", key: "pacMethod", label: "편자기상관 계산", def: "regression", options: [
+                    ["regression", "회귀 방식 (Stata 기본)"], ["yw", "Yule–Walker (yw)"]] },
+                { type: "number", key: "wntestqLags", label: "wntestq 시차 (0 = 기본)", def: 0, min: 0, max: 120, step: 1 },
+                { type: "check", key: "plots", label: "AC·PAC 그림 (신뢰대 포함)", def: true }
+            ] }
+        ]
+    }
+});
+
+const IVTS_TYPES = new Set(["ivReg", "panelIV", "arima", "unitRoot", "corrgram"]);
+
+function ivtsAutoAssign(type, params, numCols, catCols, allNames) {
+    const has = n => allNames.includes(n);
+    const pick = (cands, pool) => cands.find(c => pool.includes(c));
+    const isTime = n => /^(date|time|t|year|yr|month|period|ym|wave|quarter|qtr)$|연월|연도|년도|시점|일자/i.test(n);
+    const isId = n => /^(id|region|firm|entity|code|panel)$|(^|_)(id|cd)$|코드|식별|지역/i.test(n);
+    if (type === "ivReg") {
+        if (has("lwage") && has("educ") && has("nearc4")) {        // sample_data/IV_Schooling.csv
+            Object.assign(params, { dep: "lwage", endog: ["educ"], instruments: ["nearc4", "meduc"].filter(has),
+                exog: ["exper", "expersq", "black", "south", "urban"].filter(has), clusterVar: has("region") ? "region" : "" });
+            return;
+        }
+        const pool = numCols.filter(n => !isId(n) && !isTime(n));
+        params.dep = pool[0] || numCols[0] || allNames[0];
+        params.endog = pool.slice(1, 2);
+        params.instruments = pool.slice(2, 4);
+        params.exog = pool.slice(4, 6);
+        return;
+    }
+    if (type === "panelIV") {
+        if (has("lcare") && has("lstaff") && has("lgrant")) {      // sample_data/IV_Panel_CareStaff.csv
+            Object.assign(params, { dep: "lcare", endog: ["lstaff"], instruments: ["lgrant", "lrule"].filter(has),
+                exog: ["lincome", "aged"].filter(has), entity: "region", time: "year" });
+            return;
+        }
+        params.entity = allNames.find(isId) || catCols[0] || allNames[0];
+        params.time = allNames.find(isTime) || "";
+        const pool = numCols.filter(n => n !== params.entity && n !== params.time && !isId(n) && !isTime(n));
+        params.dep = pool[0] || numCols[0];
+        params.endog = pool.slice(1, 2);
+        params.instruments = pool.slice(2, 4);
+        params.exog = pool.slice(4, 6);
+        return;
+    }
+    // time series: sample_data/TS_Monthly_Welfare.csv (date YYYY-MM, lvisits, temp, cpi, unemp)
+    params.time = pick(["date", "t", "time", "year"], allNames) || allNames.find(isTime) || "";
+    const pool = numCols.filter(n => n !== params.time && !isTime(n) && n !== "month" && n !== "year");
+    if (type === "arima") {
+        params.dep = pick(["lvisits"], pool) || pool[0] || numCols[0];
+        params.exog = has("temp") && params.dep === "lvisits" ? ["temp"] : [];
+        return;
+    }
+    if (type === "unitRoot") {
+        params.dep = pick(["cpi"], pool) || pool[0] || numCols[0];
+        return;
+    }
+    params.dep = pick(["lvisits"], pool) || pool[0] || numCols[0];   // corrgram
+}
+
+/* multilevel — 다층모형 (analyses/multilevel.py) */
+const ML_COV_OPTIONS = [
+    ["independent", "독립 (independent · Stata 기본)"],
+    ["unstructured", "비구조 (unstructured)"],
+    ["exchangeable", "교환 (exchangeable)"],
+    ["identity", "동일 (identity)"]
+];
+
+function mlLevelSection(num, title, showIf) {
+    // num: 2 = level directly above observations (slot `cluster`), 3 = `cluster3`, 4 = `cluster4`
+    const sec = {
+        title: title,
+        items: [
+            { type: "subset", key: `slopes${num}`, from: "covs", label: `확률기울기 변수 (${num}수준 · Stata || 집단: 변수)`, def: [] },
+            { type: "select", key: `covStruct${num}`, label: `공분산 구조 (${num}수준 · covariance())`, def: "independent",
+              options: ML_COV_OPTIONS, showIf: { [`slopes${num}`]: "__filled__" },
+              help: "확률효과가 2개 이상일 때만 적용. 최상위 수준의 독립·비구조와 하위 수준의 독립 구조는 statsmodels MixedLM, 그 밖의 구조는 자체 구현 추정" },
+            { type: "check", key: `noConstant${num}`, label: `확률절편 제외 (${num}수준 · noconstant)`, def: false,
+              showIf: { [`slopes${num}`]: "__filled__" } }
+        ]
+    };
+    if (showIf) sec.showIf = showIf;
+    return sec;
+}
+
+/* paste inside `const ANALYSIS_SCHEMAS = { ... }` in place of the old mixedModel entry */
+const ML_SCHEMA_ENTRY = {
+    mixedModel: {
+        title: "다층모형 · 혼합모형 (Stata mixed · melogit · mepoisson)",
+        intro: "관측치(예: 학생)가 2수준 집단(학급) 안에, 2수준 집단이 3수준 집단(학교) 안에 포함된 위계 자료의 혼합효과 모형입니다. 집단 변수는 관측치를 바로 포함하는 집단부터 지정합니다. 하위 집단 ID가 상위 집단 안에서만 고유해도(학교마다 1반·2반…) 상위 집단과 결합해 구분합니다(Stata `|| 학교: || 학급:`). 수준마다 확률절편·확률기울기와 공분산 구조를 고르며, 선형모형은 statsmodels MixedLM으로 추정하고 결과는 Stata mixed 형식(분산 성분의 로그 척도 신뢰구간, 선형회귀 대비 LR 검정, estat icc)으로 보고합니다.",
+        slots: [
+            { key: "dep", label: "종속변수", multi: false, req: true, prefer: "num" },
+            { key: "cluster", label: "2수준 집단 (관측치를 바로 포함하는 집단 · 예: 학급)", multi: false, req: true, prefer: "cat" },
+            { key: "cluster3", label: "3수준 집단 (선택 · 예: 학교)", multi: false, req: false, prefer: "cat" },
+            { key: "cluster4", label: "4수준 집단 (선택 · 예: 지역, 3수준 지정 후)", multi: false, req: false, prefer: "cat" },
+            { key: "covs", label: "공변량 (연속형)", multi: true, req: false, prefer: "num" },
+            { key: "factors", label: "요인 (범주형 · 더미 코딩, 첫 범주 기준)", multi: true, req: false, prefer: "cat" }
+        ],
+        sections: [
+            { title: "모형", items: [
+                { type: "select", key: "family", label: "종속변수 분포", def: "gaussian", span2: true, options: [
+                    ["gaussian", "연속형 · 선형 혼합모형 (mixed)"],
+                    ["binomial", "이분형 0/1 · 다층 로지스틱 (melogit · 라플라스 근사)"],
+                    ["poisson", "빈도 · 다층 포아송 (mepoisson · 라플라스 근사)"]] },
+                { type: "select", key: "method", label: "추정 방법", def: "ml", showIf: { family: "gaussian" }, options: [
+                    ["ml", "ML 최대우도 (Stata mixed 기본)"], ["reml", "REML 제한 최대우도"]] },
+                { type: "text", key: "interactions", label: "상호작용 항 (쉼표 구분)", def: "", span2: true,
+                  placeholder: "예: 가정SES*학교유형, 가정SES:학급규모  (* = 주효과 포함, : = 곱 항만)" },
+                { type: "check", key: "expB", label: "승산비·발생률비 표시 (or · irr)", def: false, showIf: { family: ["binomial", "poisson"] } },
+                { type: "text", key: "exposure", label: "노출 변수 (exposure, 포아송)", def: "", showIf: { family: "poisson" },
+                  placeholder: "예: 관찰기간 (로그를 오프셋으로 사용)" }
+            ] },
+            mlLevelSection(2, "2수준 확률효과 (|| 2수준 집단:)", null),
+            mlLevelSection(3, "3수준 확률효과 (|| 3수준 집단:)", { cluster3: "__filled__" }),
+            mlLevelSection(4, "4수준 확률효과 (|| 4수준 집단:)", { cluster4: "__filled__" }),
+            { title: "중심화", collapsed: true, items: [
+                { type: "subset", key: "centerGrand", from: "covs", label: "전체평균 중심화 (CGM · 변수명_cgm)", def: [] },
+                { type: "subset", key: "centerGroup", from: "covs", label: "집단평균 중심화 (CWC · 변수명_cwc)", def: [] },
+                { type: "subset", key: "groupMeans", from: "covs", label: "집단평균을 예측변수로 투입 (집단 간 효과)", def: [] },
+                { type: "select", key: "centerLevel", label: "집단평균 기준 수준", def: "level2", options: [
+                    ["level2", "2수준 집단"], ["level3", "3수준 집단"], ["level4", "4수준 집단"]],
+                  help: "집단평균 중심화와 집단평균 투입을 함께 지정하면 집단 내·집단 간 효과 분해" }
+            ] },
+            { title: "출력 (Reporting)", items: [
+                { type: "select", key: "reStat", label: "확률효과 모수 표시", def: "var", options: [
+                    ["var", "분산·공분산 (Stata 기본)"], ["sd", "표준편차·상관 (stddeviations)"], ["both", "둘 다"]] },
+                { type: "number", key: "ciWidth", label: "신뢰수준 (%) · level()", def: 95, min: 50, max: 99.9, step: 1 },
+                { type: "check", key: "groupInfo", label: "집단 구조 표", def: true },
+                { type: "check", key: "lrTest", label: "단일수준 회귀 대비 LR 검정", def: true },
+                { type: "check", key: "icc", label: "급내상관 (estat icc)", def: true },
+                { type: "check", key: "blups", label: "확률효과 예측값 표 (predict, reffects reses)", def: false },
+                { type: "check", key: "caterpillar", label: "확률효과 예측값 그림 (caterpillar)", def: false },
+                { type: "check", key: "residPlot", label: "잔차 진단 그림 (선형모형)", def: false, showIf: { family: "gaussian" } }
+            ] }
+        ]
+    }
+};
+Object.assign(ANALYSIS_SCHEMAS, ML_SCHEMA_ENTRY);
+
+function mlAutoAssign(type, params, allNames, numCols, catCols) {
+    if (type !== "mixedModel") return false;
+    if (allNames.includes("수학성취도") && allNames.includes("학급ID") && allNames.includes("학교ID")) {
+        const fam = params.family || "gaussian";
+        params.dep = fam === "binomial" ? "기초학력미달" : (fam === "poisson" ? "결석일수" : "수학성취도");
+        params.cluster = "학급ID";
+        params.cluster3 = "학교ID";
+        params.covs = ["가정SES", "성별", "학습시간"].filter(n => allNames.includes(n));
+        params.factors = [];
+        return true;
+    }
+    return false;   // other datasets: the generic loop fills dep / cluster / covs as before
+}
 
 /* --- Browser storage helpers: every access guarded so the page works when storage is blocked --- */
 function safeStorageGet(key) {
@@ -6687,6 +7625,34 @@ function autoAssignVariablesIntoParams(type, params) {
     const binCols = cols.filter(c => c.unique === 2).map(c => c.name);
     const allNames = cols.map(c => c.name);
 
+    if (LIMDEP_TYPES.has(type)) { limdepAutoAssign(type, params, cols, numCols, catCols, binCols, allNames); return; }
+    if (IVTS_TYPES.has(type)) { ivtsAutoAssign(type, params, numCols, catCols, allNames); return; }
+    if (mlAutoAssign(type, params, allNames, numCols, catCols)) return;
+
+    if (type === "countReg") {
+        if (allNames.includes("외래방문") && allNames.includes("관찰개월")) {
+            params.dep = "외래방문";
+            params.covs = ["연령", "여성", "만성질환수", "의료급여"].filter(n => allNames.includes(n));
+            params.factors = ["소득분위", "지역유형"].filter(n => allNames.includes(n));
+            params.exposure = "관찰개월";
+            params.inflate = [];   // filled by the user after choosing zip/zinb/hurdle (empty = constant only)
+            params.clusterVar = allNames.includes("시군구") ? "시군구" : "";
+        } else {
+            const isIdName = n => /^(id|no|seq)$|(^|_)(id|no|code|cd)$|식별|번호|코드$/i.test(n);
+            const meta = n => cols.find(c => c.name === n) || {};
+            // a count outcome: integer, non-negative, more than two distinct values
+            const isCount = n => { const m = meta(n); return m.dataType === "Integer" && (m.min === undefined || m.min >= 0) && (m.unique || 0) > 2; };
+            const countLike = numCols.filter(n => !isIdName(n) && isCount(n));
+            const byName = countLike.find(n => /횟수|건수|방문|이용|count|visits|art|num/i.test(n));
+            params.dep = byName || countLike[0] || numCols.find(n => !isIdName(n)) || allNames[0];
+            params.covs = numCols.filter(n => n !== params.dep && !isIdName(n)).slice(0, 3);
+            params.factors = [];
+            params.inflate = [];
+            params.exposure = "";
+        }
+        return;
+    }
+
     if (SPATIAL_TYPES.has(type)) {
         const b = APP.boundary && APP.boundary.boundary ? APP.boundary : null;
         const isIdLike = n => /(^|_)(id|code|cd|gid)$|코드|식별/i.test(n);
@@ -6761,6 +7727,23 @@ function autoAssignVariablesIntoParams(type, params) {
     }
 
     if (type === "sem") {
+        if (allNames.includes("우울_1") && allNames.includes("외로움_5")) {
+            params.model = "RI_우울 =~ 1*우울_1 + 1*우울_2 + 1*우울_3 + 1*우울_4 + 1*우울_5\nRI_외로움 =~ 1*외로움_1 + 1*외로움_2 + 1*외로움_3 + 1*외로움_4 + 1*외로움_5\nW_우울1 =~ 1*우울_1\nW_우울2 =~ 1*우울_2\nW_우울3 =~ 1*우울_3\nW_우울4 =~ 1*우울_4\nW_우울5 =~ 1*우울_5\nW_외로움1 =~ 1*외로움_1\nW_외로움2 =~ 1*외로움_2\nW_외로움3 =~ 1*외로움_3\nW_외로움4 =~ 1*외로움_4\nW_외로움5 =~ 1*외로움_5\n우울_1 ~~ 0*우울_1\n우울_2 ~~ 0*우울_2\n우울_3 ~~ 0*우울_3\n우울_4 ~~ 0*우울_4\n우울_5 ~~ 0*우울_5\n외로움_1 ~~ 0*외로움_1\n외로움_2 ~~ 0*외로움_2\n외로움_3 ~~ 0*외로움_3\n외로움_4 ~~ 0*외로움_4\n외로움_5 ~~ 0*외로움_5\nW_우울2 ~ ar_우울*W_우울1 + cl_외로움_우울*W_외로움1\nW_외로움2 ~ cl_우울_외로움*W_우울1 + ar_외로움*W_외로움1\nW_우울3 ~ ar_우울*W_우울2 + cl_외로움_우울*W_외로움2\nW_외로움3 ~ cl_우울_외로움*W_우울2 + ar_외로움*W_외로움2\nW_우울4 ~ ar_우울*W_우울3 + cl_외로움_우울*W_외로움3\nW_외로움4 ~ cl_우울_외로움*W_우울3 + ar_외로움*W_외로움3\nW_우울5 ~ ar_우울*W_우울4 + cl_외로움_우울*W_외로움4\nW_외로움5 ~ cl_우울_외로움*W_우울4 + ar_외로움*W_외로움4\nW_우울1 ~~ W_우울1\nW_외로움1 ~~ W_외로움1\nW_우울1 ~~ W_외로움1\nW_우울2 ~~ W_우울2\nW_외로움2 ~~ W_외로움2\nW_우울2 ~~ W_외로움2\nW_우울3 ~~ W_우울3\nW_외로움3 ~~ W_외로움3\nW_우울3 ~~ W_외로움3\nW_우울4 ~~ W_우울4\nW_외로움4 ~~ W_외로움4\nW_우울4 ~~ W_외로움4\nW_우울5 ~~ W_우울5\nW_외로움5 ~~ W_외로움5\nW_우울5 ~~ W_외로움5\nRI_우울 ~~ RI_우울\nRI_외로움 ~~ RI_외로움\nRI_우울 ~~ RI_외로움\nRI_우울 ~~ 0*W_우울1 + 0*W_외로움1\nRI_외로움 ~~ 0*W_우울1 + 0*W_외로움1\n";
+            params.pathDiagram = false;      // 12 latent variables: the table output is the readable part
+            return;
+        }
+        if (allNames.includes("삶의질A_1") && allNames.includes("삶의질C_4")) {
+            params.model = "삶의질_T1 =~ 1*삶의질A_1 + l2_삶의질*삶의질B_1 + l3_삶의질*삶의질C_1\n삶의질_T2 =~ 1*삶의질A_2 + l2_삶의질*삶의질B_2 + l3_삶의질*삶의질C_2\n삶의질_T3 =~ 1*삶의질A_3 + l2_삶의질*삶의질B_3 + l3_삶의질*삶의질C_3\n삶의질_T4 =~ 1*삶의질A_4 + l2_삶의질*삶의질B_4 + l3_삶의질*삶의질C_4\n삶의질A_1 ~ 0*1\n삶의질A_2 ~ 0*1\n삶의질A_3 ~ 0*1\n삶의질A_4 ~ 0*1\n삶의질B_1 ~ n2_삶의질*1\n삶의질B_2 ~ n2_삶의질*1\n삶의질B_3 ~ n2_삶의질*1\n삶의질B_4 ~ n2_삶의질*1\n삶의질C_1 ~ n3_삶의질*1\n삶의질C_2 ~ n3_삶의질*1\n삶의질C_3 ~ n3_삶의질*1\n삶의질C_4 ~ n3_삶의질*1\n삶의질A_1 ~~ 삶의질A_2 + 삶의질A_3 + 삶의질A_4\n삶의질A_2 ~~ 삶의질A_3 + 삶의질A_4\n삶의질A_3 ~~ 삶의질A_4\n삶의질B_1 ~~ 삶의질B_2 + 삶의질B_3 + 삶의질B_4\n삶의질B_2 ~~ 삶의질B_3 + 삶의질B_4\n삶의질B_3 ~~ 삶의질B_4\n삶의질C_1 ~~ 삶의질C_2 + 삶의질C_3 + 삶의질C_4\n삶의질C_2 ~~ 삶의질C_3 + 삶의질C_4\n삶의질C_3 ~~ 삶의질C_4\n삶의질_T1 ~ 0*1\n삶의질_T2 ~ 0*1\n삶의질_T3 ~ 0*1\n삶의질_T4 ~ 0*1\n삶의질_T1 ~~ 삶의질_T1\n삶의질_T2 ~~ 삶의질_T2\n삶의질_T3 ~~ 삶의질_T3\n삶의질_T4 ~~ 삶의질_T4\nI =~ 1*삶의질_T1 + 1*삶의질_T2 + 1*삶의질_T3 + 1*삶의질_T4\nS =~ 0*삶의질_T1 + 1*삶의질_T2 + 2*삶의질_T3 + 3*삶의질_T4\nI ~ 1\nS ~ 1\nI ~~ I\nS ~~ S\nI ~~ S\n";
+            return;
+        }
+        if (allNames.includes("만족_친절") && allNames.includes("재이용의향")) {
+            params.model = "S =~ 만족_친절 + 만족_시간 + 만족_전문성 + 만족_소통\nT =~ 신뢰_정보 + 신뢰_약속 + 신뢰_안전\nT ~ S\n재이용의향 ~ S + T + 여성";
+            params.categorical = ["만족_친절", "만족_시간", "만족_전문성", "만족_소통", "신뢰_정보", "신뢰_약속", "신뢰_안전", "재이용의향"];
+            params.estimator = "auto";
+            params.missing = "auto";
+            params.indirect = "재이용의향 <- S";
+            return;
+        }
         if (allNames.includes("x1_vis") && allNames.includes("x4_txt")) {
             params.model = "Visual =~ x1_vis + x2_vis + x3_vis\nTextual =~ x4_txt + x5_txt + x6_txt\nSpeed =~ x7_spd + x8_spd + x9_spd\nGPA ~ Visual + Textual + Speed";
         } else if (allNames.includes("x1") && allNames.includes("y1")) {
@@ -6771,12 +7754,34 @@ function autoAssignVariablesIntoParams(type, params) {
         return;
     }
 
-    if (type === "panel") {
-        params.entity = catCols[0] || allNames[0];
-        params.time = allNames.find(n => /year|time|wave/i.test(n)) || allNames[1] || allNames[0];
-        const remNum = numCols.filter(n => n !== params.entity && n !== params.time);
-        params.dep = remNum[0] || numCols[0] || allNames[0];
-        params.covs = remNum.slice(1, 3).length ? remNum.slice(1, 3) : remNum.slice(0, 1);
+    if (type === "panel" || type === "dynPanel") {
+        const timeRe = /^(연도|년도|시점|차수|조사차수|기간|year|time|wave|period|t)$/i;
+        params.time = allNames.find(n => timeRe.test(n)) || allNames.find(n => /year|time|wave|연도|년도|시점/i.test(n)) || allNames[1] || allNames[0];
+        params.entity = allNames.find(n => n !== params.time && /지역코드|^id$|_id$|firm|entity|기관|개체|code/i.test(n))
+            || catCols.find(n => n !== params.time) || allNames.find(n => n !== params.time) || allNames[0];
+        const skip = new Set([params.entity, params.time, "시도"]);
+        const rem = numCols.filter(n => !skip.has(n));
+        if (allNames.includes("복지지출") && allNames.includes("실업률") && allNames.includes("재정자립도")) {
+            // Dynamic_Panel_Welfare.csv: 200 regions x 2014-2023
+            params.dep = "복지지출";
+            if (type === "panel") {
+                params.covs = ["고령인구비율", "재정자립도", "실업률"];
+            } else {
+                params.exog = ["고령인구비율"];
+                params.pre = ["재정자립도"];
+                params.endog = ["실업률"];
+                params.method = "system";
+                params.twostep = true;
+                params.vce = "robust";
+            }
+            return;
+        }
+        params.dep = rem[0] || numCols[0] || allNames[0];
+        if (type === "panel") {
+            params.covs = rem.slice(1, 3).length ? rem.slice(1, 3) : rem.slice(0, 1);
+        } else {
+            params.exog = rem.slice(1, 3);
+        }
         return;
     }
 
@@ -6913,6 +7918,8 @@ function renderOptionsPanel() {
             <div style="font-weight:700;font-size:12.5px;color:#166534;margin-bottom:4px;">🎨 대화형 SEM 모델러 (Stata SEM Builder / Amos 스타일)</div>
             <div style="font-size:11.5px;color:#374151;margin-bottom:8px;">타원(잠재변수)과 사각형(관측변수)을 마우스로 배치하고 화살표 경로를 손으로 직접 연결합니다.</div>
             <button class="stata-cmd-btn" style="width:100%;padding:6px;font-size:12px;background:#0D9488;" onclick="openSemBuilderModal()">🎨 대화형 SEM 빌더 캔버스 열기</button>
+            <button class="stata-cmd-btn" style="width:100%;padding:6px;font-size:12px;background:#1E3A5F;margin-top:6px;"
+                    onclick="openSemTemplateModal()">📐 모형 예시 (교차지연·잠재성장·잠재변화 · 기본 가정 반영)</button>
         </div>`;
     }
 
@@ -7155,6 +8162,11 @@ function assignSelectedToSlot(slotKey) {
     } else {
         APP.currentParams[slotKey] = v;
     }
+    // SEM: categorical variables need a WLS-family estimator (ML/MLR/MLM + categorical stops with an error)
+    if (APP.currentType === "sem" && slotKey === "categorical" && ["ml", "mlr", "mlm"].includes(APP.currentParams.estimator)) {
+        APP.currentParams.estimator = "auto";
+        showToast((APP.lang || "ko") === "en" ? "Estimator set to auto (WLSMV for categorical variables)" : "추정법을 자동(범주형 변수: WLSMV)으로 바꿈");
+    }
 
     // Advance supplier selection to next variable for rapid clicking
     const idx = APP.columns.findIndex(c => c.name === v);
@@ -7207,6 +8219,10 @@ function updateOptionParam(key, val, debounceMs = 120) {
     }
     if (APP.currentType === "graph" && key === "chartType") {
         autoAssignVariablesIntoParams("graph", APP.currentParams);
+        renderOptionsPanel();
+    } else if (APP.currentType === "mixedModel" && key === "family") {
+        // sample data: pick the outcome that fits the distribution (continuous / binary / count)
+        mlAutoAssign("mixedModel", APP.currentParams, APP.columns.map(c => c.name), [], []);
         renderOptionsPanel();
     } else {
         const sc = ANALYSIS_SCHEMAS[APP.currentType];
@@ -7372,6 +8388,9 @@ function formatCell(val, colMeta) {
         }
         if (Math.abs(val) >= 1e5 || (Math.abs(val) > 0 && Math.abs(val) < 1e-4)) {
             return val.toExponential(3);
+        }
+        if (Math.abs(val) > 0 && Math.abs(val) < 0.01) {
+            return String(Number(val.toPrecision(3)));   // 3 significant digits: 0.00145 (not 0.001)
         }
         return val.toFixed(3);
     }
@@ -7828,6 +8847,493 @@ function closeCompareModal() {
         APP.selectedAnalysisId = null;
         highlightSelectedSheet();
     }
+}
+
+const SEMTPL = {
+    catalog: [], waveSets: [], indicatorSets: [], suggested: {}, cur: null,
+    roles: {}, options: {}, last: null, timer: null, seq: 0, loaded: false, tab: "diagram"
+};
+
+const SEMTPL_TXT = {
+    ko: {
+        hdr: "📐 SEM 모형 예시 (기본 가정 반영)", close: "닫기", cancel: "취소", copy: "모형식 복사", apply: "▶ 모형식에 넣기",
+        step1: "1. 변수 지정 <small>(시점 순서대로)</small>", step2: "2. 옵션", step3: "3. 생성된 모형", step4: "모형에 반영된 기본 가정",
+        pickSet: "— 시점별 변수 묶음 선택 —", pickGrid: "— 문항 묶음 선택 (문항 × 시점) —", manual: "직접 지정 (아래에서 차례로 추가)",
+        addVar: "+ 변수 추가…", addRow: "+ 문항 추가 (시점 변수 묶음)…", item: "문항", wave: (t) => `${t}시점`,
+        waves: (n) => `${n}시점`, items: (j, t) => `문항 ${j}개 × ${t}시점`, none: "지정 안 함",
+        stat: (s) => `자유모수 ${s.npar}개 · 자유도 ${s.df} · 관측변수 ${s.observed.length}개` + (s.covariates.length ? ` · 조건부 공변량 ${s.covariates.length}개` : ""),
+        summary: (o) => `${o.heading}`, waiting: "변수를 지정하면 모형식이 표시됨", noData: "열린 데이터 없음: 데이터를 먼저 불러와야 함",
+        copied: "모형식 복사 완료", applied: (o) => `모형식 적용: ${o.title} (자유도 ${o.suggested.df})`, noModel: "생성된 모형식 없음",
+        refs: "참고문헌", min: (n) => `${n}시점 이상`, optional: "선택",
+        tabs: ["경로 그림", "모형식", "Stata sem"], latentCol: "잠재변수", waveCol: "시점", marker: "★ 기준지표 (적재량 1)",
+        measCaption: "시점별 측정 구성요소 (잠재변수 ← 측정변수)", removeItem: "이 문항 삭제",
+        legend: "□ 관측변수 · ○ 잠재변수 · → 경로 · ↔ 공분산 · 숫자 = 고정값, 이름 = 같은 이름끼리 동일 제약 · ε=0 = 잔차분산 0",
+        stataNote: "* Stata sem 명령 (같은 모형). 수렴하지 않으면 from()으로 시작값 지정"
+    },
+    en: {
+        hdr: "📐 SEM model templates (default assumptions written in)", close: "Close", cancel: "Cancel", copy: "Copy model",
+        apply: "▶ Insert into model", step1: "1. Variables <small>(in wave order)</small>", step2: "2. Options",
+        step3: "3. Generated model", step4: "Default assumptions written into the model",
+        pickSet: "— choose a set of wave variables —", pickGrid: "— choose an item set (items × waves) —",
+        manual: "Manual (add variables one by one below)", addVar: "+ add variable…", addRow: "+ add item (wave set)…",
+        item: "Item", wave: (t) => `Wave ${t}`, waves: (n) => `${n} waves`, items: (j, t) => `${j} items × ${t} waves`,
+        none: "none", stat: (s) => `${s.npar} free parameters · df ${s.df} · ${s.observed.length} observed` +
+            (s.covariates.length ? ` · ${s.covariates.length} conditioned covariates` : ""),
+        summary: (o) => `${o.name_en}`, waiting: "Assign variables to see the model", noData: "No dataset open",
+        copied: "Model copied", applied: (o) => `Model inserted: ${o.name_en} (df ${o.suggested.df})`, noModel: "No model generated",
+        refs: "References", min: (n) => `${n}+ waves`, optional: "optional",
+        tabs: ["Path diagram", "Model", "Stata sem"], latentCol: "Latent", waveCol: "Wave", marker: "★ marker (loading 1)",
+        measCaption: "Measurement component per wave (latent ← measurements)", removeItem: "Remove this item",
+        legend: "□ observed · ○ latent · → path · ↔ covariance · number = fixed value, name = equal to same name · ε=0 = zero residual variance",
+        stataNote: "* Stata sem command (same model). Use from() start values if it does not converge"
+    }
+};
+
+function semTplLang() { return (APP.lang === "en") ? "en" : "ko"; }
+function semTplT(key, ...args) {
+    const d = SEMTPL_TXT[semTplLang()];
+    const v = d[key];
+    return typeof v === "function" ? v(...args) : v;
+}
+function semTplSpec(tid) { return SEMTPL.catalog.find(t => t.id === (tid || SEMTPL.cur)) || null; }
+
+async function openSemTemplateModal(templateId = null) {
+    closeDropdown();
+    try {
+        const res = await fetch("/api/sem/templates");
+        const data = await res.json();
+        SEMTPL.catalog = data.templates || [];
+        SEMTPL.waveSets = data.wave_sets || [];
+        SEMTPL.indicatorSets = data.indicator_sets || [];
+        SEMTPL.suggested = data.suggested_roles || {};
+        SEMTPL.loaded = true;
+    } catch (err) {
+        showToast("모형 예시 목록 불러오기 오류: " + err.message, 8000);
+        return;
+    }
+    const tid = templateId && SEMTPL.catalog.some(t => t.id === templateId) ? templateId
+        : (SEMTPL.cur && SEMTPL.catalog.some(t => t.id === SEMTPL.cur) ? SEMTPL.cur : (SEMTPL.catalog[0] || {}).id);
+    semTplApplyStaticText();
+    semTplTab(SEMTPL.tab || "diagram");
+    semTplSelect(tid, SEMTPL.cur !== tid || !Object.keys(SEMTPL.roles).length);
+    document.getElementById("semtpl-modal").classList.add("open");
+}
+
+function closeSemTemplateModal() {
+    clearTimeout(SEMTPL.timer);
+    semTplZoom(false);
+    document.getElementById("semtpl-modal").classList.remove("open");
+}
+
+function semTplApplyStaticText() {
+    const set = (id, key, html = false) => { const el = document.getElementById(id); if (el) el[html ? "innerHTML" : "textContent"] = semTplT(key); };
+    set("semtpl-hdr", "hdr"); set("semtpl-close", "close"); set("semtpl-cancel", "cancel"); set("semtpl-copy", "copy");
+    set("semtpl-apply", "apply"); set("semtpl-step1", "step1", true); set("semtpl-step2", "step2");
+    set("semtpl-step3", "step3"); set("semtpl-step4", "step4");
+    const labels = semTplT("tabs");
+    document.querySelectorAll(".semtpl-tabs button").forEach((b, i) => { b.textContent = labels[i] || b.textContent; });
+    document.getElementById("semtpl-legend").textContent = semTplT("legend");
+}
+
+function semTplZoom(on) {
+    const el = document.getElementById("semtpl-diagram");
+    const big = typeof on === "boolean" ? on : !el.classList.contains("big");
+    if (big) semTplTab("diagram");
+    el.classList.toggle("big", big);
+    el.onclick = big ? () => semTplZoom(false) : null;
+}
+
+function semTplTab(tab) {
+    SEMTPL.tab = tab;
+    document.querySelectorAll(".semtpl-tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
+    document.getElementById("semtpl-diagram").style.display = tab === "diagram" ? "" : "none";
+    document.getElementById("semtpl-legend").style.display = tab === "diagram" ? "" : "none";
+    document.getElementById("semtpl-model").style.display = tab === "model" ? "" : "none";
+    document.getElementById("semtpl-stata").style.display = tab === "stata" ? "" : "none";
+}
+
+function semTplSelect(tid, resetRoles = true) {
+    const spec = semTplSpec(tid);
+    if (!spec) return;
+    SEMTPL.cur = spec.id;
+    if (resetRoles) {
+        SEMTPL.roles = JSON.parse(JSON.stringify(SEMTPL.suggested[spec.id] || {}));
+        SEMTPL.options = {};
+        for (const o of spec.options) SEMTPL.options[o.key] = o.default;
+    }
+    SEMTPL.last = null;
+    semTplRenderList();
+    semTplRenderForm();
+    semTplSchedule(0);
+}
+
+function semTplRenderList() {
+    const en = semTplLang() === "en";
+    let html = "", group = null;
+    for (const t of SEMTPL.catalog) {
+        if (t.group !== group) {
+            group = t.group;
+            html += `<div class="semtpl-group">${escapeHtml(en ? t.group_title_en : t.group_title)}</div>`;
+        }
+        html += `<button type="button" class="semtpl-item${t.id === SEMTPL.cur ? " on" : ""}" onclick="semTplSelect('${t.id}')">
+            <b>${escapeHtml(en ? t.name_en : t.title)}</b><small>${escapeHtml(en ? (t.short_en || t.short) : t.short)} · ${escapeHtml(semTplT("min", t.min_waves))}</small></button>`;
+    }
+    document.getElementById("semtpl-list").innerHTML = html;
+}
+
+function semTplNumericColumns() {
+    return (APP.columns || []).filter(c => (c.dataType === "Decimal" || c.dataType === "Integer") && c.measureType !== "ID").map(c => c.name);
+}
+
+function semTplSetLabel(set) {
+    const v = set.vars;
+    return `${set.stem} (${v[0]} … ${v[v.length - 1]}, ${semTplT("waves", v.length)})`;
+}
+
+function semTplRoleHtml(r) {
+    const en = semTplLang() === "en";
+    const label = escapeHtml(en ? (r.label_en || r.label) : r.label) + (r.req ? `<span class="req">*</span>` : "");
+    const val = SEMTPL.roles[r.key];
+    const k = r.key;
+    if (r.type === "labels") {
+        const txt = Array.isArray(val) ? val.join(", ") : (val || "");
+        return `<div class="semtpl-role"><label>${label}</label>
+            <input type="text" value="${escapeHtml(txt)}" oninput="semTplSetRole('${k}', this.value)"></div>`;
+    }
+    if (r.type === "waves") {
+        const list = Array.isArray(val) ? val : [];
+        const sets = SEMTPL.waveSets.filter(s => s.vars.length >= (r.min || 2));
+        const curIdx = sets.findIndex(s => JSON.stringify(s.vars) === JSON.stringify(list));
+        const opts = [`<option value="">${escapeHtml(r.req ? semTplT("pickSet") : semTplT("none"))}</option>`]
+            .concat(sets.map((s, i) => `<option value="${i}"${i === curIdx ? " selected" : ""}>${escapeHtml(semTplSetLabel(s))}</option>`))
+            .concat([`<option value="manual"${curIdx < 0 && list.length ? " selected" : ""}>${escapeHtml(semTplT("manual"))}</option>`]);
+        const chips = list.map((v, i) => `<span class="semtpl-chip"><span class="w">${i + 1}</span>${escapeHtml(v)}
+            <button type="button" title="↑" onclick="semTplMove('${k}', ${i}, -1)">↑</button><button type="button" title="↓" onclick="semTplMove('${k}', ${i}, 1)">↓</button><button type="button" title="×" onclick="semTplRemove('${k}', ${i})">×</button></span>`).join("");
+        const add = `<select class="semtpl-add" onchange="semTplAddVar('${k}', this.value)"><option value="">${escapeHtml(semTplT("addVar"))}</option>` +
+            semTplNumericColumns().filter(c => !list.includes(c)).map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("") + `</select>`;
+        return `<div class="semtpl-role"><label>${label}</label>
+            <select onchange="semTplPickSet('${k}', this.value)">${opts.join("")}</select>
+            <div class="semtpl-chips">${chips}${add}</div></div>`;
+    }
+    if (r.type === "vars") {
+        const list = Array.isArray(val) ? val : (val ? [val] : []);
+        const chips = list.map((v, i) => `<span class="semtpl-chip">${escapeHtml(v)}<button type="button" title="×" onclick="semTplRemove('${k}', ${i})">×</button></span>`).join("");
+        const add = `<select class="semtpl-add" onchange="semTplAddVar('${k}', this.value)"><option value="">${escapeHtml(semTplT("addVar"))}</option>` +
+            semTplNumericColumns().filter(c => !list.includes(c)).map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("") + `</select>`;
+        return `<div class="semtpl-role"><label>${label}</label><div class="semtpl-chips">${chips}${add}</div></div>`;
+    }
+    if (r.type === "grid") {
+        // SEM Builder "measurement component" style: one row per wave = latent variable <- measurement variables
+        const grid = Array.isArray(val) ? val : [];           // indicator x wave (server format)
+        const sets = SEMTPL.indicatorSets;
+        const curIdx = sets.findIndex(s => JSON.stringify(s.grid) === JSON.stringify(grid));
+        const opts = [`<option value="">${escapeHtml(r.req ? semTplT("pickGrid") : semTplT("none"))}</option>`]
+            .concat(sets.map((s, i) => `<option value="${i}"${i === curIdx ? " selected" : ""}>${escapeHtml(s.construct)} (${escapeHtml(semTplT("items", s.grid.length, s.grid[0].length))})</option>`))
+            .concat(curIdx < 0 && grid.length ? [`<option value="manual" selected>${escapeHtml(semTplT("manual"))}</option>`] : []);
+        const T = grid.reduce((m, row) => Math.max(m, row.length), 0);
+        const cols = semTplNumericColumns();
+        let tbl = "";
+        if (grid.length) {
+            tbl = `<table class="semtpl-mc"><caption style="caption-side:top;text-align:left;font-size:10.8px;color:#64748B;padding:2px 0;">${escapeHtml(semTplT("measCaption"))}</caption>
+                <tr><th style="width:34px;">${escapeHtml(semTplT("waveCol"))}</th><th style="width:72px;">${escapeHtml(semTplT("latentCol"))}</th>` +
+                grid.map((_, j) => `<th title="${j === 0 ? escapeHtml(semTplT("marker")) : ""}">${j === 0 ? "★ " : ""}${j + 1}<button type="button" title="${escapeHtml(semTplT("removeItem"))}" onclick="semTplRemove('${k}', ${j})">×</button></th>`).join("") + `</tr>` +
+                Array.from({ length: T }, (_, t) => {
+                    const wave = grid.map(row => row[t] || "");
+                    const lat = semTplLatentFor(wave);
+                    return `<tr><td>${t + 1}</td><td class="lat" data-key="${k}" data-t="${t}" title="${escapeHtml(lat)}">${escapeHtml(lat || "—")}</td>` +
+                        wave.map((v, j) => `<td><select title="${escapeHtml(v)}" onchange="semTplSetCell('${k}', ${j}, ${t}, this.value)">` +
+                            (cols.includes(v) ? "" : `<option value="${escapeHtml(v)}" selected>${escapeHtml(v)}</option>`) +
+                            cols.map(c => `<option value="${escapeHtml(c)}"${c === v ? " selected" : ""}>${escapeHtml(c)}</option>`).join("") +
+                            `</select></td>`).join("") + `</tr>`;
+                }).join("") + `</table>`;
+        }
+        const add = `<select class="semtpl-add" style="max-width:220px;" onchange="semTplAddGridRow('${k}', this.value)"><option value="">${escapeHtml(semTplT("addRow"))}</option>` +
+            SEMTPL.waveSets.filter(s => !grid.some(row => JSON.stringify(row) === JSON.stringify(s.vars)))
+                .map(s => `<option value="${SEMTPL.waveSets.indexOf(s)}">${escapeHtml(semTplSetLabel(s))}</option>`).join("") + `</select>`;
+        return `<div class="semtpl-role"><label>${label}</label>
+            <select onchange="semTplPickGrid('${k}', this.value)">${opts.join("")}</select>${tbl}
+            <div class="semtpl-chips">${add}</div></div>`;
+    }
+    return "";
+}
+
+function semTplOptionHtml(o) {
+    const en = semTplLang() === "en";
+    const label = escapeHtml(en ? (o.label_en || o.label) : o.label);
+    const help = (en ? o.help_en : o.help) ? `<div class="cmp-help">${escapeHtml(en ? o.help_en : o.help)}</div>` : "";
+    const cur = SEMTPL.options[o.key];
+    if (o.type === "check") {
+        return `<div class="semtpl-opt"><label class="c"><input type="checkbox" ${cur ? "checked" : ""} onchange="semTplSetOption('${o.key}', this.checked)"><span>${label}</span></label>${help}</div>`;
+    }
+    if (o.type === "select") {
+        const options = en ? (o.options_en || o.options) : o.options;
+        return `<div class="semtpl-opt"><label class="t">${label}</label><select onchange="semTplSetOption('${o.key}', this.value)">` +
+            options.map(([v, lab]) => `<option value="${escapeHtml(v)}"${String(cur) === String(v) ? " selected" : ""}>${escapeHtml(lab)}</option>`).join("") + `</select>${help}</div>`;
+    }
+    const ph = en ? (o.placeholder_en || o.placeholder || "") : (o.placeholder || "");
+    return `<div class="semtpl-opt"><label class="t">${label}</label><input type="text" value="${escapeHtml(cur == null ? "" : String(cur))}" placeholder="${escapeHtml(ph)}" oninput="semTplSetOption('${o.key}', this.value)">${help}</div>`;
+}
+
+function semTplRenderForm() {
+    const spec = semTplSpec();
+    if (!spec) return;
+    const en = semTplLang() === "en";
+    document.getElementById("semtpl-desc").innerHTML = `<b>${escapeHtml(en ? spec.name_en : spec.title)}</b>` +
+        (en ? "" : ` <span style="color:#64748B;">${escapeHtml(spec.name_en)}</span>`) + `<br>${escapeHtml(en ? spec.description_en : spec.description)}`;
+    document.getElementById("semtpl-roles").innerHTML = spec.roles.map(semTplRoleHtml).join("");
+    document.getElementById("semtpl-options").innerHTML = spec.options.map(semTplOptionHtml).join("");
+    document.getElementById("semtpl-refs").innerHTML = `<b>${escapeHtml(semTplT("refs"))}</b><br>` + spec.references.map(r => escapeHtml(r)).join("<br>");
+}
+
+function semTplSetRole(key, value) { SEMTPL.roles[key] = value; semTplSchedule(); }
+
+function semTplLatentFor(indicators) {
+    const meas = (SEMTPL.last && SEMTPL.last.measurement) || [];
+    const hit = meas.find(m => JSON.stringify(m.indicators) === JSON.stringify(indicators));
+    return hit ? hit.latent : "";
+}
+
+function semTplUpdateLatentCells() {
+    document.querySelectorAll("#semtpl-roles td.lat[data-key]").forEach(td => {
+        const grid = SEMTPL.roles[td.dataset.key];
+        if (!Array.isArray(grid)) return;
+        const lat = semTplLatentFor(grid.map(row => row[+td.dataset.t] || ""));
+        td.textContent = lat || "—";
+        td.title = lat;
+    });
+}
+
+function semTplSetCell(key, j, t, value) {
+    const grid = SEMTPL.roles[key];
+    if (!Array.isArray(grid) || !grid[j]) return;
+    grid[j][t] = value;
+    semTplSchedule(0);
+}
+
+/* Path diagram of the generated model (SEM Builder conventions: rectangle = observed, oval = latent, constraints written
+   on the paths). Positions come from build_template (diagram.nodes x/y in grid units), so the layout has one source. */
+function semTplDrawDiagram(d) {
+    const box = document.getElementById("semtpl-diagram");
+    if (!d || !d.nodes || !d.nodes.length) { box.innerHTML = ""; return; }
+    const SX = 64, SY = 58, H = 24, RX = 37, RY = 15, PAD = 46;
+    // observed boxes as wide as the closest pair in a row allows (multi-indicator layouts), 46–70 px
+    let gap = Infinity;
+    const obs = d.nodes.filter(n => n.kind !== "lat");
+    obs.forEach((a, i) => obs.slice(i + 1).forEach(b => { if (Math.abs(a.y - b.y) < 1e-6) gap = Math.min(gap, Math.abs(a.x - b.x)); }));
+    const W = Math.max(46, Math.min(70, gap * SX - 6));
+    const xs = d.nodes.map(n => n.x * SX), ys = d.nodes.map(n => n.y * SY);
+    const minX = Math.min(...xs) - W / 2 - PAD, maxX = Math.max(...xs) + W / 2 + PAD;
+    const minY = Math.min(...ys) - H / 2 - PAD, maxY = Math.max(...ys) + H / 2 + PAD;
+    const cx0 = (minX + maxX) / 2, cy0 = (minY + maxY) / 2;
+    const pos = {};
+    const textW = (str) => [...String(str)].reduce((w, ch) => w + (ch.charCodeAt(0) > 0x2E80 ? 9.8 : 5.6), 0);
+    // ellipse width follows the latent name (up to 50 px half-width); longer names are shortened
+    d.nodes.forEach(n => { pos[n.id] = { x: n.x * SX, y: n.y * SY, lat: n.kind === "lat", rx: Math.max(RX, Math.min(50, textW(n.id) / 2 + 8)) }; });
+    const fit = (str, room) => { let w = 0, out = ""; for (const ch of String(str)) { w += ch.charCodeAt(0) > 0x2E80 ? 1.75 : 1; if (w > room) return out + "…"; out += ch; } return out; };
+    const short = (str) => fit(str, 11.5);
+    const shortObs = (str) => fit(str, (W - 6) / 5.6);
+    const clip = (p, dx, dy) => {           // distance from the node centre to its boundary along (dx, dy)
+        const L = Math.hypot(dx, dy) || 1;
+        if (p.lat) return 1 / Math.sqrt((dx / L) ** 2 / (p.rx * p.rx) + (dy / L) ** 2 / (RY * RY));
+        return Math.min(Math.abs((W / 2) / ((dx / L) || 1e-9)), Math.abs((H / 2) / ((dy / L) || 1e-9)));
+    };
+    const f = (v) => Math.round(v * 10) / 10;
+    let edges = "", labels = "";
+    for (const e of d.edges) {
+        const a = pos[e.from], b = pos[e.to];
+        if (!a || !b) continue;
+        const dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy) || 1;
+        if (e.kind === "path") {
+            const ra = clip(a, dx, dy), rb = clip(b, -dx, -dy) + 2;
+            const x1 = a.x + dx / L * ra, y1 = a.y + dy / L * ra, x2 = b.x - dx / L * rb, y2 = b.y - dy / L * rb;
+            const z = e.fixed && e.label === "0";
+            edges += `<line class="e-path${z ? " fixed0" : ""}" x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" marker-end="url(#semtpl-arr)"/>`;
+            if (e.label && !(e.fixed && e.label === "1")) {
+                labels += `<text class="e-lab" x="${f(x1 + (x2 - x1) * 0.38)}" y="${f(y1 + (y2 - y1) * 0.38)}">${escapeHtml(short(e.label))}</text>`;
+            }
+        } else {
+            // covariance: curved double-headed arrow, bowed away from the diagram centre
+            const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+            let nx = -dy / L, ny = dx / L;
+            if ((mx + nx - cx0) ** 2 + (my + ny - cy0) ** 2 < (mx - nx - cx0) ** 2 + (my - ny - cy0) ** 2) { nx = -nx; ny = -ny; }
+            const bow = Math.max(16, Math.min(80, L * 0.28));
+            const qx = mx + nx * bow, qy = my + ny * bow;
+            const la = Math.hypot(qx - a.x, qy - a.y) || 1, lb = Math.hypot(qx - b.x, qy - b.y) || 1;
+            const sa = clip(a, qx - a.x, qy - a.y) + 2, sb = clip(b, qx - b.x, qy - b.y) + 2;
+            const x1 = a.x + (qx - a.x) / la * sa, y1 = a.y + (qy - a.y) / la * sa;
+            const x2 = b.x + (qx - b.x) / lb * sb, y2 = b.y + (qy - b.y) / lb * sb;
+            edges += `<path class="e-${e.kind}" d="M${f(x1)},${f(y1)} Q${f(qx)},${f(qy)} ${f(x2)},${f(y2)}" marker-start="url(#semtpl-arr2)" marker-end="url(#semtpl-arr2)"/>`;
+            if (e.label) labels += `<text class="e-lab" x="${f((x1 + 2 * qx + x2) / 4)}" y="${f((y1 + 2 * qy + y2) / 4)}">${escapeHtml(short(e.label))}</text>`;
+        }
+    }
+    let nodes = "";
+    for (const n of d.nodes) {
+        const p = pos[n.id];
+        const t = `<title>${escapeHtml(n.id)}</title>`;
+        if (n.kind === "lat") {
+            nodes += `<g class="n-lat">${t}<ellipse cx="${f(p.x)}" cy="${f(p.y)}" rx="${f(p.rx)}" ry="${RY}"/><text x="${f(p.x)}" y="${f(p.y)}">${escapeHtml(fit(n.id, (2 * p.rx - 10) / 5.6))}</text></g>`;
+        } else {
+            nodes += `<g class="n-${n.kind}">${t}<rect x="${f(p.x - W / 2)}" y="${f(p.y - H / 2)}" width="${W}" height="${H}" rx="2"/><text x="${f(p.x)}" y="${f(p.y)}">${escapeHtml(shortObs(n.id))}</text>` +
+                (n.zeroVar ? `<text class="zero" x="${f(p.x + W / 2 - 9)}" y="${f(p.y + H / 2 + 7)}">ε=0</text>` : "") + `</g>`;
+        }
+    }
+    box.innerHTML = `<svg viewBox="${f(minX)} ${f(minY)} ${f(maxX - minX)} ${f(maxY - minY)}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="path diagram">
+        <defs><marker id="semtpl-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1E3A5F"/></marker>
+        <marker id="semtpl-arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0F766E"/></marker></defs>
+        ${edges}${nodes}${labels}</svg>`;
+}
+function semTplSetOption(key, value) { SEMTPL.options[key] = value; semTplSchedule(); }
+
+function semTplPickSet(key, idx) {
+    if (idx === "manual") { if (!Array.isArray(SEMTPL.roles[key])) SEMTPL.roles[key] = []; }
+    else if (idx === "") { delete SEMTPL.roles[key]; }
+    else {
+        const spec = semTplSpec();
+        const r = spec.roles.find(x => x.key === key);
+        const sets = SEMTPL.waveSets.filter(s => s.vars.length >= ((r && r.min) || 2));
+        if (sets[+idx]) SEMTPL.roles[key] = sets[+idx].vars.slice();
+    }
+    semTplRenderForm();
+    semTplSchedule(0);
+}
+
+function semTplPickGrid(key, idx) {
+    if (idx === "") delete SEMTPL.roles[key];
+    else if (idx !== "manual" && SEMTPL.indicatorSets[+idx]) SEMTPL.roles[key] = SEMTPL.indicatorSets[+idx].grid.map(r => r.slice());
+    semTplRenderForm();
+    semTplSchedule(0);
+}
+
+function semTplAddGridRow(key, idx) {
+    const s = SEMTPL.waveSets[+idx];
+    if (!s) return;
+    const grid = Array.isArray(SEMTPL.roles[key]) ? SEMTPL.roles[key] : [];
+    grid.push(s.vars.slice());
+    SEMTPL.roles[key] = grid;
+    semTplRenderForm();
+    semTplSchedule(0);
+}
+
+function semTplAddVar(key, name) {
+    if (!name) return;
+    const list = Array.isArray(SEMTPL.roles[key]) ? SEMTPL.roles[key] : (SEMTPL.roles[key] ? [SEMTPL.roles[key]] : []);
+    if (!list.includes(name)) list.push(name);
+    SEMTPL.roles[key] = list;
+    semTplRenderForm();
+    semTplSchedule(0);
+}
+
+function semTplRemove(key, i) {
+    const list = SEMTPL.roles[key];
+    if (!Array.isArray(list)) return;
+    list.splice(i, 1);
+    if (!list.length) delete SEMTPL.roles[key];
+    semTplRenderForm();
+    semTplSchedule(0);
+}
+
+function semTplMove(key, i, d) {
+    const list = SEMTPL.roles[key];
+    const j = i + d;
+    if (!Array.isArray(list) || j < 0 || j >= list.length) return;
+    [list[i], list[j]] = [list[j], list[i]];
+    semTplRenderForm();
+    semTplSchedule(0);
+}
+
+function semTplSchedule(delay = 250) {
+    clearTimeout(SEMTPL.timer);
+    SEMTPL.timer = setTimeout(semTplPreview, delay);
+}
+
+function semTplShowError(msg) {
+    const el = document.getElementById("semtpl-err");
+    el.textContent = msg || "";
+    el.classList.toggle("on", !!msg);
+}
+
+async function semTplPreview() {
+    const spec = semTplSpec();
+    if (!spec) return;
+    const applyBtn = document.getElementById("semtpl-apply");
+    const missing = spec.roles.filter(r => r.req && !(Array.isArray(SEMTPL.roles[r.key]) ? SEMTPL.roles[r.key].length : SEMTPL.roles[r.key]));
+    if (missing.length) {
+        SEMTPL.last = null;
+        document.getElementById("semtpl-model").value = "";
+        document.getElementById("semtpl-stata").value = "";
+        semTplDrawDiagram(null);
+        document.getElementById("semtpl-assump").innerHTML = "";
+        document.getElementById("semtpl-notes").innerHTML = "";
+        document.getElementById("semtpl-stat").textContent = "";
+        document.getElementById("semtpl-summary").textContent = semTplT("waiting");
+        semTplShowError("");
+        applyBtn.disabled = true;
+        return;
+    }
+    const seq = ++SEMTPL.seq;
+    try {
+        const res = await fetch("/api/sem/template", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ template: spec.id, roles: SEMTPL.roles, options: SEMTPL.options })
+        });
+        let payload = null;
+        try { payload = await res.json(); } catch (_) { payload = null; }
+        if (seq !== SEMTPL.seq) return;            // a newer request is on its way
+        if (!res.ok) {
+            const d = payload && payload.detail;
+            SEMTPL.last = null;
+            semTplShowError(typeof d === "string" ? d : (d ? JSON.stringify(d) : `HTTP ${res.status}`));
+            document.getElementById("semtpl-stat").textContent = "";
+            applyBtn.disabled = true;
+            return;
+        }
+        SEMTPL.last = payload;
+        semTplShowError("");
+        document.getElementById("semtpl-model").value = payload.model;
+        document.getElementById("semtpl-stata").value = (payload.stata && payload.stata.length)
+            ? [semTplT("stataNote")].concat(payload.stata).join("\n") : payload.notes.filter(n => n.startsWith("Stata")).join("\n");
+        semTplDrawDiagram(payload.diagram);
+        semTplUpdateLatentCells();          // latent variable name of each measurement component
+        document.getElementById("semtpl-assump").innerHTML = payload.assumptions.map(a => `<li>${escapeHtml(a)}</li>`).join("");
+        document.getElementById("semtpl-notes").innerHTML = payload.notes.map(a => `<li>${escapeHtml(a)}</li>`).join("");
+        document.getElementById("semtpl-stat").textContent = semTplT("stat", payload.suggested);
+        document.getElementById("semtpl-summary").textContent = semTplT("summary", payload);
+        applyBtn.disabled = false;
+    } catch (err) {
+        if (seq !== SEMTPL.seq) return;
+        SEMTPL.last = null;
+        semTplShowError("모형식 생성 오류: " + err.message);
+        applyBtn.disabled = true;
+    }
+}
+
+function semTplCopy() {
+    const out = SEMTPL.last;
+    if (!out || !out.model) { showToast(semTplT("noModel")); return; }
+    const done = () => showToast(semTplT("copied"));
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(out.model).then(done, () => { semTplCopyFallback(out.model); done(); });
+    } else { semTplCopyFallback(out.model); done(); }
+}
+
+function semTplCopyFallback(text) {
+    const ta = document.getElementById("semtpl-model");
+    ta.focus(); ta.select();
+    try { document.execCommand("copy"); } catch (_) { /* ignore */ }
+}
+
+function semTplApply() {
+    const out = SEMTPL.last;
+    if (!out || !out.model) { showToast(semTplT("noModel")); return; }
+    closeSemTemplateModal();
+    // open the SEM panel first: openAnalysis() builds default parameters, which would replace the model
+    const openedNow = APP.currentType !== "sem";
+    if (openedNow) openAnalysis("sem");
+    APP.currentParams.model = out.model;
+    renderOptionsPanel();
+    scheduleAutoRun(true);          // re-run (queued after a run that opening the panel may have started)
+    showToast(semTplT("applied", out));
 }
 
 function cmpToggle(key, on) {
@@ -8329,7 +9835,7 @@ async function triggerRebuildFromUI() {
 const PLUGIN_GROUP_MENU = {
     "Exploration": "exploration", "T-Tests": "ttests", "ANOVA": "anova", "Regression": "regression",
     "Frequencies": "frequencies", "Factor": "factor", "MedMod": "medmod", "Linear Models": "linearmodels",
-    "Survival": "survival", "Mixture": "mixture", "Spatial": "spatial", "Text": "text", "Network": "network"
+    "Survival": "survival", "Time Series": "timeseries", "Mixture": "mixture", "Spatial": "spatial", "Text": "text", "Network": "network"
 };
 const PLUGIN_SECTION_LABEL = { ko: "추가 모듈 (Plugin)", en: "Added Modules (Plugin)" };
 
@@ -9665,7 +11171,7 @@ document.addEventListener("keydown", (ev) => {
     if (ev.key !== "Escape" || ev.defaultPrevented) return;
     const t = ev.target;
     if (t && t.closest && t.closest("#grid-tbody")) return;
-    const ids = ["sem-builder-modal", "synthetic-modal", "plot-design-modal", "doctor-modal", "textimport-modal", "boundary-modal",
+    const ids = ["sem-builder-modal", "semtpl-modal", "synthetic-modal", "plot-design-modal", "doctor-modal", "textimport-modal", "boundary-modal",
                  "compare-modal", "recode-modal", "filter-modal", "merge-modal", "convert-modal", "reshape-modal", "modules-modal", "backstage-overlay"];
     const open = ids.map(id => document.getElementById(id)).filter(el => {
         if (!el) return false;

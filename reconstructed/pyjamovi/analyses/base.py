@@ -163,6 +163,8 @@ class ResultsTable:
             else:
                 if abs(fval) >= 1e5 or (0 < abs(fval) < 1e-4):
                     return f"{fval:.3e}"
+                if 0 < abs(fval) < 0.01:
+                    return f"{fval:.3g}"          # 3 significant digits: 0.00145 (not 0.001)
                 return f"{fval:.3f}"
         return str(val)
 

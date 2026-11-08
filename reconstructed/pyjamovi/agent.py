@@ -575,6 +575,7 @@ class JamoviSession:
     def run(self, analysis_type: str, **params) -> Any:
         if self.df is None:
             raise ValueError("No data loaded in session")
+        self._fill_declared_structure(analysis_type, params)
         res = dispatch_analysis(analysis_type, self.df, params)
         self.history.append(res)
         self.specs.append({
@@ -775,6 +776,18 @@ class JamoviSession:
         ms = model_syntax or model or kwargs.pop("model", "")
         return self.run("sem", model=ms, **kwargs)
 
+    def sem_template(self, template: str, run: bool = True, **kwargs):
+        """Ready-made longitudinal SEM (CLPM, RI-CLPM, latent growth, latent change) with the default assumptions
+        written into the model. run=True fits it with sess.sem (SEM options such as estimator go there);
+        run=False returns the template spec (.model, .assumptions)."""
+        from .analyses.sem_templates import sem_template as _sem_template, split_kwargs
+        self._require_df()
+        roles, opts, sem_opts = split_kwargs(template, kwargs)
+        spec = _sem_template(template, self.df, roles=roles, options=opts)
+        if not run:
+            return spec
+        return self.sem(model=spec.model, **sem_opts)
+
     def lca(self, categorical: Optional[List[str]] = None, continuous: Optional[List[str]] = None, classes: int = 2, **kwargs):
         """Latent class / latent profile analysis with Mplus defaults (MLR, STARTS 20 4, FIML).
         categorical = Mplus CATEGORICAL indicators, continuous = LPA indicators; classRange=[1, 5] compares K."""
@@ -827,9 +840,33 @@ class JamoviSession:
         return match_keys(self.df[data_key], gdf[key])
 
     def xtset(self, panel_id: str, time_var: Optional[str] = None):
-        """Declare the panel structure (Stata xtset) used as default idVar/timeVar by spatial panel models."""
+        """Declare the panel structure (Stata xtset): default entity/time of panel, dynPanel, panelIV and
+        idVar/timeVar of spatial panel models."""
         self.panel_spec = {"idVar": panel_id, "timeVar": time_var}
         return None
+
+    def tsset(self, time_var: str):
+        """Declare the time variable (Stata tsset): default time of arima, unitRoot and corrgram."""
+        self.ts_spec = {"timeVar": time_var}
+        return None
+
+    _PANEL_IDS = ("panel", "dynPanel", "panelIV")
+    _TS_IDS = ("arima", "unitRoot", "corrgram")
+
+    def _fill_declared_structure(self, analysis_type: str, params: Dict[str, Any]) -> None:
+        """Entity/time declared by xtset / tsset fill the panel and time-series options the call left empty."""
+        from .analyses import extensions
+        t = extensions.aliases().get(analysis_type, analysis_type)
+        ps = getattr(self, "panel_spec", None) or {}
+        if t in self._PANEL_IDS:
+            if not params.get("entity") and ps.get("idVar"):
+                params["entity"] = ps["idVar"]
+            if not params.get("time") and ps.get("timeVar"):
+                params["time"] = ps["timeVar"]
+        elif t in self._TS_IDS:
+            tv = (getattr(self, "ts_spec", None) or {}).get("timeVar") or ps.get("timeVar")
+            if not params.get("time") and tv:
+                params["time"] = tv
 
     def _spatial(self, analysis_type: str, params: Dict[str, Any]):
         ps = getattr(self, "panel_spec", None)

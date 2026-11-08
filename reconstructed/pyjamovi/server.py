@@ -92,6 +92,18 @@ DATASET_DESCRIPTIONS: Dict[str, str] = {
     "Mixture_LCA_Care.csv": "합성 돌봄 욕구 자료 (N=1,200, 3개 잠재계층으로 생성) — 잠재계층·잠재프로파일 분석, R3STEP·BCH·DCAT",
     "Mixture_LTA_Long.csv": "합성 정서 문항 종단 자료 (800명 × 3개 차수, long) — 잠재전이분석",
     "Mixture_LCGA_Long.csv": "합성 삶의 만족도 종단 자료 (600명 × 2019–2023, long, 탈락 포함) — 잠재계층 성장분석",
+    "SEM_Longitudinal_Panel.csv": "합성 종단 패널 자료 (800명 × 5시점, wide, 탈락 포함) — 교차지연(CLPM·RI-CLPM)·잠재성장·잠재변화 모형 예시",
+    "SEM_Longitudinal_Items.csv": "합성 다중지표 종단 자료 (800명 × 4시점, 구성개념별 문항 3개) — 다중지표 잠재 교차지연·2차 요인 성장모형 예시",
+    "SEM_Categorical_Care.csv": "합성 돌봄 서비스 만족도 자료 (800명, 이분·리커트 문항) — 범주형 변수 SEM (WLSMV)",
+    "Dynamic_Panel_Welfare.csv": "합성 지역 복지지출 패널 (200개 지역 × 2014–2023, 비균형) — 패널 회귀(xtreg)·동적 패널 GMM(xtabond·xtdpdsys)",
+    "IV_Schooling.csv": "합성 교육 수익률 횡단 자료 (도구변수 포함) — 도구변수 회귀 2SLS·LIML·GMM, 1단계·내생성·과대식별 검정",
+    "IV_Panel_CareStaff.csv": "합성 돌봄 인력 패널 (도구변수 포함) — 패널 도구변수 회귀(xtivreg FE·RE·FD·BE)",
+    "TS_Monthly_Welfare.csv": "합성 월별 서비스 이용 시계열 (추세·계절성·외생 변수) — ARIMA·계절 ARIMA·ARMAX, 단위근 검정, 자기상관",
+    "Count_HealthVisits.csv": "합성 외래 방문 횟수 자료 (1,500명, 0 비율 51.5%, 관찰개월·시군구) — 포아송·음이항·영과잉·절단·허들 모형",
+    "LimDep_Employment_Wage.csv": "합성 취업·임금 자료 (임금은 취업자만 관측) — 프로빗·cloglog, Heckman 표본선택, heckprobit",
+    "LimDep_Satisfaction_Service.csv": "합성 서비스 만족도(5점)·이용 서비스 자료 — 순서형 로짓·프로빗, 다항 로짓",
+    "LimDep_MedicalCost.csv": "합성 본인부담 의료비 자료 (0에서 검열) — 토빗, 절단 회귀",
+    "Multilevel_School3L.csv": "합성 3수준 자료 (학생 4,930명 · 학급 224개 · 학교 50개) — 다층모형(선형·로지스틱·포아송), 확률기울기, ICC",
 }
 
 MIME_MAP: Dict[str, str] = {
@@ -1112,6 +1124,34 @@ def modify_data_structure(req: RowColActionRequest):
 
         return STATE.after_data_change()
     except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# ---- SEM model templates (교차지연·잠재성장·잠재변화): model strings from analyses/sem_templates.py ----
+class SemTemplateRequest(BaseModel):
+    template: str
+    roles: Dict[str, Any] = {}
+    options: Dict[str, Any] = {}
+
+
+@app.get("/api/sem/templates")
+def sem_templates_catalog():
+    """SEM model templates (교차지연·잠재성장·잠재변화): catalog, wave sets detected in the open dataset and
+    per-template role proposals (sample datasets: SEM_Longitudinal_Panel.csv / SEM_Longitudinal_Items.csv)."""
+    from pyjamovi.analyses import sem_templates as semt
+    df = STATE.session.df
+    return semt.catalog_payload(list(map(str, df.columns)) if df is not None else None)
+
+
+@app.post("/api/sem/template")
+def sem_template_build(req: SemTemplateRequest):
+    """Model string + default-assumption list of one template for the given roles/options (live preview)."""
+    from pyjamovi.analyses import sem_templates as semt
+    df = STATE.session.df
+    try:
+        return semt.build_template(req.template, req.roles or {}, req.options or {},
+                                   list(map(str, df.columns)) if df is not None else None)
+    except ValueError as e:          # TemplateError and select-option errors: Korean message for the dialog
         raise HTTPException(status_code=400, detail=str(e))
 
 

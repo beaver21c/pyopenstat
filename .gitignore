@@ -35,3 +35,6 @@ Thumbs.db
 # Command log (cumulative record of every command; kept per machine)
 workspace/command_log*.py
 workspace/command_log*.json
+
+# Mplus User's Guide example files (fetched by scripts/fetch_mplus_examples.py, not redistributed)
+tests/data/mplus_ug/

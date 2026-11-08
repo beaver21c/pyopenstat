@@ -216,7 +216,11 @@ def _translate_sem(body: str, cmd: str) -> str:
             raise ValueError(f"sem method({meth}) 미지원 (ml, mlmv만 변환)")
     vce = opts.get("vce", "").lower()
     if vce:
-        if vce.startswith(("robust", "sbentler", "r")) and not vce.startswith("boot"):
+        if vce.startswith("sbentler"):
+            # Satorra–Bentler scaled χ² and robust SE with listwise deletion = Mplus MLM (Stata rejects sbentler with mlmv)
+            kw = [k for k in kw if k != "missing='fiml'"]
+            kw.append("estimator='mlm'")
+        elif vce.startswith(("robust", "r")) and not vce.startswith("boot"):
             kw.append("estimator='mlr'")
         elif vce.startswith("boot"):
             rm = re.search(r"reps\((\d+)\)", vce)
@@ -233,12 +237,63 @@ def _translate_sem(body: str, cmd: str) -> str:
     return f"sess.sem(model={model!r}" + (", " + ", ".join(kw) if kw else "") + ")"
 
 
+def _gsem_family(opt: str) -> str:
+    o = (opt or "").lower().replace(" ", "")
+    if not o:
+        return ""
+    if "oprobit" in o or re.search(r"(^|,)probit", o) or ("link(probit)" in o and re.search(r"family\((ordinal|bernoulli|binomial)", o)):
+        return "probit"
+    if any(w in o for w in ("logit", "ologit", "mlogit", "poisson", "nbreg", "cloglog", "loglog", "family(", "link(",
+                            "exposure", "offset")):
+        return "other"
+    if "gaussian" in o or "regress" in o:
+        return "gaussian"
+    return ""
+
+
+def _translate_gsem_probit(body: str) -> str:
+    groups, opt_str = _split_top(body)
+    opts = _parse_options(opt_str)
+    explicit_latent = set(_names(opts.get("latent", "")))
+    caps = "nocapslatent" not in opts
+    is_latent = lambda v: v in explicit_latent or (caps and bool(re.match(r"[A-Z]", v)))
+    glob = _gsem_family(opt_str or "")
+    if glob == "other":
+        raise ValueError("gsem: 프로빗 링크(oprobit·probit)만 범주형 SEM(WLSMV)으로 변환 — 로짓·포아송 등 미지원")
+    cat, clean = [], []
+    for g in groups:
+        path, gopt = (g.split(",", 1) + [""])[:2]
+        f = _gsem_family(gopt) or glob or "gaussian"
+        if f == "other":
+            raise ValueError(f"gsem: 경로 ({g.strip()})의 분포·링크 미지원 — 프로빗 링크(oprobit·probit)만 WLSMV로 변환")
+        if f == "probit":
+            parts = re.split(r"(->|<-)", path)
+            segs = [_names(x) for x in parts[0::2]]
+            arrows = parts[1::2]
+            for k, arrow in enumerate(arrows):
+                tgts = segs[k + 1] if arrow == "->" else segs[k]
+                for t in tgts:
+                    t = t.split("@", 1)[0]
+                    if not is_latent(t) and t != "_cons" and t not in cat:
+                        cat.append(t)
+        clean.append(path)
+    keep = {k: v for k, v in opts.items() if k in ("latent", "nocapslatent", "cov", "covariance", "var", "variance")}
+    opt_txt = " ".join(f"{k}({v})" if v not in (None, "", True) else k for k, v in keep.items())
+    body2 = " ".join(f"({c.strip()})" for c in clean) + (f", {opt_txt}" if opt_txt else "")
+    py = _translate_sem(body2, "gsem")
+    if not cat:
+        return py + "  # gsem(정규 분포 경로만) → sem(ML)"
+    return py[:-1] + f", categorical={cat!r})  # gsem(ML·수치 적분) → WLSMV(제한정보·delta 모수화) 변환: 추정치는 근사"
+
+
 def _translate_gsem(body: str) -> str:
     groups, opt_str = _split_top(body)
     opts = _parse_options(opt_str)
     lc = _names(opts.get("lclass", ""))
+    if not lc:
+        return _translate_gsem_probit(body)
     if len(lc) < 2:
-        raise ValueError("gsem: 잠재계층 lclass(C k) 지정 시에만 변환 (그 밖의 gsem 모형 미지원)")
+        raise ValueError("gsem: 잠재계층 lclass(C k)에 계층 수 지정 필요")
     k = int(lc[1])
     default_fam = "logit" if any(f in opts for f in ("logit", "ologit", "mlogit", "probit", "oprobit")) else "gaussian"
     cat, cont = [], []
@@ -564,6 +619,10 @@ def transpile_stata_line(line: str, ctx: Optional[dict] = None) -> Optional[str]
     est = _translate_estimates(s, ctx if ctx is not None else {})
     if est is not None:
         return est
+    from .analyses import extensions
+    ext_line = extensions.transpile(s)
+    if ext_line is not None:
+        return ext_line
     reg = _translate_regression(s)
     if reg is not None:
         return reg
@@ -674,14 +733,6 @@ def transpile_stata_line(line: str, ctx: Optional[dict] = None) -> Optional[str]
         return call + ")"
     if re.match(r"^recode\s", s, re.IGNORECASE):
         return f"raise ValueError({('Unsupported Stata recode syntax (one variable per line): ' + s)!r})"
-
-    # 11. xtreg dep indep1 ..., fe / re
-    m = re.match(r"^xtreg\s+([A-Za-z0-9_]+)\s+([^,]+)(?:,\s*(fe|re))?", s, re.IGNORECASE)
-    if m:
-        dep = m.group(1)
-        indeps = [x.strip() for x in m.group(2).split() if x.strip()]
-        model_type = m.group(3).lower() if m.group(3) else "fe"
-        return f"sess.panel(dep={dep!r}, indeps={indeps!r}, model={model_type!r})"
 
     # 12a. Sp setup commands: weights and effects are handled by the spatial analysis options
     m = re.match(r"^(spmatrix|spset|spshape2dta|spcompare|spdistance|estat\s+impact|estat\s+moran)\b(.*)$", s, re.IGNORECASE)

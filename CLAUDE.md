@@ -22,13 +22,15 @@ This repository contains **OpenStat Studio v3.0** (`openstat` / `pyjamovi`, MIT 
 - 실행 확인: `curl -s http://127.0.0.1:8500/api/health` (응답 `"status":"ok"`)
 
 **③ 분석 대상 확인**
-- 자료 파일·분석 목적이 요청에 없으면 한 번만 묻는다 (예제 자료: `sample_data/` — ToothGrowth.csv, MedMod_WorkStress.csv, Grunfeld_Panel.csv, SEM_Latent3Factor.csv, Mixture_LCA_Care.csv, Spatial_Panel_Welfare.csv, Text_PolicyDocs.csv 등).
+- 자료 파일·분석 목적이 요청에 없으면 한 번만 묻는다 (예제 자료: `sample_data/` — ToothGrowth.csv, MedMod_WorkStress.csv, Grunfeld_Panel.csv, SEM_Latent3Factor.csv, Mixture_LCA_Care.csv, Spatial_Panel_Welfare.csv, Text_PolicyDocs.csv, Dynamic_Panel_Welfare.csv, IV_Schooling.csv, TS_Monthly_Welfare.csv, Count_HealthVisits.csv, LimDep_Employment_Wage.csv, Multilevel_School3L.csv, SEM_Categorical_Care.csv, SEM_Longitudinal_Panel.csv 등).
 - 사용자 파일 열기: `curl -s -F "file=@<파일 경로>" http://127.0.0.1:8500/api/dataset/upload` (.csv .xlsx .dta .sav .omv .parquet) / 예제 자료: `curl -s -X POST "http://127.0.0.1:8500/api/dataset/load?name=ToothGrowth.csv"`
 
 **④ 분석 실행 — 열린 프로그램에 명령 보내기**
 - `POST http://127.0.0.1:8500/api/syntax/execute` 본문 `{"code": "<명령>", "replace_existing": false}`. 명령은 파이썬 SDK 또는 Stata 명령 모두 가능:
   - 자료 처리: `sess.compute('bmi', 'weight / (height/100)**2')`, `sess.filter_rows("age >= 20")`, `sess.recode('age', 'age_g', "min..29='20대'; 30..max='30대 이상'")`, `gen loglen = log(len)`, `keep if dose > 500`
   - 분석: `sess.run('anovaOneW', deps=['len'], group='dose', phMethod='gamesHowell', eqv=True)`, `ttest len, by(supp)`, `regress len dose`
+  - 계량·제한종속·다층·시계열: `xtreg y x, fe`, `xtabond y x, lags(1) vce(robust)`, `ivregress 2sls y x (w = z)`, `arima y, arima(1,0,1)`, `nbreg y x, irr`, `zinb y x, inflate(z)`, `ologit y x`, `tobit y x, ll(0)`, `heckman y x, select(s = z)`, `mixed y x || school: || class:` (패널 명령은 `xtset`, 시계열 명령은 `tsset`을 먼저 실행), 또는 `sess.run('dynPanel', ...)`·`sess.run('countReg', family='zinb', ...)`
+  - SEM: `sess.sem(model=..., categorical=[...])`(WLSMV), 모형 예시 `sess.sem_template('riclpm', x_waves=[...], y_waves=[...])`
   - 분석 이름·옵션 목록: `curl -s http://127.0.0.1:8500/api/catalog` 또는 §2 `openstat catalog`
 - 결과는 브라우저 화면에 2~3초 안에 나타나고, 모든 명령은 `workspace/command_log.py`에 누적 기록된다.
 - 결과 수치 확인: `curl -s http://127.0.0.1:8500/api/session/state` 의 `analyses[].tables` 를 읽어 보고한다 (요약은 표 이름·핵심 수치·해석 순서).

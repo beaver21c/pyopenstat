@@ -255,6 +255,12 @@ def sem(data: pd.DataFrame, model_syntax: str, **kwargs) -> SEM:
     return SEM(data, model_syntax=model_syntax, **kwargs)
 
 
+def sem_template(template: str, data: Optional[pd.DataFrame] = None, **kwargs):
+    """교차지연·잠재성장·잠재변화 모형 예시: 기본 가정이 반영된 모형식 생성 (run=True면 SEM까지 실행)."""
+    from .analyses.sem_templates import sem_template as _sem_template
+    return _sem_template(template, data, **kwargs)
+
+
 def mediation(data: pd.DataFrame, dep: str, pred: str, med: str, **kwargs) -> Mediation:
     return Mediation(data, dep=dep, pred=pred, med=med, **kwargs)
 
@@ -267,8 +273,12 @@ def panel(data: pd.DataFrame, entity_col: str, time_col: str, dep: str, covs: Un
     return PanelAnalysis(data, entity_col=entity_col, time_col=time_col, dep=dep, covs=covs, model_type=model_type, **kwargs)
 
 
-def mixedModel(data: pd.DataFrame, dep: str, cluster: str, **kwargs) -> MixedLinearModel:
-    return MixedLinearModel(data, dep=dep, cluster=cluster, **kwargs)
+def mixedModel(data: pd.DataFrame, dep: str, cluster: Optional[str] = None, **kwargs) -> BaseAnalysis:
+    """Multilevel (mixed-effects) model, 2–4 levels (analyses/multilevel.py): levels=[top, ..., cluster] or cluster=."""
+    params = dict(kwargs, dep=dep)
+    if cluster is not None:
+        params["cluster"] = cluster
+    return dispatch_analysis("mixedModel", data, params)
 
 
 def survival(data: pd.DataFrame, time_col: str, event_col: str, group: Optional[str] = None, **kwargs) -> SurvivalAnalysis:
@@ -374,6 +384,7 @@ __all__ = [
     "pca",
     "efa",
     "sem",
+    "sem_template",
     "mediation",
     "moderation",
     "panel",

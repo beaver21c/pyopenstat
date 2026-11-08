@@ -228,7 +228,113 @@ def _p(params: Dict[str, Any], key: str, default: Any = None) -> Any:
     return default if v in (None, "", []) else v
 
 
+def _sem_cat_list(p: Dict[str, Any]) -> List[str]:
+    v = p.get("categorical")
+    if v in (None, "", []):
+        return []
+    if isinstance(v, (list, tuple)):
+        return [str(x).strip() for x in v if str(x).strip()]
+    return [x.strip() for x in re.split(r"[,;\n]+", str(v)) if x.strip()]
+
+
+def _sem_stata(p: Dict[str, Any]) -> Optional[List[str]]:
+    model = str(_p(p, "model", ""))
+    cat = set(_sem_cat_list(p))
+    est = str(_p(p, "estimator", "auto")).lower()
+    if est in ("auto", "default"):
+        est = "wlsmv" if cat else "ml"
+    fam = lambda v: ", oprobit" if v in cat else ""
+    parts = []
+    scale_lines: List[str] = []
+    for line in re.split(r"[\n;]", model):
+        line = re.sub(r"#.*$", "", line).strip()
+        m = re.match(r"^(\S+)\s*=~\s*(.+)$", line)
+        if m:
+            inds = [re.sub(r"^[^*]*\*", "", x).strip() for x in m.group(2).split("+")]
+            if cat:
+                cats = [x for x in inds if x in cat]
+                conts = [x for x in inds if x not in cat]
+                if cats:
+                    parts.append(f"({m.group(1)} -> {' '.join(cats)}, oprobit)")
+                if conts:
+                    parts.append(f"({m.group(1)} -> {' '.join(conts)})")
+            else:
+                parts.append(f"({m.group(1)} -> {' '.join(inds)})")
+            continue
+        if "~*~" in line:
+            scale_lines.append(line)
+            continue
+        m = re.match(r"^(\S+)\s*~(?![~1])\s*(.+)$", line)
+        if m:
+            preds = [re.sub(r"^[^*]*\*", "", x).strip() for x in m.group(2).split("+")]
+            preds = [x for x in preds if x != "1"]          # 'y ~ 1' / 'f ~ 0*1': intercepts and means, not paths
+            if preds:
+                parts.append(f"({m.group(1)} <- {' '.join(preds)}{fam(m.group(1))})")
+    if not parts:
+        return None
+    lat = sorted({re.match(r"\((\S+) ->", x).group(1) for x in parts if "->" in x})
+    note = [f"* Stata sem/gsem은 잠재변수 이름이 대문자로 시작해야 함(또는 latent() 지정): {', '.join(lat)}"] if lat else []
+    if cat:
+        return note + [
+            f"* Stata에는 {est.upper()}(가중최소제곱) 추정이 없음 — 아래 gsem은 완전정보 ML(적응 구적, 프로빗 링크) 대안",
+            "* 척도: gsem은 y* 잔차분산 1(Mplus theta 모수화와 같은 척도), cut = 문턱값; 결측은 가용 자료 ML(목록별 삭제 아님)",
+            "* χ²·CFI·RMSEA 등 적합도 지수는 gsem에서 제공되지 않음 (estat ic: AIC·BIC)",
+        ] + ([f"* 척도요인(Mplus {{y}}) 지정은 gsem에 해당 기능 없음 — 생략: {'; '.join(scale_lines)}"] if scale_lines else []) + [
+            f"gsem {' '.join(parts)}",
+            "estat ic",
+        ]
+    if est in ("ml", "mlr") and not _p(p, "group"):
+        # full translation (fixed values, equality labels, intercepts, (co)variances) — analyses/sem_templates.to_stata
+        try:
+            from .analyses.sem_templates import to_stata
+            miss = "listwise" if _p(p, "missing", "fiml") == "listwise" else "fiml"
+            lines = to_stata(model, missing=miss, estimator=est)
+            if not any(ln.strip().startswith("estat gof") for ln in lines):
+                lines = lines + ["estat gof, stats(all)"]
+            return lines + ["sem, standardized   // 표준화 추정치",
+                            "* 수렴하지 않으면 from()으로 시작값 지정 (예: OpenStat 추정치)"]
+        except Exception:
+            pass                       # outside the translator's subset: path-only translation below
+    if est == "mlm":
+        return note + [f"sem {' '.join(parts)}, method(ml) vce(sbentler) standardized",
+                       "estat gof, stats(all)   // Satorra–Bentler 보정 χ²·RMSEA·CFI·TLI"]
+    opts = ["method(mlmv)" if _p(p, "missing", "fiml") in ("fiml", "auto") else "method(ml)"] \
+        + (["vce(robust)"] if est == "mlr" else []) + ["standardized"]
+    return note + [f"sem {' '.join(parts)}, {' '.join(opts)}", "estat gof, stats(all)"]
+
+
+def _sem_r(p: Dict[str, Any]) -> List[str]:
+    model = str(_p(p, "model", "")).replace('"', "'")
+    cat = _sem_cat_list(p)
+    est = str(_p(p, "estimator", "auto")).lower()
+    if est in ("auto", "default"):
+        est = "wlsmv" if cat else "ml"
+    args = ["model", "data = data", f"estimator = {_q(est.upper())}"]
+    if cat:
+        args.append("ordered = c(" + ", ".join(_q(c) for c in cat) + ")")
+        args.append(f"parameterization = {_q(_p(p, 'parameterization', 'delta'))}")
+        if str(p.get("conditionalX", True)).lower() in ("false", "0", "no"):
+            args.append("conditional.x = FALSE, fixed.x = FALSE")
+    elif est != "mlm":
+        args.append(f"missing = {_q('listwise' if _p(p, 'missing', 'fiml') == 'listwise' else 'fiml')}")
+    if _p(p, "group"):
+        args.append(f"group = {_q(_p(p, 'group'))}")
+    args += ["meanstructure = TRUE", 'mimic = "Mplus"']
+    out = [f"model <- \"\n{model}\n\"", f"fit <- lavaan::sem({', '.join(args)})",
+           "summary(fit, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)"]
+    if cat:
+        out.insert(1, "# lavaan 0.7.2: delta 모수화에서 범주형 매개변수(y*가 다른 변수의 예측변수)의 SE는 해석적 Δ 누락으로 "
+                      "OpenStat(수치 Δ)과 다를 수 있음")
+        out.insert(2, "# lavaan mimic = \"Mplus\"의 WLS 계열 SE는 Mplus 8.8 출력보다 N/(N−1)배, SRMR은 lavaan 정의 — "
+                      "OpenStat은 Mplus 8.8 출력 기준(SE ÷ N, SRMR은 Mplus 8.1 정의)")
+    return out
+
+
 def _an_stata(t: str, p: Dict[str, Any]) -> Optional[List[str]]:
+    from .analyses import extensions
+    ext = extensions.stata_code(t, p)
+    if ext is not None:
+        return ext
     if t == "descriptives":
         v = " ".join(_lst(_p(p, "vars")))
         sb = _p(p, "splitBy")
@@ -309,51 +415,13 @@ def _an_stata(t: str, p: Dict[str, Any]) -> Optional[List[str]]:
             out.append(f"rotate, {rot}" if rot != "oblimin" else "rotate, oblimin oblique")
         return out
     if t == "sem":
-        model = str(_p(p, "model", ""))
-        parts = []
-        for line in re.split(r"[\n;]", model):
-            line = re.sub(r"#.*$", "", line).strip()
-            m = re.match(r"^(\S+)\s*=~\s*(.+)$", line)
-            if m:
-                inds = [re.sub(r"^[^*]*\*", "", x).strip() for x in m.group(2).split("+")]
-                parts.append(f"({m.group(1)} -> {' '.join(inds)})")
-                continue
-            m = re.match(r"^(\S+)\s*~(?![~1])\s*(.+)$", line)
-            if m:
-                preds = [re.sub(r"^[^*]*\*", "", x).strip() for x in m.group(2).split("+")]
-                parts.append(f"({m.group(1)} <- {' '.join(preds)})")
-        if not parts:
-            return None
-        lat = sorted({re.match(r"\((\S+) ->", x).group(1) for x in parts if "->" in x})
-        note = [f"* Stata sem은 잠재변수 이름이 대문자로 시작해야 함: {', '.join(lat)}"] if lat else []
-        opts = ["method(mlmv)" if _p(p, "missing", "fiml") == "fiml" else "method(ml)"] + (["vce(robust)"] if _p(p, "estimator") == "mlr" else []) + ["standardized"]
-        return note + [f"sem {' '.join(parts)}, {' '.join(opts)}", "estat gof, stats(all)"]
+        return _sem_stata(p)
     if t == "mediation":
         x, m, y = _p(p, "pred"), _p(p, "med"), _p(p, "dep")
         return [f"sem ({m} <- {x}) ({y} <- {m} {x})", "estat teffects"]
     if t == "moderation":
         return [f"regress {_p(p, 'dep')} c.{_p(p, 'pred')}##c.{_p(p, 'mod')}",
                 f"margins, dydx({_p(p, 'pred')}) at({_p(p, 'mod')}=(-1 0 1))  // 조절변수 값은 표준화 기준 예시"]
-    if t == "panel":
-        e, tm, y = _p(p, "entity"), _p(p, "time"), _p(p, "dep")
-        x = " ".join(_lst(_p(p, "covs")))
-        mt = _p(p, "modelType", "fixed")
-        vce = {"robust": " vce(robust)", "clustered": f" vce(cluster {e})"}.get(_p(p, "covType"), "")
-        out = [f"xtset {e} {tm}"]
-        if mt == "fixed":
-            out.append(f"xtreg {y} {x}, fe{vce}")
-        elif mt == "twoway":
-            out.append(f"xtreg {y} {x} i.{tm}, fe{vce}")
-        elif mt == "random":
-            out.append(f"xtreg {y} {x}, re{vce}")
-        else:
-            out.append(f"regress {y} {x}{vce.replace(' vce', ', vce') if vce else ''}")
-        if p.get("hausman"):
-            out += [f"quietly xtreg {y} {x}, fe", "estimates store fe", f"quietly xtreg {y} {x}, re", "estimates store re", "hausman fe re"]
-        return out
-    if t == "mixedModel":
-        x = " ".join(_lst(_p(p, "covs")) + [f"i.{f}" for f in _lst(_p(p, "factors"))])
-        return [f"mixed {_p(p, 'dep')} {x} || {_p(p, 'cluster')}:" + (", reml" if p.get("reml", True) else ", mle"), "estat icc"]
     if t == "survival":
         out = [f"stset {_p(p, 'time')}, failure({_p(p, 'event')})"]
         g = _p(p, "group")
@@ -369,6 +437,10 @@ def _an_stata(t: str, p: Dict[str, Any]) -> Optional[List[str]]:
 
 
 def _an_r(t: str, p: Dict[str, Any], syntax_r: Optional[str]) -> Optional[List[str]]:
+    from .analyses import extensions
+    ext = extensions.r_code(t, p)
+    if ext is not None:
+        return ext
     vr = lambda key: "c(" + ", ".join(_q(x) for x in _lst(_p(p, key))) + ")"
     if t == "descriptives":
         sb = _p(p, "splitBy")
@@ -412,25 +484,11 @@ def _an_r(t: str, p: Dict[str, Any], syntax_r: Optional[str]) -> Optional[List[s
     if t == "efa":
         return [f"jmv::efa(data, vars = {vr('vars')}, extraction = {_q(_p(p, 'extraction', 'minres'))}, rotation = {_q(_p(p, 'rotation', 'oblimin'))})"]
     if t == "sem":
-        model = str(_p(p, "model", "")).replace('"', "'")
-        est = "MLR" if _p(p, "estimator") == "mlr" else "ML"
-        return [f"model <- \"\n{model}\n\"",
-                f"fit <- lavaan::sem(model, data = data, estimator = {_q(est)}, missing = {_q('fiml' if _p(p, 'missing', 'fiml') == 'fiml' else 'listwise')}, mimic = \"Mplus\")",
-                "summary(fit, fit.measures = TRUE, standardized = TRUE)"]
+        return _sem_r(p)
     if t == "mediation":
         return [f"jamm::jammGLM(data, dep = {_q(_p(p, 'dep'))}, mediators = {_q(_p(p, 'med'))}, covs = {_q(_p(p, 'pred'))})  # 또는 medmod::med(...)"]
     if t == "moderation":
         return [f"medmod::mod(data, dep = {_q(_p(p, 'dep'))}, mod = {_q(_p(p, 'mod'))}, pred = {_q(_p(p, 'pred'))}, simpleSlopeEst = TRUE)"]
-    if t == "panel":
-        e, tm, y = _p(p, "entity"), _p(p, "time"), _p(p, "dep")
-        f = f"{y} ~ " + " + ".join(_lst(_p(p, "covs")))
-        model = {"fixed": "within", "twoway": "within", "random": "random", "pooled": "pooling"}.get(_p(p, "modelType", "fixed"), "within")
-        eff = ", effect = \"twoways\"" if _p(p, "modelType") == "twoway" else ""
-        return [f"pdata <- plm::pdata.frame(data, index = c({_q(e)}, {_q(tm)}))",
-                f"fit <- plm::plm({f}, data = pdata, model = {_q(model)}{eff})", "summary(fit)"]
-    if t == "mixedModel":
-        f = f"{_p(p, 'dep')} ~ " + (" + ".join(_lst(_p(p, "covs")) + _lst(_p(p, "factors"))) or "1") + f" + (1 | {_p(p, 'cluster')})"
-        return [f"fit <- lme4::lmer({f}, data = data, REML = {str(bool(p.get('reml', True))).upper()})", "summary(fit)"]
     if t == "survival":
         g = _p(p, "group")
         rhs = g if g else "1"

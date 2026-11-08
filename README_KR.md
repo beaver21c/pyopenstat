@@ -12,7 +12,7 @@
 
 - **AI 직접 연동**: Claude Code 등 AI 도구가 MCP 도구·명령줄(`openstat`)·파이썬 SDK로 분석을 직접 실행하고, 코드 기록과 결과 기록 파일을 읽어 수정·재실행. 외부 세션에서 실행한 분석도 열린 프로그램 화면에 자동 반영
 - **통계 프로그램 형식의 작업 화면**: 변수 탐색기, 데이터 스프레드시트, 분석 옵션 창, 결과 시트, 명령 기록·코드 편집기(Stata 명령 입력 실행)를 한 화면에 배치하고 창 배열 6종 제공
-- **사회과학 분석 범위**: 기술통계·t검정·분산분석·회귀·요인·신뢰도, 구조방정식(Mplus 기본 설정), 잠재계층·잠재전이·잠재계층 성장분석, 패널·다층모형, 생존·베이지안·매개·조절, GIS 공간회귀·공간패널·지리가중회귀, 텍스트·관계망 분석 등 분석 45종과 그래프 15종
+- **사회과학 분석 범위**: 기술통계·t검정·분산분석·회귀·요인·신뢰도, 구조방정식(Mplus 기본 설정, 범주형 변수 WLSMV, 교차지연·잠재성장 모형 예시), 잠재계층·잠재전이·잠재계층 성장분석, 패널(고정·확률효과·동적 패널 GMM·패널 도구변수)·다층모형(3수준 이상), 도구변수·시계열(ARIMA), 가산자료(포아송·음이항·영과잉)·제한종속(프로빗·순서형·다항·토빗·Heckman) 모형, 생존·베이지안·매개·조절, GIS 공간회귀·공간패널·지리가중회귀, 텍스트·관계망 분석 등 분석 59종과 그래프 15종
 - **한글(.hwpx) 출력과 보고 양식**: 결과표(한글에서 편집 가능한 표 개체)와 그림을 한글 문서로 저장. 유의수준 별표·괄호 표준오차·「<표 n>」 번호의 사회과학 보고 양식, Stata `esttab` 형식 모형 비교표 제공. Word·Excel·PDF·LaTeX 등 11개 형식 지원
 - **Stata 방식 자료 관리**: merge(1:1·m:1·1:m, `_merge` 표시 변수)·reshape·recode·destring·encode, 실행 취소, .dta·.sav·.omv 입출력, 텍스트 파일·지도 경계 파일 불러오기, 합성데이터 생성
 - **재현 가능한 분석 기록**: 파일 불러오기부터 실행한 모든 명령(자료 처리·분석·직접 입력 명령·내보내기)이 파이썬 파일 하나(`workspace/command_log.py`)에 순서대로 쌓여 그대로 다시 실행 가능. Stata(.do)·R(.R) 코드는 필요할 때 변환하여 받음
@@ -29,7 +29,7 @@
 
 1. **파이썬 기반 통계 엔진**: AI가 데이터 분석 코드 작성에 주로 사용하는 파이썬으로 통계 추정·자료 처리·결과 내보내기 전 과정을 구현. AI(Claude Code 등)가 명령줄·MCP 도구·파이썬 SDK로 분석을 직접 실행하고, 코드 기록(`workspace/live_session.py`)과 결과 기록(`workspace/live_session.json`)을 읽어 결과를 확인한 뒤 수정·재실행. 같은 결과가 열린 프로그램 화면의 결과창과 코드 창에도 실시간 반영됨
 2. **연구자에게 익숙한 프로그램 형식**: AI만으로 분석하면 분석 과정과 결과의 기록·관리, 시각적 점검에 한계가 있음. 이에 변수 생성·편집 화면, 결과창, 코드 작성창을 갖춘 통계 프로그램 형식으로 구성하여, 연구자가 AI의 분석 과정을 화면에서 확인·검토·수정할 수 있도록 함
-3. **jamovi 참고와 분석 기법 확장**: 메뉴 구성과 결과표 양식은 jamovi를 참고함. 여기에 파이썬 라이브러리로 구현한 기법(패널 회귀, 구조방정식(Mplus 기본 설정), 잠재계층·혼합모형, GIS 공간회귀, 텍스트·관계망 분석 등)을 더해 사회과학 분야에서 통용되는 분석을 포괄함
+3. **jamovi 참고와 분석 기법 확장**: 메뉴 구성과 결과표 양식은 jamovi를 참고함. 여기에 파이썬 라이브러리(statsmodels·linearmodels·arch 등)로 구현한 기법(패널·동적 패널·도구변수·시계열, 가산자료·제한종속 모형, 다층모형, 구조방정식(Mplus 기본 설정), 잠재계층·혼합모형, GIS 공간회귀, 텍스트·관계망 분석 등)을 더해 사회과학 분야에서 통용되는 분석을 포괄함. 계량·제한종속·다층 모형의 옵션·기본값·보고 통계량은 Stata, 구조방정식은 lavaan·Mplus 관례를 참고함
 4. **논문·보고서 작성 연계(한글 .hwpx 출력)**: 국내 논문·보고서 작성 환경을 고려하여 결과표와 그림을 한글(.hwpx) 문서로 직접 저장함. 표는 한글에서 편집 가능한 표 개체로 생성되며, 유의수준 별표·괄호 표준오차·「<표 n>」 번호를 붙이는 사회과학 보고 양식을 선택할 수 있음. SPSS·Stata·SAS·jamovi·JASP의 결과 내보내기 형식에는 한글(.hwpx)이 없어(2026년 11월 확인), 이들 패키지에서는 워드·엑셀·HTML로 내보낸 결과를 한글에서 다시 정리하는 과정이 필요함
 
 ## 🎯 활용 가능성
@@ -169,15 +169,27 @@ OpenStat Studio는 파이썬 초보자부터 데이터 사이언티스트까지 
 | **회귀 & 범주형** | `corrmatrix`, `partial_corr` | Pearson/Spearman 상관행렬, 편상관분석 |
 | | `linReg` | OLS 다중회귀, VIF 다중공선성, Durbin-Watson 잔차독립성, 2×2 진단도 |
 | | `logRegBin` | 이항 로지스틱 회귀, 오즈비(Odds Ratio), ROC/AUC 곡선 |
+| | `binaryReg` | 이항 선택모형 logit·probit·cloglog(Stata), 평균 한계효과, 분류표, Hosmer–Lemeshow, ROC |
+| | `ordinalReg`, `multinomReg` | 순서형 로짓·프로빗(ologit·oprobit, 절단점·Brant 검정), 다항 로짓(mlogit, 상대위험비) |
+| | `countReg` | 가산자료 회귀: 포아송, 음이항(NB2·NB1), 영과잉(zip·zinb), 절단(tpoisson·tnbreg), 허들, IRR·한계효과·관측·예측 빈도 비교 |
+| | `tobitReg`, `truncReg` | 토빗(검열 자료, 한계효과 4종), 절단 회귀(truncreg) |
+| | `heckman`, `heckprobit` | Heckman 표본선택(최우추정·2단계, ρ·λ·독립성 검정), 표본선택 프로빗 |
+| | `ivReg` | 도구변수 회귀 2SLS·LIML·GMM(ivregress), 1단계 진단(최소 고유값·Stock–Yogo), 내생성·과대식별 검정 |
 | | `crosstab` | 교차분할표, $\chi^2$ 독립성 검정, Fisher 직접확률, Cramér's V |
 | **요인 & 신뢰도** | `reliability` | Cronbach's $\alpha$, McDonald's $\omega$, 항목 제거 시 신뢰도 |
 | | `pca`, `efa` | 주성분분석, 탐색적 요인분석(Varimax/Promax/Oblimin, Scree Plot) |
-| **구조방정식 (SEM)** | `sem` | Mplus 기본 설정(ML·FIML·평균구조), MLR, 다집단·측정동일성, 간접효과, 수정지수, STDYX, 적합도(χ²·RMSEA·CFI·TLI·SRMR) |
+| **구조방정식 (SEM)** | `sem` | Mplus 기본 설정(ML·FIML·평균구조), MLR·MLM, 다집단·측정동일성, 간접효과, 수정지수, STDYX, 적합도(χ²·RMSEA·CFI·TLI·SRMR) |
+| | `sem` (범주형 변수) | 이분·순서형 변수(Mplus CATEGORICAL)를 지표·결과변수로 사용, WLSMV·WLSM·WLS·ULSMV·ULS 추정, delta·theta 모수화, 문턱값, 척도요인(`y ~*~ y`)·범주형 잠재성장모형, 보정 χ² (Mplus 사용자 설명서 공개 예제 출력과 대조) |
+| | 모형 예시 (`sem_template`) | 교차지연(CLPM·RI-CLPM·다중지표 잠재 CLPM), 잠재성장(선형·2차·잠재기저·조건부·병행과정·2차 요인), 잠재변화점수 — 변수만 지정하면 기본 가정이 반영된 모형식 생성 |
 | **잠재계층·혼합모형** | `lca` | 잠재계층(LCA)·잠재프로파일(LPA), 계층 수 비교, TECH11·TECH14, R3STEP·BCH·DCAT (Mplus 기본 설정) |
 | | `lta` | 잠재전이분석: 시점별 계층 비율, 전이확률, 측정동일성 |
 | | `lcga` | 잠재계층 성장분석: 계층별 성장요인 평균(선형·2차·3차), FIML |
-| **패널 & 다층모형** | `panel` | 개체 고정효과(Entity FE), 이원 고정효과, 확률효과(RE), 하우스만 검정 |
-| | `mixedModel` | 선형 혼합모형(Multilevel Linear Mixed Model), REML, ICC 계산 |
+| **패널 & 다층모형** | `panel` | xtreg 계열: 고정·이원 고정·확률·집단 간·1차 차분·통합·모집단 평균(PA), 강건·군집·Driscoll–Kraay 표준오차, Hausman·Breusch–Pagan·Wooldridge·Pesaran CD·수정 Wald 검정 |
+| | `dynPanel` | 동적 패널 GMM: Arellano–Bond 차분(xtabond)·Blundell–Bond 시스템(xtdpdsys), 1·2단계, Windmeijer 보정, AR(1)·AR(2)·Sargan·Hansen 검정 |
+| | `panelIV` | 패널 도구변수 회귀(xtivreg): 고정효과·확률효과(G2SLS·EC2SLS)·1차 차분·집단 간 |
+| | `mixedModel` | 다층모형 2~4수준(Stata mixed): 수준별 확률절편·확률기울기·공분산 구조, ML·REML, 수준별 ICC, 선형회귀 대비 LR 검정, 확률효과 예측값, 다층 로지스틱·포아송(melogit·mepoisson, 라플라스 근사) |
+| **시계열** | `arima` | ARIMA·계절 ARIMA·ARMAX(Stata arima), 예측, 잔차 진단 |
+| | `unitRoot`, `corrgram` | 단위근 검정(ADF·Phillips–Perron·KPSS), 자기상관·편자기상관·Ljung–Box 검정 |
 | **베이지안 & 생존분석** | `bayesTTestIS`, `bayesANOVA` | JZS 코시 사전분포 기반 베이지안 가설검정 ($BF_{10}$) |
 | | `mediation`, `moderation` | 부트스트랩 매개효과, 상호작용 조절효과 및 단순기울기(Simple Slopes) |
 | | `survival` | Kaplan-Meier 생존곡선 분석, Cox 비례위험 회귀분석 |
@@ -234,7 +246,7 @@ OpenStat Studio는 파이썬 초보자부터 데이터 사이언티스트까지 
 - `requirements.txt`에 명시된 패키지들을 다운로드받는 과정에서 보안 프로그램이 차단할 경우, 프록시 설정이나 네트워크 예외 처리를 확인해 주세요.
 
 ### Q3. 분석 결과가 Stata·SPSS 등 다른 프로그램과 일치하나요?
-- 주요 분석은 표준 알고리즘으로 구현하였고, 공간회귀·구조방정식 등 일부 분석은 기준 패키지 결과와 대조하는 자동 테스트(`tests/`)를 갖추었음. 다만 추정 방법·기본 설정·결측 처리 방식에 따라 프로그램 간 결과가 달라질 수 있으며, 모든 분석·옵션 조합의 결과 일치를 보증하지 않음. 논문·보고서에 사용하기 전 다른 프로그램으로 교차 확인 권장([면책 고지](#disclaimer) 참조)
+- 주요 분석은 표준 알고리즘과 검증된 파이썬 라이브러리(statsmodels·linearmodels·arch 등)로 구현하였고, 패널·도구변수·시계열·가산자료·제한종속·다층모형은 Stata, 구조방정식은 lavaan, 공간회귀 등 일부 분석은 해당 기준 패키지 결과와 대조하는 자동 테스트(`tests/`)를 갖추었음. 다만 추정 방법·기본 설정·결측 처리 방식에 따라 프로그램 간 결과가 달라질 수 있으며, 모든 분석·옵션 조합의 결과 일치를 보증하지 않음. 논문·보고서에 사용하기 전 다른 프로그램으로 교차 확인 권장([면책 고지](#disclaimer) 참조)
 
 ---
 

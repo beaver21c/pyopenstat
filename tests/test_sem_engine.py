@@ -167,3 +167,51 @@ def test_sem_module_tables_and_errors(df):
                 dict(model_syntax=CFA, estimator="wlsmv")):
         with pytest.raises(ValueError):
             SEM(d, **bad)
+
+
+def test_semicolon_inside_comment_and_backtick_names(df):
+    base = se.estimate(df, "Visual =~ x1_vis + x2_vis + x3_vis\nTextual =~ x4_txt + x5_txt + x6_txt")
+    commented = ("# 2요인 모형; 요인 간 공분산 자유 ! 주석\n"
+                 "Visual =~ x1_vis + x2_vis + x3_vis   # 시각; 첫 적재량 1\n"
+                 "Textual =~ x4_txt + x5_txt + x6_txt ! 언어; 비고")
+    r = se.estimate(df, commented)
+    assert np.allclose(r.theta, base.theta) and r.fitstats["df"] == base.fitstats["df"]
+    r2 = se.estimate(df, "Visual =~ x1_vis + x2_vis + x3_vis; Textual =~ x4_txt + x5_txt + x6_txt")   # ; still separates
+    assert np.allclose(r2.theta, base.theta)
+    k = df.rename(columns={"x1_vis": "x#1;a"})
+    r3 = se.estimate(k, "Visual =~ `x#1;a` + x2_vis + x3_vis\nTextual =~ x4_txt + x5_txt + x6_txt  # c; d")
+    assert np.allclose(r3.theta, base.theta)
+
+
+def test_identification_check_is_scale_invariant(df):
+    m = CFA + "\nGPA ~ Visual + Textual + Speed"
+    r0 = se.estimate(df, m)
+    d = df.copy()
+    d["GPA"] = d["GPA"] * 1e4                       # variance ≈ 2.7e7 next to factor variances ≈ 0.5
+    r1 = se.estimate(d, m)
+    assert r0.identified and r1.identified
+    b0 = {x.rhs: r0.se[x.pid] for x in r0.spec.rows if x.op == "~"}
+    b1 = {x.rhs: r1.se[x.pid] for x in r1.spec.rows if x.op == "~"}
+    for v in b0:
+        assert abs(b1[v] / 1e4 - b0[v]) < 1e-6 * max(1.0, b0[v])
+    # truly unidentified models are still flagged
+    for bad in ("F =~ NA*x1_vis + x2_vis\nF ~~ F", "F =~ x1_vis + x2_vis", "x3_vis ~ x1_vis\nx1_vis ~ x3_vis"):
+        r = se.estimate(df, bad)
+        assert not r.identified and np.all(np.isnan(r.se)) and any("식별" in n for n in r.notes)
+
+
+def test_identification_template_conditional_lgm_matches_lavaan():
+    """sem_templates lgm_conditional with model_covariates=True (연령 variance ≈ 105 in the joint model): SEs as lavaan
+    (information = "observed", observed.information = "hessian")."""
+    st = pytest.importorskip("pyjamovi.analyses.sem_templates")
+    panel = pd.read_csv(os.path.join(ROOT_DIR, "sample_data", "SEM_Longitudinal_Panel.csv"))
+    w = lambda stem: [f"{stem}_{t}" for t in range(1, 6) if f"{stem}_{t}" in panel.columns]
+    b = st.build_template("lgm_conditional", {"y_waves": w("삶의만족도"), "covariates": ["연령", "소득"],
+                                              "tvc_waves": w("건강")}, {"model_covariates": True}, list(panel.columns))
+    r = se.estimate(panel, b["model"])
+    assert r.identified
+    ref = {("I", "~", "소득"): (0.2420141, 0.0201525), ("삶의만족도_3", "~", "건강_3"): (0.2607664, 0.0202521)}
+    for x in r.spec.rows:
+        if x.free and (x.lhs, x.op, x.rhs) in ref:
+            est, sev = ref[(x.lhs, x.op, x.rhs)]
+            assert abs(r.theta[x.pid] - est) < 1e-5 and abs(r.se[x.pid] - sev) < 1e-5

@@ -17,6 +17,7 @@ semopy>=2.3.11
 
 # Econometrics, Panel Data & Survival Analysis
 linearmodels>=6.1
+arch>=8.0
 lifelines>=0.30.0
 
 # Text Mining (Korean morphological analysis, word clouds, document clustering) & Network Analysis

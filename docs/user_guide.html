@@ -521,6 +521,10 @@ code { font-family: var(--mono-stack); overflow-wrap: anywhere; }
         <a href="#ch-open" class="nav-link">2. 엑셀/CSV 데이터 불러오기</a>
         <a href="#ch-ttest" class="nav-link">3. 두 집단 비교 (독립표본 T-검정)</a>
         <a href="#ch-anova" class="nav-link">4. 세 집단 이상 비교 (분산분석 ANOVA)</a>
+        <a href="#ch-limdep" class="nav-link">4-1. 회귀 확장 (선택·가산·토빗·Heckman·IV)</a>
+        <a href="#ch-panel" class="nav-link">4-2. 패널·동적 패널 GMM·패널 IV</a>
+        <a href="#ch-timeseries" class="nav-link">4-3. 시계열 (ARIMA·단위근)</a>
+        <a href="#ch-multilevel" class="nav-link">4-4. 다층모형 (2~4수준)</a>
         <a href="#ch-dataops" class="nav-link">5. 데이터 가공 (계산·결합·구조 변환·형식)</a>
         <a href="#ch-charts" class="nav-link">6. 15종 논문용 차트 빌더</a>
         <a href="#ch-export" class="nav-link">7. 결과 보고서 내보내기 · 보고 양식 · 모형 비교표</a>
@@ -533,6 +537,8 @@ code { font-family: var(--mono-stack); overflow-wrap: anywhere; }
         <a href="#ch-gis-panel" class="nav-link">14. 공간패널회귀 (xsmle·spxtregress)</a>
         <a href="#ch-gis-gwr" class="nav-link">15. 지리가중회귀 (GWR)</a>
         <a href="#ch-sem" class="nav-link">16. 구조방정식 모형 (CFA·SEM · Mplus 기본)</a>
+        <a href="#ch-semcat" class="nav-link">16-1. SEM 범주형 변수 (WLSMV)</a>
+        <a href="#ch-semtpl" class="nav-link">16-2. SEM 모형 예시 (교차지연·잠재성장)</a>
         <a href="#ch-lca" class="nav-link">17. 잠재계층·잠재프로파일 (LCA·LPA)</a>
         <a href="#ch-lta" class="nav-link">18. 잠재전이분석 (LTA)</a>
         <a href="#ch-lcga" class="nav-link">19. 잠재계층 성장분석 (LCGA)</a>
@@ -562,7 +568,7 @@ code { font-family: var(--mono-stack); overflow-wrap: anywhere; }
                 <div class="step-body">
             <table class="guide-table">
                 <thead><tr><th>항목</th><th>내용</th></tr></thead>
-                <tbody><tr><td>AI 직접 연동</td><td>Claude Code 등 AI 도구가 MCP 도구·명령줄(<code>openstat</code>)·파이썬 SDK로 분석을 직접 실행하고, 코드 기록과 결과 기록 파일을 읽어 수정·재실행. 외부 세션에서 실행한 분석도 열린 프로그램 화면에 자동 반영.</td></tr><tr><td>통계 프로그램 형식의 작업 화면</td><td>변수 탐색기, 데이터 스프레드시트, 분석 옵션 창, 결과 시트, 명령 기록·코드 편집기(Stata 명령 입력 실행)를 한 화면에 배치하고 창 배열 6종 제공.</td></tr><tr><td>사회과학 분석 범위</td><td>기술통계·t검정·분산분석·회귀·요인·신뢰도, 구조방정식(Mplus 기본 설정), 잠재계층·잠재전이·잠재계층 성장분석, 패널·다층모형, 생존·베이지안·매개·조절, GIS 공간회귀·공간패널·지리가중회귀, 텍스트·관계망 분석 등 분석 45종과 그래프 15종.</td></tr><tr><td>한글(.hwpx) 출력과 보고 양식</td><td>결과표(한글에서 편집 가능한 표 개체)와 그림을 한글 문서로 저장. 유의수준 별표·괄호 표준오차·「&lt;표 n&gt;」 번호의 사회과학 보고 양식, Stata <code>esttab</code> 형식 모형 비교표 제공. Word·Excel·PDF·LaTeX 등 11개 형식 지원.</td></tr><tr><td>Stata 방식 자료 관리</td><td>merge(1:1·m:1·1:m, <code>_merge</code> 표시 변수)·reshape·recode·destring·encode, 실행 취소, .dta·.sav·.omv 입출력, 텍스트 파일·지도 경계 파일 불러오기, 합성데이터 생성.</td></tr><tr><td>재현 가능한 분석 기록</td><td>파일 불러오기부터 실행한 모든 명령(자료 처리·분석·직접 입력 명령·내보내기)이 파이썬 파일 하나(<code>workspace/command_log.py</code>)에 순서대로 쌓여 그대로 다시 실행 가능. Stata(.do)·R(.R) 코드는 필요할 때 변환하여 받음.</td></tr><tr><td>무료·로컬 실행</td><td>MIT 라이선스로 무료 사용. 사용자 PC에서 실행되며 웹 화면은 127.0.0.1에만 연결. Windows·macOS·Linux 실행 파일 제공.</td></tr></tbody>
+                <tbody><tr><td>AI 직접 연동</td><td>Claude Code 등 AI 도구가 MCP 도구·명령줄(<code>openstat</code>)·파이썬 SDK로 분석을 직접 실행하고, 코드 기록과 결과 기록 파일을 읽어 수정·재실행. 외부 세션에서 실행한 분석도 열린 프로그램 화면에 자동 반영.</td></tr><tr><td>통계 프로그램 형식의 작업 화면</td><td>변수 탐색기, 데이터 스프레드시트, 분석 옵션 창, 결과 시트, 명령 기록·코드 편집기(Stata 명령 입력 실행)를 한 화면에 배치하고 창 배열 6종 제공.</td></tr><tr><td>사회과학 분석 범위</td><td>기술통계·t검정·분산분석·회귀·요인·신뢰도, 구조방정식(Mplus 기본 설정, 범주형 변수 WLSMV, 교차지연·잠재성장 모형 예시), 잠재계층·잠재전이·잠재계층 성장분석, 패널(고정·확률효과·동적 패널 GMM·패널 도구변수)·다층모형(3수준 이상), 도구변수·시계열(ARIMA), 가산자료(포아송·음이항·영과잉)·제한종속(프로빗·순서형·다항·토빗·Heckman) 모형, 생존·베이지안·매개·조절, GIS 공간회귀·공간패널·지리가중회귀, 텍스트·관계망 분석 등 분석 59종과 그래프 15종.</td></tr><tr><td>한글(.hwpx) 출력과 보고 양식</td><td>결과표(한글에서 편집 가능한 표 개체)와 그림을 한글 문서로 저장. 유의수준 별표·괄호 표준오차·「&lt;표 n&gt;」 번호의 사회과학 보고 양식, Stata <code>esttab</code> 형식 모형 비교표 제공. Word·Excel·PDF·LaTeX 등 11개 형식 지원.</td></tr><tr><td>Stata 방식 자료 관리</td><td>merge(1:1·m:1·1:m, <code>_merge</code> 표시 변수)·reshape·recode·destring·encode, 실행 취소, .dta·.sav·.omv 입출력, 텍스트 파일·지도 경계 파일 불러오기, 합성데이터 생성.</td></tr><tr><td>재현 가능한 분석 기록</td><td>파일 불러오기부터 실행한 모든 명령(자료 처리·분석·직접 입력 명령·내보내기)이 파이썬 파일 하나(<code>workspace/command_log.py</code>)에 순서대로 쌓여 그대로 다시 실행 가능. Stata(.do)·R(.R) 코드는 필요할 때 변환하여 받음.</td></tr><tr><td>무료·로컬 실행</td><td>MIT 라이선스로 무료 사용. 사용자 PC에서 실행되며 웹 화면은 127.0.0.1에만 연결. Windows·macOS·Linux 실행 파일 제공.</td></tr></tbody>
             </table>
                 </div>
             </div>
@@ -803,6 +809,216 @@ code { font-family: var(--mono-stack); overflow-wrap: anywhere; }
                     • <strong>One-Way ANOVA 표</strong>: $F(2, 57) = 67.42, p < .001, \eta^2 = 0.703$<br>
                     • <strong>사후검정 표</strong>: 0.5mg vs 1.0mg ($p < .001$), 1.0mg vs 2.0mg ($p < .001$), 0.5mg vs 2.0mg ($p < .001$) 모두 유의미한 차이가 확인되어, 투여 용량이 증가할수록 치아 길이가 뚜렷하게 길어짐을 실증합니다.
                 </p>
+            </div>
+        </section>
+
+        <!-- Chapter 4-1: 회귀 확장: 이항·순서·다항 선택, 가산자료, 토빗·표본선택, 도구변수 -->
+        <section id="ch-limdep" class="guide-card">
+            <div class="card-hdr">
+                <span class="card-num">4-1</span>
+                <h2 class="card-title">회귀 확장: 이항·순서·다항 선택, 가산자료, 토빗·표본선택, 도구변수</h2>
+            </div>
+            <p class="card-desc">로짓 외의 비선형 회귀와 도구변수 회귀를 Stata의 명령·옵션·보고 통계량 구성에 맞춰 제공함. 계산은 statsmodels·linearmodels, 라이브러리가 없는 토빗·절단 회귀·Heckman·heckprobit은 statsmodels 최우추정 틀(GenericLikelihoodModel)에 우도함수를 더해 구현함. Stata 19.5 결과와 대조한 자동 테스트(<code>tests/test_limdep_models.py</code>, <code>test_count_models.py</code>, <code>test_iv_timeseries.py</code>) 포함.</p>
+            <span class="guide-keywords" hidden>probit cloglog ologit oprobit mlogit 다항 순서형 토빗 tobit truncreg 절단 검열 heckman 표본선택 heckprobit poisson 포아송 nbreg 음이항 zip zinb 영과잉 tpoisson tnbreg 허들 hurdle irr 한계효과 margins ivregress 2sls liml gmm 도구변수 내생성 과대식별 stock yogo</span>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">1단계</span>
+                    <span class="step-title">메뉴와 예제 자료</span>
+                </div>
+                <div class="step-body">
+                    <span class="ui-click ">[분석]</span> 탭 → <span class="ui-click primary">[회귀분석 ▾]</span>의 「도구변수 회귀 (IV)」, 「이항·순서·다항 선택모형」, 「가산자료 회귀 (Count)」, 「절단·검열·표본선택」 묶음에서 선택. 첫 화면 예제 단추로 연습용 합성 자료를 열면 변수가 자동 지정됨.
+                </div>
+                <table class="guide-table">
+                    <thead><tr><th>분석 (id)</th><th>Stata 대응</th><th>예제 자료</th></tr></thead>
+                    <tbody>
+                        <tr><td>도구변수 회귀 (<code>ivReg</code>)</td><td><code>ivregress 2sls|liml|gmm</code>, <code>estat firststage|endogenous|overid</code></td><td><span class="ui-click ">📊 교육 수익률</span> <code>IV_Schooling.csv</code></td></tr>
+                        <tr><td>이항 선택모형 (<code>binaryReg</code>)</td><td><code>logit</code>·<code>probit</code>·<code>cloglog</code>, <code>margins, dydx(*)</code>, <code>estat classification</code>·<code>estat gof</code>·<code>lroc</code></td><td><code>LimDep_Employment_Wage.csv</code></td></tr>
+                        <tr><td>순서형 로짓·프로빗 (<code>ordinalReg</code>)</td><td><code>ologit</code>·<code>oprobit</code> (/cut1…), Brant 검정</td><td><code>LimDep_Satisfaction_Service.csv</code></td></tr>
+                        <tr><td>다항 로짓 (<code>multinomReg</code>)</td><td><code>mlogit</code> (<code>baseoutcome()</code>, <code>rrr</code>)</td><td><code>LimDep_Satisfaction_Service.csv</code></td></tr>
+                        <tr><td>가산자료 회귀 (<code>countReg</code>)</td><td><code>poisson</code>·<code>nbreg</code>(NB2·NB1)·<code>zip</code>·<code>zinb</code>·<code>tpoisson</code>·<code>tnbreg</code>, 허들(R pscl 규약)</td><td><span class="ui-click ">🏥 외래 방문 횟수</span> <code>Count_HealthVisits.csv</code></td></tr>
+                        <tr><td>토빗·절단 회귀 (<code>tobitReg</code>·<code>truncReg</code>)</td><td><code>tobit, ll() ul()</code>, <code>truncreg</code></td><td><code>LimDep_MedicalCost.csv</code></td></tr>
+                        <tr><td>Heckman 표본선택 (<code>heckman</code>·<code>heckprobit</code>)</td><td><code>heckman …, select() [twostep]</code>, <code>heckprobit</code></td><td><code>LimDep_Employment_Wage.csv</code></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">2단계</span>
+                    <span class="step-title">주요 옵션</span>
+                </div>
+                <div class="step-body">
+                    옵션 창 구성은 Stata 대화상자(모형 → 표준오차 → 사후추정 → 보고)를 따름.
+                </div>
+                <table class="guide-table">
+                    <thead><tr><th>옵션</th><th>기본값</th><th>설명</th></tr></thead>
+                    <tbody>
+                        <tr><td>표준오차 (<code>covType</code>)</td><td>OIM (최우추정 모형) · 일반 (IV)</td><td>강건(<code>vce(robust)</code>, N/(N−1) 보정)·군집(<code>vce(cluster)</code>, G/(G−1) 보정). 군집은 군집 변수 칸 지정 필요</td></tr>
+                        <tr><td>연결함수 (<code>link</code>)</td><td>logit</td><td>probit·cloglog. 순서형은 logit·probit</td></tr>
+                        <tr><td>가산 모형 (<code>family</code>)</td><td>poisson</td><td>nb2·nb1·zip·zinb·ztp·ztnb·ztnb1·hurdle_poisson·hurdle_nb. 영과잉·허들은 팽창식 변수 칸(비우면 상수항만)과 팽창식 연결함수(logit·probit) 지정</td></tr>
+                        <tr><td>노출변수·offset</td><td>없음</td><td><code>exposure()</code>(양수)·<code>offset()</code> 중 하나</td></tr>
+                        <tr><td>한계효과 (<code>ame</code>·<code>margins</code>)</td><td>모형별</td><td>평균 한계효과(델타법 SE). 요인 더미는 Stata와 같은 이산 변화로 계산</td></tr>
+                        <tr><td>검열·절단 한계 (<code>ll</code>·<code>ul</code>)</td><td>토빗 0 (예제)</td><td>숫자 또는 min·max. 절단 회귀는 한계 밖 관측치를 제외하고 그 수를 주석에 기록</td></tr>
+                        <tr><td>Heckman 추정 (<code>method</code>)</td><td>ml</td><td>twostep(2단계, Heckman 보정 공분산). 선택 지표를 비우면 결과 변수 비결측 = 선택</td></tr>
+                        <tr><td>IV 추정량 (<code>estimator</code>)</td><td>2sls</td><td>liml·gmm(가중행렬 robust·cluster·unadjusted, center). <code>small</code> = t·F 검정</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">3단계</span>
+                    <span class="step-title">결과 읽기와 명령 입력</span>
+                </div>
+                <div class="step-body">
+                    계수표(추정치·SE·z 또는 t·p·신뢰구간)는 모형 비교표와 사회과학 보고 양식에 바로 쓰임. 모형별로 LR χ²·McFadden 유사 R²·AIC·BIC, 음이항의 과산포 검정(chibar2), 영과잉의 Vuong 검정, 관측·예측 빈도 비교표·그림, IV의 1단계 진단(부분 R²·Shea 부분 R²·최소 고유값과 Stock–Yogo 임계값), 내생성(Durbin·Wu–Hausman)·과대식별(Sargan·Basmann·Hansen J) 검정, Heckman의 ρ·σ·λ와 독립성 검정을 표시함. 명령 기록·코드 편집기(25장)에 Stata 명령을 그대로 입력해도 실행됨. 이어서 입력한 <code>margins, dydx(*)</code>·<code>estat classification</code>·<code>brant</code> 등은 직전 결과에 표를 추가함.
+                </div>
+<pre class="code-block">ivregress 2sls lwage exper expersq black south (educ = nearc4 meduc), first
+nbreg 외래방문 연령 여성 만성질환수, exposure(관찰개월) irr
+zinb 외래방문 연령 여성, inflate(의료급여) vce(cluster 시군구)
+heckman 시간당임금 교육연수 경력, select(취업여부 = 연령 교육연수 미취학자녀수 배우자소득)
+# 파이썬: res = sess.run('countReg', dep='외래방문', covs=['연령', '여성'], family='zinb', inflate=['의료급여'])</pre>
+                <div class="alert-warn"><strong>⚠ 유의:</strong> 가중치, 요인 상호작용(<code>#</code>), <code>margins, at()·over()</code>, 변수로 지정한 검열 한계, IV의 <code>vce(hac)</code>는 미지원이며 입력 시 오류로 안내함. statsmodels 0.15의 영과잉 모형 일부(포아송 헤시안, probit 팽창식, 절단 NB1)는 표준오차 오류가 있어 보정한 계산을 사용함.</div>
+            </div>
+        </section>
+
+        <!-- Chapter 4-2: 패널 회귀·동적 패널 GMM·패널 도구변수 (xtreg·xtabond·xtivreg) -->
+        <section id="ch-panel" class="guide-card">
+            <div class="card-hdr">
+                <span class="card-num">4-2</span>
+                <h2 class="card-title">패널 회귀·동적 패널 GMM·패널 도구변수 (xtreg·xtabond·xtivreg)</h2>
+            </div>
+            <p class="card-desc">개체 × 시점 패널자료의 선형 모형. xtreg 계열은 linearmodels·statsmodels(GEE), 동적 패널 GMM은 Stata xtabond·xtdpdsys와 대조한 자체 구현(pydynpd는 1단계 AR 검정·시스템 GMM 계수가 Stata와 달라 대조용으로만 사용), 패널 도구변수는 linearmodels 2SLS를 변환 자료에 적용함. Stata 19.5 대조 테스트: <code>tests/test_panel_extended.py</code>, <code>tests/test_iv_timeseries.py</code>.</p>
+            <span class="guide-keywords" hidden>패널 xtreg 고정효과 확률효과 between 1차 차분 fd pa gee driscoll kraay hausman xttest0 xtserial xtcsd xttest3 동적 패널 gmm xtabond xtdpdsys arellano bond blundell windmeijer sargan hansen ar(2) collapse xtivreg g2sls ec2sls 패널 도구변수</span>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">1단계</span>
+                    <span class="step-title">메뉴와 자료 구조</span>
+                </div>
+                <div class="step-body">
+                    <span class="ui-click primary">[패널 &amp; 혼합 ▾]</span> → 「패널 회귀 (xtreg)」, 「동적 패널 GMM (xtabond·xtdpdsys)」, 「패널 도구변수 회귀 (xtivreg)」. 자료는 개체·시점별 1행(long). 개체 변수와 시점 변수를 지정하며, 시점 사이의 빈 시점은 시점 값으로 판단함(행 순서 아님). 예제 <span class="ui-click ">📊 지역 복지지출 패널</span>(<code>Dynamic_Panel_Welfare.csv</code>, 합성 200개 지역 × 2014–2023, 비균형), <span class="ui-click ">📊 돌봄 인력 패널</span>(<code>IV_Panel_CareStaff.csv</code>).
+                </div>
+                <table class="guide-table">
+                    <thead><tr><th>분석</th><th>선택지</th><th>보고 내용</th></tr></thead>
+                    <tbody>
+                        <tr><td>패널 회귀 (<code>panel</code>)</td><td>고정·이원 고정·확률(Swamy–Arora)·집단 간·1차 차분·통합 OLS·모집단 평균(교환·독립·AR(1)·비구조 상관)</td><td>집단 내·간·전체 R², sigma_u·sigma_e·rho, 개체효과 F 검정, corr(u_i, Xb), θ, Wald χ²</td></tr>
+                        <tr><td>표준오차</td><td>일반(기본, Stata <code>vce(conventional)</code>)·강건·군집·Driscoll–Kraay</td><td>강건 = Stata <code>vce(robust)</code>: 고정·확률·PA는 개체 군집, 통합·차분·집단 간은 HC1</td></tr>
+                        <tr><td>진단검정</td><td>Hausman, Breusch–Pagan LM(<code>xttest0</code>), Wooldridge(<code>xtserial</code>), Pesaran CD(<code>xtcsd</code>), 수정 Wald(<code>xttest3</code>)</td><td>선택한 검정마다 별도 표</td></tr>
+                        <tr><td>동적 패널 (<code>dynPanel</code>)</td><td>차분 GMM·시스템 GMM, 종속변수 시차, 외생·선결(<code>pre()</code>)·내생(<code>endogenous()</code>) 변수와 시차 범위, 시점 더미, 1·2단계, 강건(Windmeijer), collapse</td><td>계수(z), 도구변수 수, AR(1)·AR(2) 검정, Sargan(동분산 1단계 기준)·Hansen J, 도구변수 구성표</td></tr>
+                        <tr><td>패널 도구변수 (<code>panelIV</code>)</td><td>고정효과·확률효과(G2SLS 기본, EC2SLS)·1차 차분·집단 간</td><td>sigma_u·sigma_e·rho, R², Wald χ², 1단계 요약</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">2단계</span>
+                    <span class="step-title">명령 입력</span>
+                </div>
+                <div class="step-body">
+                    명령 기록·코드 편집기에서 <code>xtset</code>으로 개체·시점을 먼저 지정하면 이후 패널 명령에 자동으로 쓰임. 진단 명령(<code>xttest0</code>·<code>xtcsd</code>·<code>hausman fe re</code>·<code>estat abond</code>)은 직전 패널 결과에 검정을 추가함.
+                </div>
+<pre class="code-block">xtset 지역코드 연도
+xtreg 복지지출 고령인구비율 재정자립도 실업률, fe vce(robust)
+xtdpdsys 복지지출 고령인구비율, pre(재정자립도) endogenous(실업률) twostep vce(robust)
+estat abond
+# 파이썬: res = sess.run('dynPanel', entity='지역코드', time='연도', dep='복지지출', exog=['고령인구비율'], method='system', twostep=True, vce='robust')</pre>
+                <div class="alert-warn"><strong>⚠ 유의:</strong> 시점 더미가 있는 2단계 강건 표준오차는 Stata와 다를 수 있음: Stata는 차분 후 중복된 더미의 도구변수를 남겨 표준오차가 커지고, 본 프로그램은 중복 도구변수를 제외함(Stata 코드 내보내기는 해당 더미를 빼고 추정하도록 작성). xtreg mle·cre·<code>absorb()</code>, 가중치, 다중 군집, xtabond2 일반 구문, difference-in-Hansen 검정은 미지원.</div>
+            </div>
+        </section>
+
+        <!-- Chapter 4-3: 시계열: ARIMA·단위근 검정·자기상관 (arima·dfuller·corrgram) -->
+        <section id="ch-timeseries" class="guide-card">
+            <div class="card-hdr">
+                <span class="card-num">4-3</span>
+                <h2 class="card-title">시계열: ARIMA·단위근 검정·자기상관 (arima·dfuller·corrgram)</h2>
+            </div>
+            <p class="card-desc">단일 시계열의 ARIMA·계절 ARIMA·ARMAX 모형과 진단. 추정은 statsmodels SARIMAX(칼만 필터 정확 최우추정), 단위근 검정은 arch, 자기상관·Ljung–Box는 statsmodels로 계산하며 Stata arima의 모수화(ARMAX = ARMA 오차를 갖는 회귀, 차분 후 상수항 유지)와 OPG 표준오차를 따름.</p>
+            <span class="guide-keywords" hidden>시계열 arima sarima armax 계절 예측 forecast dfuller adf 단위근 phillips perron kpss corrgram 자기상관 편자기상관 ljung box wntestq tsset</span>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">1단계</span>
+                    <span class="step-title">메뉴와 옵션</span>
+                </div>
+                <div class="step-body">
+                    <span class="ui-click primary">[시계열 ▾]</span> → 「ARIMA·계절 ARIMA·ARMAX」, 「단위근 검정」, 「자기상관·편자기상관·포트맨토 검정」. 시간 변수로 정렬하고 중복·빈 시점을 표에 기록함. 예제 <span class="ui-click ">📈 월별 이용 시계열</span>(<code>TS_Monthly_Welfare.csv</code>). ARIMA는 계산량이 많아 <span class="ui-click arrow">▶ 분석 실행</span>을 눌러 실행함.
+                </div>
+                <table class="guide-table">
+                    <thead><tr><th>옵션</th><th>기본값</th><th>설명</th></tr></thead>
+                    <tbody>
+                        <tr><td>차수 p, d, q / 계절 P, D, Q, s</td><td>1, 0, 1 / 없음</td><td>시차 목록 직접 지정 가능(Stata <code>ar()</code>·<code>ma()</code>)</td></tr>
+                        <tr><td>외생 변수</td><td>없음</td><td>ARMAX. 차분 시 외생 변수도 함께 차분할지 선택</td></tr>
+                        <tr><td>표준오차</td><td>OPG (Stata 기본)</td><td>OIM·강건</td></tr>
+                        <tr><td>예측</td><td>12시점</td><td>ARMAX 예측은 자료 끝에 종속변수가 비고 외생 변수가 채워진 행 필요</td></tr>
+                        <tr><td>단위근 검정</td><td>ADF</td><td>Phillips–Perron, KPSS. 상수·추세·drift·없음, 시차 지정. MacKinnon 근사 p값·임계값</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">2단계</span>
+                    <span class="step-title">명령 입력</span>
+                </div>
+                <div class="step-body">
+                    <code>tsset</code>으로 시간 변수를 지정하면 이후 시계열 명령에 자동으로 쓰임.
+                </div>
+<pre class="code-block">tsset t
+arima lvisits temp, arima(1,0,1)
+arima lvisits, arima(0,1,1) sarima(0,1,1,12)
+dfuller cpi, lags(2) trend
+corrgram lvisits, lags(24)</pre>
+                <div class="alert-warn"><strong>⚠ 유의:</strong> Stata와 추정치가 상대 1e-4 수준으로 다를 수 있음(Stata가 미세하게 낮은 로그우도에서 수렴 판정). 차분 모형의 예측 표준오차는 원 수준 예측의 표준오차(R forecast와 같음). ARCH 항, <code>vce(hac)</code>, <code>dfgls</code>는 미지원.</div>
+            </div>
+        </section>
+
+        <!-- Chapter 4-4: 다층모형 2~4수준 (Stata mixed · melogit · mepoisson) -->
+        <section id="ch-multilevel" class="guide-card">
+            <div class="card-hdr">
+                <span class="card-num">4-4</span>
+                <h2 class="card-title">다층모형 2~4수준 (Stata mixed · melogit · mepoisson)</h2>
+            </div>
+            <p class="card-desc">학생–학급–학교처럼 위계로 포함된 자료의 혼합효과 모형. 선형모형은 statsmodels MixedLM으로 추정하고 결과는 Stata mixed 형식(분산 성분의 로그 척도 신뢰구간, 선형회귀 대비 LR 검정, estat icc)으로 보고함. statsmodels가 지원하지 않는 공분산 구조(하위 수준의 비구조·교환·동일 등)와 다층 로지스틱·포아송(라플라스 근사)은 자체 구현으로 계산하며 결과 표에 「자체 구현 추정」으로 표시함.</p>
+            <span class="guide-keywords" hidden>다층모형 혼합모형 mixed multilevel hlm 3수준 위계 확률절편 확률기울기 random slope 공분산 구조 unstructured independent icc estat icc reml ml blup melogit mepoisson 라플라스 중심화</span>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">1단계</span>
+                    <span class="step-title">자료와 수준 지정</span>
+                </div>
+                <div class="step-body">
+                    <span class="ui-click primary">[패널 &amp; 혼합 ▾]</span> → 「다층모형 · 선형 혼합모형 (2~4수준)」 또는 「다층 로지스틱·포아송」. 집단 변수는 관측치를 바로 포함하는 집단(2수준, 예: 학급)부터 3수준(학교)·4수준 순서로 지정함. 하위 집단 ID가 상위 집단 안에서만 고유해도(학교마다 1반·2반…) 상위 집단과 결합해 구분함(Stata <code>|| 학교: || 학급:</code>와 같음). 예제 <span class="ui-click ">🏫 학생–학급–학교 3수준</span>(<code>Multilevel_School3L.csv</code>, 합성 학생 4,930명·학급 224개·학교 50개).
+                </div>
+                <table class="guide-table">
+                    <thead><tr><th>옵션</th><th>기본값</th><th>설명</th></tr></thead>
+                    <tbody>
+                        <tr><td>추정 방법</td><td>ML (Stata mixed 기본)</td><td>REML 선택 가능. 파이썬에서 옵션을 생략하면 기존 동작대로 REML</td></tr>
+                        <tr><td>수준별 확률기울기</td><td>없음</td><td>공변량 가운데 선택(Stata <code>|| 집단: 변수</code>)</td></tr>
+                        <tr><td>수준별 공분산 구조</td><td>독립 (Stata 기본)</td><td>비구조·교환·동일. 확률효과가 2개 이상일 때 적용</td></tr>
+                        <tr><td>확률절편 제외</td><td>해제</td><td>Stata <code>noconstant</code></td></tr>
+                        <tr><td>분포 (<code>family</code>)</td><td>정규</td><td>이항(melogit)·포아송(mepoisson), OR·IRR, offset·exposure</td></tr>
+                        <tr><td>중심화</td><td>없음</td><td>전체평균·집단평균 중심화, 집단평균 투입(집단 내·간 효과 분리)</td></tr>
+                        <tr><td>보고</td><td>분산</td><td>표준편차·둘 다, 수준별 ICC, LR 검정, 확률효과 예측값(BLUP) 표·그림, 잔차 그림</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">2단계</span>
+                    <span class="step-title">결과 읽기와 명령 입력</span>
+                </div>
+                <div class="step-body">
+                    고정효과 표(계수·SE·z·p·신뢰구간), 확률효과 모수 표(수준별 분산·공분산·상관, 잔차분산과 SE·신뢰구간), 집단 구조 표(수준별 집단 수, 집단당 관측치 최소·평균·최대), 선형회귀 대비 LR 검정, 수준별 ICC(확률기울기 모형은 조건부 ICC)를 제공함.
+                </div>
+<pre class="code-block">mixed 수학성취도 가정SES 성별 학습시간 || 학교ID: 가정SES || 학급ID:, mle
+estat icc
+melogit 기초학력미달 가정SES || 학교ID: || 학급ID:, intmethod(laplace) or
+# 파이썬: res = sess.run('mixedModel', dep='수학성취도', levels=['학교ID', '학급ID'], covs=['가정SES'], randomSlopes={'학교ID': ['가정SES']}, method='ml')</pre>
+                <div class="alert-warn"><strong>⚠ 유의:</strong> 다층 로지스틱·포아송은 라플라스 근사만 지원(Stata 기본은 적응형 가우스–에르미트 7점이므로 결과가 조금 다름). 가중치, <code>vce(robust)</code>, Kenward–Roger 자유도, 잔차 구조, 교차분류 효과는 미지원.</div>
             </div>
         </section>
 
@@ -2138,6 +2354,104 @@ sem (Visual -&gt; x1_vis x2_vis x3_vis) (GPA &lt;- Visual), method(mlmv) vce(rob
                 <div class="alert-warn">
                     <strong>검증 범위:</strong> 결측 없는 자료의 추정치·표준오차·χ²는 semopy와 일치(추정치 차이 1.6×10⁻⁴ 이하)하며, FIML 로그우도는 사례별 다변량정규 직접 계산과 일치, MLR 회귀계수 표준오차는 statsmodels HC0와 일치, 다집단 형태 동일성 모형의 χ²는 집단별 적합의 합과 일치함을 확인했습니다. Mplus를 사용할 수 없는 환경에서 개발하여 Mplus 출력과 직접 대조하지 않았습니다.
                 </div>
+            </div>
+        </section>
+
+        <!-- Chapter 16-1: 구조방정식: 범주형 변수 (Mplus CATEGORICAL · WLSMV) -->
+        <section id="ch-semcat" class="guide-card">
+            <div class="card-hdr">
+                <span class="card-num">16-1</span>
+                <h2 class="card-title">구조방정식: 범주형 변수 (Mplus CATEGORICAL · WLSMV)</h2>
+            </div>
+            <p class="card-desc">이분·순서형 관측변수를 요인 지표나 회귀의 결과변수로 쓰는 구조방정식. Mplus의 범주형 기본값(WLSMV, delta 모수화, 공변량 조건부 추정)을 따름. Mplus 사용자 설명서(statmodel.com)에 공개된 예제 22개(3장 경로분석, 5장 확인적 요인분석·SEM, 6장 잠재성장)의 입력·자료·Mplus 8.8 출력과 대조한 테스트(<code>tests/test_sem_mplus_examples.py</code>, 자료는 <code>scripts/fetch_mplus_examples.py</code>로 내려받음)와 lavaan 0.7.2 대조 테스트(<code>tests/test_sem_categorical.py</code>)를 포함함. 다분·다계열상관, 가중행렬(Γ), 강건 표준오차, 보정 χ²는 사용 가능한 파이썬 라이브러리가 없어 자체 구현함.</p>
+            <span class="guide-keywords" hidden>구조방정식 sem 범주형 categorical 이분 순서형 리커트 wlsmv wlsm wls ulsmv uls dwls mlm satorra bentler delta theta 문턱값 threshold 다분상관 polychoric polyserial</span>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">1단계</span>
+                    <span class="step-title">변수 지정과 추정 옵션</span>
+                </div>
+                <div class="step-body">
+                    <span class="ui-click primary">[SEM / CFA ▾]</span> → 「구조방정식 모형」 옵션 창의 <strong>[범주형 변수 (이분·순서형, Mplus CATEGORICAL)]</strong> 칸에 해당 변수를 넣음. 추정법이 「자동」이면 범주형 변수가 있을 때 WLSMV, 없으면 ML을 사용함. 예제 <span class="ui-click ">🧭 돌봄 만족도 문항</span>(<code>SEM_Categorical_Care.csv</code>, 합성 800명).
+                </div>
+                <table class="guide-table">
+                    <thead><tr><th>옵션</th><th>기본값</th><th>설명</th></tr></thead>
+                    <tbody>
+                        <tr><td>추정법</td><td>자동</td><td>ML·MLR·MLM(연속형) / WLSMV·WLSM·WLS·ULSMV·ULS(범주형)</td></tr>
+                        <tr><td>모수화</td><td>delta (Var(y*) = 1/Δ², 척도요인 Δ = 1)</td><td>theta (y* 잔차분산 = 1). delta에서는 <code>y ~*~ y</code>(Mplus <code>{y}</code>)로 척도요인, theta에서는 <code>y ~~ y</code>로 y* 잔차분산을 자유 모수로 지정</td></tr>
+                        <tr><td>공변량 조건부 추정</td><td>사용</td><td>외생 관측변수에 대한 프로빗 회귀 후 잔차 다분상관(Mplus·lavaan 기본)</td></tr>
+                        <tr><td>결측</td><td>자동 (WLS 계열: 목록별 삭제)</td><td>쌍별 결측(Mplus WLSMV 기본)은 미지원</td></tr>
+                        <tr><td>표본 통계량</td><td>해제</td><td>문턱값·다분/다계열 상관과 SE 표(SAMPSTAT)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">2단계</span>
+                    <span class="step-title">결과 읽기</span>
+                </div>
+                <div class="step-body">
+                    추정치 표에 문턱값 <code>[y$k]</code>가 추가되고, 적합도 표에 보정 χ²·척도 보정 계수·이동 모수, RMSEA·CFI·TLI(보정 χ² 기준), SRMR(Mplus 8.1 이후 정의: 상관·평균·분산·범주 확률 잔차), WRMR(Mplus 8.1부터 출력하지 않는 참고 지수)이 표시됨. 표준오차·χ²·RMSEA는 Mplus 출력과 같이 표본 크기 N을 씀. R² 표는 y*의 R²·잔차분산·척도 요인을 보고함. 간접효과·정의 모수·수정지수도 범주형 모형에서 계산됨.
+                </div>
+<pre class="code-block">res = sess.sem(model="S =~ 만족_친절 + 만족_시간 + 만족_전문성 + 만족_소통\n재이용의향 ~ S + 여성",
+               categorical=["만족_친절", "만족_시간", "만족_전문성", "만족_소통", "재이용의향"])</pre>
+                <div class="alert-tip"><strong>💡 범주형 결과의 잠재성장모형 (Mplus 예제 6.4 기본값):</strong> 문턱값 시점 간 동일, 절편요인 평균 0, 둘째 시점부터 척도요인 자유.
+<pre class="code-block">i =~ 1*u1 + 1*u2 + 1*u3 + 1*u4
+s =~ 0*u1 + 1*u2 + 2*u3 + 3*u4
+u1 | th*t1
+u2 | th*t1
+u3 | th*t1
+u4 | th*t1
+i ~ 0*1
+s ~ 1
+u2 ~*~ u2
+u3 ~*~ u3
+u4 ~*~ u4</pre>theta 모수화(예제 6.5)에서는 마지막 세 줄 대신 <code>u2 ~~ u2</code> 등으로 y* 잔차분산을 자유로 둠.</div>
+                <div class="alert-tip"><strong>💡 참고:</strong> lavaan의 <code>mimic="Mplus"</code> 설정은 WLS 계열 표준오차를 Mplus 출력보다 N/(N−1)배 크게, SRMR은 lavaan 정의로 보고함(본 프로그램은 Mplus 8.8 출력 기준). lavaan 0.7.2는 delta 모수화에서 범주형 매개변수(다른 변수를 예측하는 범주형 변수)가 있으면 해당 계수의 표준오차를 다르게 보고함. 몬테카를로 모의실험(500회)에서 본 프로그램의 표준오차가 실제 표집 변동과 일치함(b: 경험적 SD 0.0719, 본 프로그램 0.0712, lavaan 0.0899).</div>
+                <div class="alert-warn"><strong>⚠ 유의:</strong> 범주형 변수가 있는 다집단 분석, 쌍별 결측, 범주형 변수의 ML·MLR(수치 적분)은 미지원. Stata에는 WLSMV가 없어 Stata 코드 내보내기는 gsem 프로빗 모형(ML)을 대안으로 적음.</div>
+            </div>
+        </section>
+
+        <!-- Chapter 16-2: 구조방정식 모형 예시: 교차지연·잠재성장·잠재변화 (기본 가정 반영) -->
+        <section id="ch-semtpl" class="guide-card">
+            <div class="card-hdr">
+                <span class="card-num">16-2</span>
+                <h2 class="card-title">구조방정식 모형 예시: 교차지연·잠재성장·잠재변화 (기본 가정 반영)</h2>
+            </div>
+            <p class="card-desc">대표적인 종단 구조방정식 모형 10종을 고르고 시점별 변수만 지정하면 관례적 기본 가정이 반영된 모형식을 만들어 SEM 분석에 넣음. 모형식 머리에 기본 가정 목록이 주석으로 붙음. lavaan 0.7.2와 27개 변형을 대조한 테스트 포함(<code>tests/test_sem_templates.py</code>). 선형·2차·2차 요인 잠재성장 예시는 Mplus 사용자 설명서 예제 6.1·6.9·6.14의 출력(χ²·자유도·로그우도)과 같고, RI-CLPM 예시는 Mplus 공식 RI-CLPM 입력(무선절편 공분산, 시점 내 요인, 측정오차 0, 무선절편과 첫 시점 요인 공분산 0)과 같은 제약을 씀. 2차 요인 잠재성장 예시의 기본값 「같은 문항 잔차의 시점 간 공분산: 모든 시점 쌍」은 Mplus 예제 6.14(공분산 없음)와 다르므로, 「없음」을 고르면 예제 6.14와 같은 모형이 됨. 대화상자 구성은 Stata SEM Builder(관측변수 묶음·측정 구성요소·경로 그림)를 참고함.</p>
+            <span class="guide-keywords" hidden>모형 예시 템플릿 교차지연 clpm riclpm 무선절편 잠재성장 lgm 2차 잠재기저 조건부 병행과정 2차 요인 curve of factors 다중지표 측정동일성 잠재변화점수 lcs 종단</span>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">1단계</span>
+                    <span class="step-title">모형 고르기</span>
+                </div>
+                <div class="step-body">
+                    <span class="ui-click primary">[SEM / CFA ▾]</span> 메뉴의 「모형 예시」 항목 또는 SEM 옵션 창의 <span class="ui-click teal">📐 모형 예시</span> 단추. 예제 <span class="ui-click ">🧭 종단 패널 5시점</span>(<code>SEM_Longitudinal_Panel.csv</code>), <span class="ui-click ">🧭 다중지표 종단 4시점</span>(<code>SEM_Longitudinal_Items.csv</code>).
+                </div>
+                <table class="guide-table">
+                    <thead><tr><th>묶음</th><th>모형</th><th>주요 옵션</th></tr></thead>
+                    <tbody>
+                        <tr><td>교차지연</td><td>CLPM, RI-CLPM(Hamaker 외, 2015), 다중지표 잠재 CLPM</td><td>자기회귀·교차지연 경로의 시점 간 동일 제약, 잔차 공분산 동일, 측정동일성 수준, 같은 문항 잔차 공분산(전체·인접·없음)</td></tr>
+                        <tr><td>잠재성장</td><td>선형, 2차, 잠재기저, 조건부(시간불변·시간가변 공변량), 병행과정, 2차 요인(curve-of-factors)</td><td>시간점수, 잔차분산 동일, 공변량 모형 포함 여부, 측정동일성(2차 요인)</td></tr>
+                        <tr><td>잠재변화</td><td>단변량 이중 변화점수</td><td>일정 변화·비례 변화 항</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">2단계</span>
+                    <span class="step-title">변수 지정과 적용</span>
+                </div>
+                <div class="step-body">
+                    시점별 변수는 탐지된 묶음(예: 우울_1 … 우울_5)을 고르거나 하나씩 추가하고 ↑↓로 순서를 맞춤. 문항 × 시점은 시점마다 한 줄(잠재변수 이름 ← 측정변수, ★ 기준지표)로 지정함. 오른쪽에 경로 그림·모형식·Stata sem 명령, 자유모수·자유도, 기본 가정 목록이 바로 표시됨. <span class="ui-click arrow">▶ 모형식에 넣기</span>를 누르면 SEM 분석이 실행됨.
+                </div>
+<pre class="code-block">res = sess.sem_template('riclpm', x_waves=['우울_1', '우울_2', '우울_3', '우울_4', '우울_5'],
+                         y_waves=['외로움_1', '외로움_2', '외로움_3', '외로움_4', '외로움_5'], constrain_lagged=True)
+spec = ost.sem_template('lgm_linear', y_waves=['우울_1', '우울_2', '우울_3'])   # 모형식만: print(spec.model)</pre>
+                <div class="alert-warn"><strong>⚠ 유의:</strong> 군집 자료의 2수준(between·within) SEM은 엔진이 지원하지 않음. 잠재변수를 주요 변수로 쓰는 위계 모형은 2차 요인 잠재성장모형과 다중지표 잠재 교차지연모형으로 제공함. Stata로 내보낸 2차·잠재기저 등 일부 모형은 Stata 기본 시작값으로 수렴하지 않을 수 있어 <code>from()</code>으로 시작값을 지정함.</div>
             </div>
         </section>
 
