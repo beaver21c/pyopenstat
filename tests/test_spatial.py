@@ -103,6 +103,17 @@ def test_weights_construction(cs, W, tmp_path):
     assert pts.spec.kind == "knn" and pts.unit == "km"
 
 
+def test_minmax_normalization_follows_stata():
+    """Stata spmatrix normalize(minmax) / Kelejian & Prucha (2010): divide by the smaller of the largest row sum
+    and the largest column sum of absolute values (differs from the larger one when W is asymmetric)."""
+    import numpy as np
+    import scipy.sparse as sp
+    from pyjamovi.analyses.spatial_weights import SpatialWeights
+    W = sp.csr_matrix(np.array([[0, 1, 1, 1], [1, 0, 0, 0], [1, 0, 0, 0], [0, 1, 0, 0]], float))  # rows 3,1,1,1; cols 2,2,1,1
+    out = SpatialWeights._normalise(W, "minmax").toarray()
+    assert np.allclose(out, W.toarray() / 2.0)
+
+
 def test_cross_section_ml_matches_spreg(cs, W):
     spreg = pytest.importorskip("spreg")
     y, X = cs["복지지출"].to_numpy(float), cs[COVS].to_numpy(float)

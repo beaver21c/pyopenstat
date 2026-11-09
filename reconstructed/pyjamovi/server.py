@@ -79,6 +79,7 @@ DATASET_DESCRIPTIONS: Dict[str, str] = {
     "ToothGrowth.omv": "Open Matrix Vector (.omv) binary container of ToothGrowth (N=60)",
     "iris.csv": "Edgar Anderson's Iris Morphological Measurements across 3 Species (N=150) — ANOVA, Regression, PCA, SEM",
     "Big5.csv": "Big Five Personality Inventory (500 respondents × 5 subscales) — Correlation, PCA/EFA, Reliability",
+    "Korea_Regional_Welfare_GIS.csv": "서울 25개 자치구 복지지출·노인인구 비율과 좌표 (위경도) — k-최근접 공간가중행렬, Moran's I, 공간회귀",
     "bugs.csv": "Ryan, Wilde & Crist (2013) Arthropod Disgust/Fright Ratings (N=93) — Contingency χ², RM-ANOVA, Paired T-Test",
     "Grunfeld_Panel.csv": "Grunfeld (1958) Corporate Investment Panel (11 Firms × 20 Years, N=220) — Panel FE/RE, Hausman, Mixed Model",
     "SEM_Latent3Factor.csv": "3-Factor Latent Construct Dataset (9 Indicators x1..y3, N=300) — CFA, SEM, Reliability, EFA",
@@ -577,6 +578,17 @@ def get_index():
 @app.get("/guide", response_class=HTMLResponse)
 def get_user_guide():
     guide_path = os.path.join(WEB_DIR, "user_guide.html")
+    with open(guide_path, "r", encoding="utf-8") as f:
+        content = f.read()
+    return HTMLResponse(content=content, headers={"Cache-Control": "no-store, no-cache, must-revalidate"})
+
+
+@app.get("/user_guide_en.html", response_class=HTMLResponse)
+@app.get("/guide_en", response_class=HTMLResponse)
+def get_user_guide_en():
+    guide_path = os.path.join(WEB_DIR, "user_guide_en.html")
+    if not os.path.exists(guide_path):
+        guide_path = os.path.join(WEB_DIR, "user_guide.html")
     with open(guide_path, "r", encoding="utf-8") as f:
         content = f.read()
     return HTMLResponse(content=content, headers={"Cache-Control": "no-store, no-cache, must-revalidate"})

@@ -1,6 +1,8 @@
 # OpenStat Studio v3.0 (`pyopenstat`)
 
-🔗 **저장소** <https://github.com/beaver21c/pyopenstat> · ⬇️ **[내려받기 (ZIP)](https://github.com/beaver21c/pyopenstat/archive/refs/heads/main.zip)** · 📖 **사용 설명서** [온라인 보기](https://raw.githack.com/beaver21c/pyopenstat/main/docs/user_guide.html) / [파일](docs/user_guide.html) · ⚠️ **[면책 고지](#disclaimer)**
+🌐 **한국어** · [English](README_EN.md)
+
+🔗 **저장소** <https://github.com/beaver21c/pyopenstat> · ⬇️ **[내려받기 (ZIP)](https://github.com/beaver21c/pyopenstat/archive/refs/heads/main.zip)** · 📖 **사용 설명서** [온라인 보기](https://raw.githack.com/beaver21c/pyopenstat/main/docs/user_guide.html) / [파일](docs/user_guide.html) / [English](https://raw.githack.com/beaver21c/pyopenstat/main/docs/user_guide_en.html) · ⚠️ **[면책 고지](#disclaimer)**
 
 **AI와 연동되는 파이썬 기반 사회과학 통계 프로그램 · 통계 프로그램 형식의 작업 화면 · 한글(.hwpx) 결과 출력**
 
@@ -103,7 +105,7 @@
 
 ## ⚡ 빠른 시작 (3가지 사용 방식)
 
-OpenStat Studio는 일반 사용자, AI 에이전트 사용자, 파이썬 연구자 모두를 위해 완벽하게 최적화된 3가지 실행 방식을 제공합니다.
+일반 사용자, AI 에이전트 사용자, 파이썬 연구자를 위한 실행 방식 3가지 제공.
 
 ### 🌟 방식 1. 일반 사용자 (마우스 1클릭 무설치형 실행)
 복잡한 터미널 명령어 입력 없이, 마우스 클릭만으로 그래픽 화면(GUI) 프로그램을 엽니다.
@@ -114,7 +116,7 @@ OpenStat Studio는 일반 사용자, AI 에이전트 사용자, 파이썬 연구
    - **macOS / Linux**: 터미널에서 `./START_OPENSTAT.sh` 실행
 3. **자동 환경 구성 및 앱 실행**:
    - 시스템에 Python이 설치되어 있으면, 최초 1회 필요한 가상환경(`.venv`)과 패키지를 자동으로 설치한 뒤 브라우저 독립 앱 창(`http://localhost:8500`)을 자동으로 띄웁니다.
-   - 2회차 실행부터는 1초 만에 즉시 실행됩니다.
+   - 2회차부터는 설치 단계 없이 바로 실행.
    - *종료 방법*: 검은색 콘솔 창을 닫거나 콘솔에서 아무 키나 누르면 서버 종료.
    - *공유 폴더 실행*: 네트워크 공유 폴더에서 실행하면 이 PC의 `%USERPROFILE%\OpenStatStudio`로 복사한 뒤 실행.
 
@@ -142,12 +144,12 @@ OpenStat Studio는 일반 사용자, AI 에이전트 사용자, 파이썬 연구
    > *"sample_data/ToothGrowth.csv 데이터 불러와서 dose별 t-검정하고 APA 표랑 박스플롯 그려줘"*  
    > *"패널 데이터 Grunfeld_Panel.csv로 고정효과 분석하고 결과 표를 HWPX, Excel로 만들어줘"*  
    > *"age가 65세 이상인 사람만 필터링해서 고혈압 유병률 교차분석해줘"*  
-3. Claude Code가 OpenStat의 28종 통계 분석, 15종 그래프 빌더, 데이터 변환(Recode/Filter/Reshape/Compute), 한글(HWPX)/엑셀(XLSX)/워드(DOCX)/PDF 내보내기를 직접 실시간 실행합니다.
+3. Claude Code가 OpenStat의 통계 분석 66종, 그래프 15종, 데이터 변환(Recode/Filter/Reshape/Compute), 한글(HWPX)/엑셀(XLSX)/워드(DOCX)/PDF 내보내기를 직접 실시간 실행합니다.
 
 ---
 
 ### 💻 방식 3. 파이썬 연구자 & 데이터 과학자 (`import openstat as ost`)
-Jupyter Notebook, Google Colab 또는 파이썬 스크립트에서 Stata/R보다 직관적인 분석 코드를 작성합니다.
+Jupyter Notebook, Google Colab 또는 파이썬 스크립트에서 분석 코드를 작성.
 
 ```python
 import openstat as ost
@@ -159,7 +161,7 @@ sess = ost.Session("sample_data/Grunfeld_Panel.csv")
 sess.compute("inv_cap_ratio", "invest / capital")
 sess.filter("year >= 1940")
 
-# 3. 고급 계량경제 패널 분석 (Entity Fixed Effects + Hausman Test)
+# 3. 패널 분석 (Entity Fixed Effects + Hausman Test)
 res = sess.panel(
     entity="firm", time="year", dep="invest", covs=["value", "capital"],
     model_type="fixed", hausman=True,
@@ -171,7 +173,7 @@ res.export_results("reports/panel_report.hwpx")  # 한글 OWPML 네이티브 표
 res.export_results("reports/panel_report.xlsx")  # 엑셀 APA 3선 서식 표
 res.export_results("reports/panel_social.hwpx", report_style="social")  # 사회과학 보고 양식: 0.512*** (0.103), <표 n>
 res.save_plot("reports/panel_plot.svg")          # 출판용 벡터 SVG
-sess.save_py("reports/analysis_script.py")       # 100% 재현 가능한 파이썬 스크립트
+sess.save_py("reports/analysis_script.py")       # 다시 실행할 수 있는 파이썬 스크립트
 ```
 
 ---
@@ -223,7 +225,7 @@ sess.save_py("reports/analysis_script.py")       # 100% 재현 가능한 파이�
   - `[Undo]`: 1단계 작업 취소 및 이전 상태 복원
 
 ### 3. 독립형 15종 학술 그래프 빌더 (`GraphBuilder`)
-통계 검정과 완전히 독립적으로 논문용 차트를 그리고 결과 시트에 추가할 수 있습니다:
+통계 검정과 별도로 논문용 차트를 그려 결과 시트에 추가:
 - `bar`, `stacked_bar`, `line`, `area`, `pie`, `donut`, `histogram`, `density`, `box`, `violin`, `raincloud`, `scatter` (버블 + OLS/LOESS 회귀선), `pairplot`, `heatmap`, `errorbar` (Forest CI 플롯).
 
 ### 3-1. 텍스트 분석 & 관계망 분석 (리본 [텍스트 분석]·[관계망 분석])
@@ -248,7 +250,7 @@ sess.save_py("reports/analysis_script.py")       # 100% 재현 가능한 파이�
 
 ### 4. 11개 포맷 결과 보고서 내보내기 (통계 표 + 고해상도 그림)
 - **`.hwpx`**: 한글 OWPML 네이티브 편집 가능 표(`<hp:tbl>`) **+ 삽입된 PNG 그림(`<hp:pic>`)**
-- **`.pdf`**: 다면 출판 품질의 APA 3선 표 및 고해상도 그래프 리포트
+- **`.pdf`**: APA 3선 표와 고해상도 그래프를 담은 보고서
 - **`.docx`**: 마이크로소프트 워드 네이티브 APA 표 + 차트
 - **`.xlsx`**: 엑셀 전용 APA 테두리 서식 시트 + 차트 이미지 시트
 - **`.tex`**: LaTeX `booktabs` 표 + `\includegraphics` 벡터 PDF 그림 세트
@@ -289,7 +291,8 @@ OpenStat-Studio/
 ├── SETUP_CLAUDE_CODE.sh     # [macOS/Linux] Claude Code AI 연동 스크립트
 ├── .mcp.json                # Claude Code MCP 설정 (SETUP_CLAUDE_CODE 실행 시 PC별 생성, Git 추적 제외)
 ├── CLAUDE.md                # Claude Code 에이전트 지침서
-├── README.md                # 영문 & 국문 통합 안내서
+├── README.md                # 안내서 (한국어)
+├── README_EN.md             # 안내서 (영어)
 ├── README_KR.md             # 한국어 상세 매뉴얼
 ├── NOTICE.md                # 오픈소스 출처 및 라이선스 고지
 ├── LICENSE                  # MIT 라이선스 전문
@@ -298,7 +301,7 @@ OpenStat-Studio/
 ├── docs/                    # 사용 설명서(user_guide.html)·화면 사진(images/)
 ├── reconstructed/           # 파이썬 소스 코드
 │   ├── pyjamovi/            # 통계 엔진, 데이터 전처리, 시각화, 웹 UI
-│   │   ├── analyses/        # 28종 통계 분석 모듈
+│   │   ├── analyses/        # 통계 분석 모듈
 │   │   ├── data_ops.py      # Stata 수준 데이터 변환 엔진
 │   │   ├── exporters/       # 11개 포맷 내보내기 엔진
 │   │   └── web/             # 웹 화면(UI)과 SVG 아이콘

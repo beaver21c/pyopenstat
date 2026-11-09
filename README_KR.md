@@ -1,6 +1,8 @@
 # OpenStat Studio v3.0 한국어 사용자 가이드
 
-🔗 **저장소** <https://github.com/beaver21c/pyopenstat> · ⬇️ **[내려받기 (ZIP)](https://github.com/beaver21c/pyopenstat/archive/refs/heads/main.zip)** · 📖 **사용 설명서** [온라인 보기](https://raw.githack.com/beaver21c/pyopenstat/main/docs/user_guide.html) / [파일](docs/user_guide.html) · ⚠️ **[면책 고지](#disclaimer)**
+🌐 **한국어** · [English](README_EN.md)
+
+🔗 **저장소** <https://github.com/beaver21c/pyopenstat> · ⬇️ **[내려받기 (ZIP)](https://github.com/beaver21c/pyopenstat/archive/refs/heads/main.zip)** · 📖 **사용 설명서** [온라인 보기](https://raw.githack.com/beaver21c/pyopenstat/main/docs/user_guide.html) / [파일](docs/user_guide.html) / [English](https://raw.githack.com/beaver21c/pyopenstat/main/docs/user_guide_en.html) · ⚠️ **[면책 고지](#disclaimer)**
 
 **AI와 연동되는 파이썬 기반 사회과학 통계 프로그램 · 통계 프로그램 형식의 작업 화면 · 한글(.hwpx) 결과 출력**
 
@@ -108,7 +110,7 @@ OpenStat Studio는 파이썬 초보자부터 데이터 사이언티스트까지 
 > **최초 1회 실행 시 자동 환경 구성**:
 > 컴퓨터에 Python 3.10 이상이 설치되어 있으면, 프로그램이 스스로 가상환경(`.venv`)을 만들고 필요한 통계 패키지들을 알아서 설치합니다 (약 1분 소요).  
 > 설치가 끝나면 Microsoft Edge 또는 Chrome 브라우저를 독립 앱 창으로 띄워 오픈스탯 스튜디오가 실행됩니다.  
-> 2회차 실행부터는 기다림 없이 1초 만에 바로 실행됩니다!
+> 2회차부터는 설치 단계 없이 바로 실행됨.
 >
 > **공유 폴더에서 실행하는 경우**: 다른 PC의 공유 폴더(네트워크 드라이브)에서 더블클릭하면 이 PC의 `%USERPROFILE%\OpenStatStudio`로 프로그램을 복사·갱신한 뒤 로컬 사본을 실행 (위치 변경: 환경변수 `OPENSTAT_LOCAL_DIR`).
 
@@ -145,7 +147,7 @@ OpenStat Studio는 파이썬 초보자부터 데이터 사이언티스트까지 
    > *"dose를 독립변수로, len을 종속변수로 일원배치 분산분석(ANOVA) 돌려줘. 등분산성이 깨졌을 때 쓸 Games-Howell 사후검정도 같이 넣고, 박스플롯도 그려줘"*
 3. **데이터 가공 (Stata do-file 동등 기능)**:
    > *"환자 데이터에서 체중(weight)과 신장(height)으로 BMI 변수를 새로 계산하고, 연령(age)을 20대/30대/40대/50대이상으로 범주화(recode)해줘"*
-4. **고급 패널 계량경제학 분석**:
+4. **패널 계량경제 분석**:
    > *"Grunfeld_Panel.csv 패널 데이터로 고정효과(Fixed Effects) 모형 돌리고 하우스만 검정(Hausman test) 결과 해석해 줘"*
 5. **보고서 파일 내보내기**:
    > *"지금까지 분석한 모든 표와 그래프를 논문 작성용 한글(HWPX) 파일과 엑셀(XLSX) 파일로 저장해줘"*

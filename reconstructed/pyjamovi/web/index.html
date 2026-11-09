@@ -2693,10 +2693,10 @@ table.jmv-apa-table tbody tr.sec-break td {
             <div id="results-scroll-wrap" style="flex:1 1 auto;overflow-y:auto;">
             <div id="welcome-screen">
                 <img src="assets/brand-logo-mark.svg" alt="OpenStat Studio" style="opacity:0.9;">
-                <div style="font-size:20px;color:#1E3A5F;font-weight:700;">OpenStat Studio <span style="font-size:12.5px;color:#0D9488;font-weight:600;">v3.0 순수 파이썬 통계 분석 &amp; 시각화 스튜디오 (MIT)</span></div>
+                <div style="font-size:20px;color:#1E3A5F;font-weight:700;">OpenStat Studio <span style="font-size:12.5px;color:#0D9488;font-weight:600;" data-i18n="welcome_sub">v3.0 파이썬 기반 사회과학 통계 프로그램 (MIT)</span></div>
                 <div style="margin-top:6px;font-size:13px;color:#334155;max-width:640px;line-height:1.6;">
-                    순수 파이썬(Pure Python) 기반 45종 통계 분석, Stata 수준 데이터 전처리(계산/재코딩/필터/병합), 15종 학술 차트 빌더, <strong>Claude Code</strong> 자연어 AI 연동, 그리고 <strong>한글(HWPX) / 엑셀(XLSX) / Word / PDF</strong> 출판용 리포트 자동 생성.<br>
-                    <span style="font-size:11.5px;color:#64748B;">메뉴 구성과 결과표 양식은 jamovi를 참고함 · 개인이 개발한 오픈소스(MIT), 무보증(AS IS) 제공 · <a href="user_guide.html#ch-disclaimer" target="_blank" style="color:#0F766E;">면책 고지</a></span>
+                    <span data-i18n="welcome_lead">파이썬 기반 통계 분석 66종, Stata 방식 자료 처리(계산·재코딩·필터·결합·구조 변환), 그래프 15종, <strong>Claude Code</strong> 연동, <strong>한글(HWPX)·엑셀(XLSX)·Word·PDF</strong> 결과 내보내기.</span><br>
+                    <span style="font-size:11.5px;color:#64748B;" data-i18n="welcome_note">메뉴 구성과 결과표 양식은 jamovi를 참고함 · 개인이 개발한 오픈소스(MIT), 무보증(AS IS) 제공 · <a href="user_guide.html#ch-disclaimer" target="_blank" style="color:#0F766E;">면책 고지</a></span>
                 </div>
                 <div class="welcome-quick-pills">
                     <span class="quick-pill" onclick="loadDatasetByName('ToothGrowth.csv')">ToothGrowth (T-검정 / ANOVA / 베이지안)</span>
@@ -2738,7 +2738,7 @@ table.jmv-apa-table tbody tr.sec-break td {
             <div id="jmv-references-footer" style="display:none;">
                 <strong>Open-Source Attribution &amp; References</strong>
                 <div style="margin-top:4px;">[1] <strong>OpenStat Studio Contributors (2026)</strong>. <em>OpenStat Studio v3.0</em> (MIT License) — Pure-Python Statistical Engine, Customizable Plot Studio &amp; Claude Code Runtime (SciPy, Statsmodels, Pingouin, semopy, linearmodels, lifelines).</div>
-                <div>[2] Analytical models, menu organization, and Open Matrix Vector (<code>.omv</code>) interoperability designed with reference to <strong>The jamovi project</strong> (<a href="https://www.jamovi.org" target="_blank" style="color:#0D9488;">https://www.jamovi.org</a>). All UI icons and source code are original clean-room works.</div>
+                <div>[2] Analytical models, menu organization, and Open Matrix Vector (<code>.omv</code>) interoperability designed with reference to <strong>The jamovi project</strong> (<a href="https://www.jamovi.org" target="_blank" style="color:#0D9488;">https://www.jamovi.org</a>). UI icons and source code were written for this project.</div>
             </div>
         </div>
 
@@ -2791,7 +2791,7 @@ table.jmv-apa-table tbody tr.sec-break td {
         <button class="bs-back-btn" onclick="closeBackstage()">← Back</button>
         <div class="bs-nav-item" id="bs-tab-new" onclick="createNewBlankDataset()">New Blank Sheet</div>
         <div class="bs-nav-item active" id="bs-tab-open" onclick="renderBackstageOpen()">Open (Data Library)</div>
-        <div class="bs-nav-item" onclick="window.open('user_guide.html', '_blank'); closeBackstage();" style="color:#A7F3D0;font-weight:700;">📖 클릭 투 클릭 사용 설명서 (User Guide)</div>
+        <div class="bs-nav-item" onclick="window.open(guideHref(), '_blank'); closeBackstage();" style="color:#A7F3D0;font-weight:700;">📖 클릭 투 클릭 사용 설명서 (User Guide)</div>
         <div class="bs-nav-item" onclick="triggerLocalFileUpload()">Import Local File...</div>
         <div class="bs-nav-item" onclick="window.location.href='/api/syntax/export_py'; closeBackstage();">Save Python Script (.py)</div>
         <div class="bs-nav-section" title="아래 결과 내보내기(.pdf·.hwpx·.docx·.xlsx·.tex·.html)에 적용되는 표 양식">내보내기 표 양식 <span class="bs-style-tag">기본 APA 양식</span></div>
@@ -3428,6 +3428,7 @@ table.jmv-apa-table tbody tr.sec-break td {
 
 <div id="toast-banner"></div>
 
+<script src="assets/i18n_dict.js?v=20261109"></script>
 <script>
 /* ==========================================================================
    OpenStat Studio v3.0 Standalone Desktop Client Controller (MIT License)
@@ -3443,6 +3444,9 @@ table.jmv-apa-table tbody tr.sec-break td {
 const I18N = {
     ko: {
         top_user_guide: "사용 설명서",
+        welcome_sub: "v3.0 파이썬 기반 사회과학 통계 프로그램 (MIT)",
+        welcome_lead: "파이썬 기반 통계 분석 66종, Stata 방식 자료 처리(계산·재코딩·필터·결합·구조 변환), 그래프 15종, <strong>Claude Code</strong> 연동, <strong>한글(HWPX)·엑셀(XLSX)·Word·PDF</strong> 결과 내보내기.",
+        welcome_note: '메뉴 구성과 결과표 양식은 jamovi를 참고함 · 개인이 개발한 오픈소스(MIT), 무보증(AS IS) 제공 · <a href="user_guide.html#ch-disclaimer" target="_blank" style="color:#0F766E;">면책 고지</a>',
         tab_variables: "변수",
         tab_data: "데이터",
         tab_analyses: "분석",
@@ -3557,6 +3561,9 @@ const I18N = {
     },
     en: {
         top_user_guide: "User Guide",
+        welcome_sub: "v3.0 Python-based statistics for the social sciences (MIT)",
+        welcome_lead: "66 statistical analyses in Python, Stata-style data management (compute · recode · filter · merge · reshape), 15 chart types, <strong>Claude Code</strong> integration, and export of results to <strong>Hangul (HWPX) · Excel (XLSX) · Word · PDF</strong>.",
+        welcome_note: 'Menu layout and result tables designed with reference to jamovi · Open source (MIT) developed by an individual, provided AS IS without warranty · <a href="user_guide_en.html#ch-disclaimer" target="_blank" style="color:#0F766E;">Disclaimer</a>',
         tab_variables: "Variables",
         tab_data: "Data",
         tab_analyses: "Analyses",
@@ -3913,23 +3920,23 @@ const RIBBON_MENUS_I18N = {
             { sep: true },
             { id: "linReg", label: "Linear Regression" },
             { sep: true },
-            { section: "Instrumental Variables" },
-            { id: "ivReg", label: "IV Regression — 2SLS / LIML / GMM (ivregress)", badge: "Stata" },
+            { section: "Instrumental-Variables Regression (IV)" },
+            { id: "ivReg", label: "Instrumental-Variables Regression — 2SLS / LIML / GMM (ivregress)", badge: "Stata" },
             { sep: true },
-            { section: "Binary, Ordered & Multinomial Choice" },
+            { section: "Binary, Ordered & Multinomial Choice Models" },
             { id: "logRegBin", label: "2 Outcomes (Binomial)" },
-            { id: "binaryReg", label: "Binary Choice (logit · probit · cloglog)", badge: "Stata" },
+            { id: "binaryReg", label: "Binary Choice Models (logit · probit · cloglog)", badge: "Stata" },
             { id: "ordinalReg", label: "Ordered Logit / Probit (ologit · oprobit)" },
             { id: "multinomReg", label: "Multinomial Logit (mlogit)" },
             { sep: true },
             { section: "Truncation, Censoring & Sample Selection" },
-            { id: "tobitReg", label: "Tobit — Censored Regression (tobit)" },
+            { id: "tobitReg", label: "Tobit Regression — Censored Data (tobit)" },
             { id: "truncReg", label: "Truncated Regression (truncreg)" },
             { id: "heckman", label: "Heckman Selection Model (heckman)" },
-            { id: "heckprobit", label: "Probit with Sample Selection (heckprobit)" },
+            { id: "heckprobit", label: "Probit Model with Sample Selection (heckprobit)" },
             { sep: true },
-            { section: "Count Data Regression" },
-            { id: "countReg", label: "Count Regression (Poisson, NB, ZIP, ZINB, Truncated, Hurdle)", badge: "poisson·nbreg·zip" },
+            { section: "Count Regression" },
+            { id: "countReg", label: "Count Regression (Poisson, Negative Binomial, Zero-Inflated, Truncated, Hurdle)", badge: "poisson·nbreg·zip" },
             { sep: true },
             { section: "Model Comparison" },
             { action: "openCompareModal()", label: "Model Comparison Table (side-by-side, esttab)", badge: "esttab" }
@@ -3939,21 +3946,21 @@ const RIBBON_MENUS_I18N = {
             { id: "contTables", label: "Contingency Tables (χ² / Fisher)" }
         ],
         sem: [
-            { id: "sem", label: "Structural Equation Model (CFA / SEM · continuous & categorical · write the model)", badge: "ML·WLSMV" },
+            { id: "sem", label: "Structural Equation Model (CFA · SEM · continuous and categorical variables · write the model directly)", badge: "ML·WLSMV" },
             { action: "openSemBuilderModal()", label: "Interactive SEM Builder (draw the model)", badge: "Builder" },
             { sep: true },
-            { section: "Model templates — cross-lagged (default assumptions)" },
+            { section: "Model templates — cross-lagged (default assumptions written in)" },
             { action: "openSemTemplateModal('clpm')", label: "Cross-Lagged Panel Model (CLPM)", badge: "Template" },
-            { action: "openSemTemplateModal('riclpm')", label: "Random-Intercept CLPM (RI-CLPM)", badge: "Template" },
-            { action: "openSemTemplateModal('latent_clpm')", label: "Multiple-Indicator Latent CLPM (invariance)", badge: "Template" },
-            { section: "Model templates — latent growth / change" },
+            { action: "openSemTemplateModal('riclpm')", label: "Random Intercept Cross-Lagged Panel Model (RI-CLPM)", badge: "Template" },
+            { action: "openSemTemplateModal('latent_clpm')", label: "Multiple Indicator Latent Cross-Lagged Panel Model (measurement invariance)", badge: "Template" },
+            { section: "Model templates — latent growth · latent change" },
             { action: "openSemTemplateModal('lgm_linear')", label: "Linear Latent Growth Model", badge: "Template" },
             { action: "openSemTemplateModal('lgm_quadratic')", label: "Quadratic Latent Growth Model", badge: "Template" },
             { action: "openSemTemplateModal('lgm_basis')", label: "Latent Basis Growth Model (free time scores)", badge: "Template" },
-            { action: "openSemTemplateModal('lgm_conditional')", label: "Conditional LGM (time-invariant / time-varying covariates)", badge: "Template" },
-            { action: "openSemTemplateModal('lgm_parallel')", label: "Parallel-Process Latent Growth Model", badge: "Template" },
-            { action: "openSemTemplateModal('lgm_second_order')", label: "Second-Order (Curve-of-Factors) LGM", badge: "Template" },
-            { action: "openSemTemplateModal('lcs_univariate')", label: "Latent Change Score Model (dual change)", badge: "Template" }
+            { action: "openSemTemplateModal('lgm_conditional')", label: "Conditional Latent Growth Model (time-invariant and time-varying covariates)", badge: "Template" },
+            { action: "openSemTemplateModal('lgm_parallel')", label: "Parallel Process Latent Growth Model", badge: "Template" },
+            { action: "openSemTemplateModal('lgm_second_order')", label: "Second-Order Latent Growth Model (multiple indicators · latent variables)", badge: "Template" },
+            { action: "openSemTemplateModal('lcs_univariate')", label: "Latent Change Score Model (dual change score)", badge: "Template" }
         ],
         factor: [
             { id: "reliability", label: "Reliability Analysis (Cronbach's α & ω)" },
@@ -3967,32 +3974,32 @@ const RIBBON_MENUS_I18N = {
         ],
         linearmodels: [
             { section: "Panel Econometrics" },
-            { id: "panelDescribe", label: "Panel Data Description (xtdescribe / xtsum / xttab / xttrans)" },
+            { id: "panelDescribe", label: "Panel Data Summary (xtdescribe · xtsum · xttab · xttrans)" },
             { id: "panel", label: "Panel Regression (xtreg: FE / RE / CRE / BE / FD / PA)" },
-            { id: "panelNonlinear", label: "Nonlinear Panel — logit / probit / Poisson / NB / tobit / ordinal (xtlogit, xtpoisson, …)", badge: "Stata" },
-            { id: "dynPanel", label: "Dynamic Panel GMM (Arellano–Bond / Blundell–Bond)", badge: "GMM" },
-            { id: "panelIV", label: "Panel IV — FE / RE (G2SLS·EC2SLS) / FD / BE (xtivreg)", badge: "Stata" },
-            { action: "openAnalysis('panelGLS', null, {method: 'xtgls'})", label: "Panel FGLS — heteroskedastic / correlated / AR(1) (xtgls)", badge: "Stata" },
-            { action: "openAnalysis('panelGLS', null, {method: 'xtpcse'})", label: "Panel-corrected standard errors (xtpcse)", badge: "Stata" },
-            { action: "openAnalysis('panelGLS', null, {method: 'xtregar'})", label: "FE / RE with AR(1) disturbance (xtregar)", badge: "Stata" },
-            { id: "hausmanTaylor", label: "Hausman–Taylor / Amemiya–MaCurdy (xthtaylor)", badge: "Stata" },
+            { id: "panelNonlinear", label: "Nonlinear Panel — logit / probit / Poisson / negative binomial / tobit / ordinal (xtlogit, xtpoisson, …)", badge: "Stata" },
+            { id: "dynPanel", label: "Dynamic Panel GMM (xtabond · xtdpdsys)", badge: "GMM" },
+            { id: "panelIV", label: "Panel Instrumental-Variables Regression — FE · RE (G2SLS · EC2SLS) · FD · BE (xtivreg)", badge: "Stata" },
+            { action: "openAnalysis('panelGLS', null, {method: 'xtgls'})", label: "Panel FGLS — heteroskedasticity · cross-sectional correlation · AR(1) (xtgls)", badge: "Stata" },
+            { action: "openAnalysis('panelGLS', null, {method: 'xtpcse'})", label: "Panel-Corrected Standard Errors — PCSE (xtpcse)", badge: "Stata" },
+            { action: "openAnalysis('panelGLS', null, {method: 'xtregar'})", label: "Fixed- and Random-Effects Models with an AR(1) Disturbance (xtregar)", badge: "Stata" },
+            { id: "hausmanTaylor", label: "Hausman–Taylor · Amemiya–MaCurdy (xthtaylor)", badge: "Stata" },
             { sep: true },
             { section: "Policy Evaluation (DiD / Event Study)" },
-            { action: "openAnalysis('panelDiD', null, {method: 'twfe'})", label: "Panel DiD — TWFE ATET and parallel-trends tests (xtdidregress)", badge: "Stata" },
-            { action: "openAnalysis('panelDiD', null, {method: 'event'})", label: "Event study — leads and lags of treatment", badge: "Stata" },
-            { action: "openAnalysis('panelDiD', null, {method: 'hdid'})", label: "Heterogeneous DiD — ATT(g,t), Callaway–Sant'Anna / extended TWFE (xthdidregress)", badge: "Stata" },
+            { action: "openAnalysis('panelDiD', null, {method: 'twfe'})", label: "Panel DiD — two-way fixed-effects ATET and parallel-trends tests (xtdidregress)", badge: "Stata" },
+            { action: "openAnalysis('panelDiD', null, {method: 'event'})", label: "Event study — leads and lags of treatment effects", badge: "Stata" },
+            { action: "openAnalysis('panelDiD', null, {method: 'hdid'})", label: "Heterogeneous DiD — ATETs by cohort and time (xthdidregress)", badge: "Stata" },
             { sep: true },
             { section: "Multilevel Models" },
-            { id: "mixedModel", label: "Multilevel linear mixed model (2–4 levels, Stata mixed)", badge: "Stata" },
-            { action: "openAnalysis('mixedModel', null, {family: 'binomial'})", label: "Multilevel logistic / Poisson (melogit · mepoisson)", badge: "GLMM" }
+            { id: "mixedModel", label: "Multilevel model · linear mixed-effects model (2–4 levels, Stata mixed)", badge: "Stata" },
+            { action: "openAnalysis('mixedModel', null, {family: 'binomial'})", label: "Multilevel mixed-effects logistic / Poisson regression (melogit · mepoisson)", badge: "GLMM" }
         ],
         timeseries: [
             { section: "Time-Series Models" },
             { id: "arima", label: "ARIMA / Seasonal ARIMA / ARMAX (arima)", badge: "Stata" },
             { sep: true },
-            { section: "Diagnostics" },
-            { id: "unitRoot", label: "Unit-Root Tests — ADF / Phillips–Perron / KPSS" },
-            { id: "corrgram", label: "Autocorrelations & Portmanteau Test (corrgram / wntestq)" },
+            { section: "Time-Series Diagnostics" },
+            { id: "unitRoot", label: "Unit-Root Tests — ADF / Phillips–Perron / KPSS (dfuller / pperron)" },
+            { id: "corrgram", label: "Autocorrelations, Partial Autocorrelations & Portmanteau Test (corrgram / wntestq)" },
             { sep: true },
             { section: "Panel Time-Series Tests" },
             { id: "panelUnitRoot", label: "Panel Unit-Root Tests — LLC / HT / Breitung / IPS / Fisher / Hadri (xtunitroot)", badge: "Stata" },
@@ -4011,33 +4018,33 @@ const RIBBON_MENUS_I18N = {
         spatial: [
             { section: "Boundaries & spatial weights" },
             { action: "openBoundaryModal()", label: "Link boundary file (.shp · .zip · .geojson)", badge: "Boundary" },
-            { id: "spatialMap", label: "Thematic Map (Choropleth)" },
-            { id: "spatialWeights", label: "Spatial Weights Matrix (contiguity · distance · kNN)", badge: "W" },
+            { id: "spatialMap", label: "Choropleth Map" },
+            { id: "spatialWeights", label: "Spatial Weights Matrix: Creation · Diagnostics (contiguity · distance · k-nearest neighbors)", badge: "W" },
             { sep: true },
             { section: "Exploratory spatial data analysis" },
             { id: "spatial_moran", label: "Spatial Autocorrelation (Moran's I · LISA · Gi*)", badge: "GeoDa" },
             { sep: true },
             { section: "Spatial regression" },
-            { id: "spatial", label: "Spatial Regression — cross-section (OLS-LM · SAR · SEM · SDM · SDEM · SAC)", badge: "spregress" },
-            { id: "spatialPanel", label: "Spatial Panel Regression (FE · RE)", badge: "xsmle" },
+            { id: "spatial", label: "Spatial Regression — cross-section (OLS diagnostics · SAR · SEM · SDM · SDEM · SAC)", badge: "spregress" },
+            { id: "spatialPanel", label: "Spatial Panel Regression (fixed effects · random effects)", badge: "xsmle" },
             { id: "gwr", label: "Geographically Weighted Regression (GWR)", badge: "mgwr" }
         ],
         text: [
-            { section: "Text data" },
-            { action: "openTextImportModal()", label: "Import text files (txt·md·docx·pdf·hwpx → dataset)", badge: "Import" },
+            { section: "Text Data" },
+            { action: "openTextImportModal()", label: "Import Text Files (txt·md·docx·pdf·hwpx → Dataset)", badge: "Import" },
             { sep: true },
-            { section: "Keywords & networks" },
+            { section: "Keywords & Networks" },
             { id: "textKeywords", label: "Keyword Analysis (Frequency · TF-IDF · Word Cloud)" },
             { id: "textNetwork", label: "Keyword Co-occurrence Network" },
             { sep: true },
-            { section: "Document classification" },
-            { id: "textCluster", label: "Document Clustering (Embedding · UMAP · HDBSCAN)", badge: "Embedding" }
+            { section: "Document Classification" },
+            { id: "textCluster", label: "Document Clustering (Embedding · UMAP · HDBSCAN · Topic Groups)", badge: "Embedding" }
         ],
         network: [
-            { section: "Relational data (edge list)" },
-            { id: "graphNetwork", label: "Relational Network (Source · Target · Weight)" },
+            { section: "Relational Data (Edge List)" },
+            { id: "graphNetwork", label: "Network Analysis (Source · Target · Weight → Centrality · Communities)" },
             { sep: true },
-            { section: "Variable networks" },
+            { section: "Variable Networks" },
             { id: "networkAnalysis", label: "Variable Network (EBICglasso)", badge: "JASP" },
             { sep: true },
             { id: "textNetwork", label: "Keyword Co-occurrence Network" }
@@ -4047,7 +4054,7 @@ const RIBBON_MENUS_I18N = {
             { sep: true },
             { section: "Full Results (Tables + Embedded Graphs)" },
             { action: "exportFullSessionResults('pdf')", label: "Publication PDF Report (.pdf)", badge: "PDF" },
-            { action: "exportFullSessionResults('hwpx')", label: "Hancom Hangul + Graphs (.hwpx)", badge: "한글" },
+            { action: "exportFullSessionResults('hwpx')", label: "Hancom Hangul + Graphs (.hwpx)", badge: "HWPX" },
             { action: "exportFullSessionResults('docx')", label: "Word Document + Graphs (.docx)", badge: "APA" },
             { action: "exportFullSessionResults('xlsx')", label: "Excel Workbook + Charts (.xlsx)", badge: "APA" },
             { action: "exportFullSessionResults('tex')", label: "LaTeX Booktabs + Figures (.tex)", badge: "TeX" },
@@ -4426,6 +4433,98 @@ function setLanguage(lang) {
     applyLanguage();
 }
 
+/* ---- Fixed UI text in the other language ----
+   Parts of the page are written in Korean and parts in English. assets/i18n_dict.js holds the other
+   language: UI_EN (Korean source text -> English) and UI_KO (English source text -> Korean).
+   localizeDom() rewrites text nodes and title/placeholder attributes and keeps the source text on the node,
+   so switching back restores it. Data (variable names, the data grid, result tables, code) is never touched. */
+const UI_I18N_SKIP = "#results-list, #grid-tbody, #grid-thead, #right-grid-tbody, #left-var-tbody, #variables-container, " +
+    ".supplier-item, .slot-pill, .semtpl-chip, script, style, textarea, pre, code, .CodeMirror, [data-noi18n], " +
+    "#doctor-results-area, #window-title, #pop-ds-name, #toast-banner";
+const UI_I18N_KEYED = "[data-i18n]";   // text comes from I18N; only its title/placeholder are looked up here
+const UI_HANGUL = /[가-힣]/;
+
+function uiNorm(s) { return String(s).replace(/\s+/g, " ").trim(); }
+
+function uiText(s, lang) {
+    if (typeof s !== "string" || !s) return s;
+    lang = lang || APP.lang || "ko";
+    const dict = lang === "en" ? window.UI_EN : window.UI_KO;
+    if (!dict) return s;
+    const hasKo = UI_HANGUL.test(s);
+    if (lang === "en" ? !hasKo : hasKo) return s;
+    const hit = dict[uiNorm(s)];
+    if (typeof hit !== "string") return s;
+    return s.match(/^\s*/)[0] + hit + s.match(/\s*$/)[0];
+}
+
+function uiLocalizeText(n, lang) {
+    const cur = n.nodeValue;
+    if (n.__uiSet !== cur) n.__uiSrc = cur;      // first visit, or the page changed the text since
+    const src = n.__uiSrc;
+    if (!src || !src.trim()) return;
+    const out = uiText(src, lang);
+    if (out !== cur) n.nodeValue = out;
+    n.__uiSet = out;
+}
+
+function uiLocalizeAttrs(el, lang) {
+    for (const a of ["title", "placeholder"]) {
+        const cur = el.getAttribute(a);
+        if (cur === null || el.hasAttribute("data-i18n-" + a)) continue;
+        const st = el.__uiAttr || (el.__uiAttr = {});
+        if (!st[a] || st[a].set !== cur) st[a] = { src: cur };
+        const out = uiText(st[a].src, lang);
+        if (out !== cur) el.setAttribute(a, out);
+        st[a].set = out;
+    }
+}
+
+function localizeDom(root, lang) {
+    lang = lang || APP.lang || "ko";
+    if (!root || !window.UI_EN) return;
+    const host = root.nodeType === 1 ? root : root.parentElement;
+    if (!host || host.closest(UI_I18N_SKIP)) return;
+    const keyed = host.closest(UI_I18N_KEYED);
+    if (root.nodeType === 3) { if (!keyed) uiLocalizeText(root, lang); return; }
+    if (root.nodeType !== 1) return;
+    uiLocalizeAttrs(root, lang);
+    if (keyed) return;
+    const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, {
+        acceptNode: (n) => {
+            if (n.nodeType !== 1) return NodeFilter.FILTER_ACCEPT;
+            if (n.matches(UI_I18N_SKIP)) return NodeFilter.FILTER_REJECT;
+            if (n.matches(UI_I18N_KEYED)) { uiLocalizeAttrs(n, lang); return NodeFilter.FILTER_REJECT; }
+            return NodeFilter.FILTER_ACCEPT;
+        }
+    });
+    let n;
+    while ((n = tw.nextNode())) {
+        if (n.nodeType === 3) uiLocalizeText(n, lang);
+        else uiLocalizeAttrs(n, lang);
+    }
+}
+
+/* Text added later (dialogs, menus, panels built by script) is translated as it appears. */
+function startUiI18nObserver() {
+    if (APP._i18nObs || !window.MutationObserver) return;
+    APP._i18nObs = new MutationObserver((muts) => {
+        const lang = APP.lang || "ko";
+        for (const m of muts) {
+            if (m.type === "attributes") { if (!m.target.closest(UI_I18N_SKIP)) uiLocalizeAttrs(m.target, lang); continue; }
+            for (const node of m.addedNodes) localizeDom(node, lang);
+        }
+    });
+    APP._i18nObs.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["title", "placeholder"] });
+}
+
+/* The user guide in the interface language. */
+function guideHref(anchor) {
+    return ((APP.lang || "ko") === "en" ? "user_guide_en.html" : "user_guide.html") + (anchor || "");
+}
+
+function uiKo() { return (APP.lang || "ko") !== "en"; }
+
 function applyLanguage() {
     const lang = APP.lang || "ko";
     const dict = I18N[lang] || I18N.ko;
@@ -4453,6 +4552,13 @@ function applyLanguage() {
         if (dict[key]) el.setAttribute("title", dict[key]);
     });
 
+    document.documentElement.setAttribute("lang", lang === "en" ? "en" : "ko");
+    localizeDom(document.body, lang);
+    startUiI18nObserver();
+    document.querySelectorAll('a[href^="user_guide"]').forEach(a => {
+        a.setAttribute("href", a.getAttribute("href").replace(/^user_guide(_en)?\.html/, lang === "en" ? "user_guide_en.html" : "user_guide.html"));
+    });
+
     // Update variables view if open
     const vc = document.getElementById("variables-container");
     if (vc && vc.style.display !== "none") {
@@ -4463,6 +4569,13 @@ function applyLanguage() {
     if (APP.currentType) {
         renderOptionsPanel();
     }
+
+    // Script-built pieces that carry their own wording
+    if (typeof renderLeftVarExplorer === "function" && APP.columns) renderLeftVarExplorer();
+    if (typeof updateSyntaxStatusBadge === "function" && typeof APP.commandLogText === "string") updateSyntaxStatusBadge();
+    document.querySelectorAll(".grid-more-row").forEach(tr => { const h = gridMoreRowHtml(); if (h) tr.outerHTML = h; });
+    if (APP.analyses && APP.analyses.length && typeof renderAllResults === "function") renderAllResults();
+    if (typeof updateReportStyleIndicators === "function") updateReportStyleIndicators();
 }
 
 // Global Image Error Auto-Recovery
@@ -5133,18 +5246,19 @@ function bdRenderInfo() {
     const j = APP.bdInfo;
     if (!j) return;
     document.getElementById("bd-preview").src = j.preview || "";
-    const prjWarn = j.hasPrj ? "" : `<div style="color:#B45309;">좌표계(.prj) 없음 — 위경도 범위의 좌표는 WGS84로, 그 밖은 평면 좌표로 간주</div>`;
+    const prjWarn = j.hasPrj ? "" : `<div style="color:#B45309;">${uiKo() ? "좌표계(.prj) 없음 — 위경도 범위의 좌표는 WGS84로, 그 밖은 평면 좌표로 간주" : "No coordinate system (.prj): coordinates within longitude/latitude range are read as WGS84, others as planar"}</div>`;
+    const bko = uiKo();
     document.getElementById("bd-info").innerHTML = `<div><b>${escapeHtml((j.path || "").split("/").pop())}</b></div>
-        <div>도형 ${Number(j.n).toLocaleString()}개 · ${escapeHtml(j.geomType || "")}</div>
-        <div>좌표계: ${escapeHtml(j.crsName || j.crs || "")}</div>
-        <div>속성 열: ${j.columns.map(c => escapeHtml(c.name)).join(", ")}</div>${prjWarn}`;
+        <div>${bko ? `도형 ${Number(j.n).toLocaleString()}개` : `${Number(j.n).toLocaleString()} shapes`} · ${escapeHtml(j.geomType || "")}</div>
+        <div>${bko ? "좌표계" : "Coordinate system"}: ${escapeHtml(j.crsName || j.crs || "")}</div>
+        <div data-noi18n>${bko ? "속성 열" : "Attribute columns"}: ${j.columns.map(c => escapeHtml(c.name)).join(", ")}</div>${prjWarn}`;
     const dataCols = APP.columns.map(c => c.name);
     const opt = (arr, cur, blank) => (blank ? `<option value="">${blank}</option>` : "") + arr.map(v => `<option value="${escapeHtml(v)}" ${v === cur ? "selected" : ""}>${escapeHtml(v)}</option>`).join("");
     const sug = j.suggestions || [];
     const top = sug[0] || {};
     const b = APP.boundary;
-    document.getElementById("bd-idvar").innerHTML = opt(dataCols, top.idVar || (b && b.idVar) || "", "(선택)");
-    document.getElementById("bd-bkey").innerHTML = j.columns.map(c => `<option value="${escapeHtml(c.name)}" ${c.name === (top.boundaryKey || "") ? "selected" : ""}>${escapeHtml(c.name)}${c.isKey ? " (고유)" : ""}</option>`).join("");
+    document.getElementById("bd-idvar").innerHTML = opt(dataCols, top.idVar || (b && b.idVar) || "", uiKo() ? "(선택)" : "(choose)");
+    document.getElementById("bd-bkey").innerHTML = j.columns.map(c => `<option value="${escapeHtml(c.name)}" ${c.name === (top.boundaryKey || "") ? "selected" : ""}>${escapeHtml(c.name)}${c.isKey ? (uiKo() ? " (고유)" : " (unique)") : ""}</option>`).join("");
     const lab = dataCols.find(n => n !== top.idVar && /(명|이름|name|nm)$/i.test(n)) || "";
     document.getElementById("bd-label").innerHTML = opt(dataCols, lab, "(없음)");
     document.getElementById("bd-sugg").innerHTML = sug.length
@@ -7174,12 +7288,62 @@ const TOAST_KO = [
     [/^Code display off$/, "결과에 코드 표시 꺼짐"],
 ];
 
+/* English wording for the Korean status messages (applied in the English UI). */
+const TOAST_EN = [
+    [/^지도 경계 연결: (\d+)\/(\d+)곳 일치$/, "Map boundary attached: $1 of $2 areas matched"],
+    [/^경계 속성표를 데이터로 열고 경계를 연결함 \(지역 (\d+)곳\)$/, "Opened the boundary attribute table as data and attached the boundary ($1 areas)"],
+    [/^지도 경계 연결 해제$/, "Map boundary detached"],
+    [/^값 입력 오류 \((.+) (\d+)행\): ([\s\S]*)$/, "Invalid value ($1, row $2): $3"],
+    [/^결합할 자료 선택$/, "Choose the dataset to merge"],
+    [/^키 변수 지정 필요$/, "Specify the key variables"],
+    [/^남길 행을 1개 이상 선택$/, "Choose at least one kind of row to keep"],
+    [/^결합 완료$/, "Merge completed"],
+    [/^결합 오류$/, "Merge error"],
+    [/^결합 실패: ([\s\S]*)$/, "Merge failed: $1"],
+    [/^변수 지정 필요$/, "Specify the variables"],
+    [/^변환 완료$/, "Conversion completed"],
+    [/^변환 오류$/, "Conversion error"],
+    [/^변환 실패: ([\s\S]*)$/, "Conversion failed: $1"],
+    [/^구조 변환 완료 \((.+)\)$/, "Reshape completed ($1)"],
+    [/^연속 지표 분산을 '(.+)'\(으\)로 맞춤 \(공분산과 같은 제약 필요\)$/, "Continuous indicator variances set to '$1' (must match the covariance constraint)"],
+    [/^연속 지표 공분산을 '(.+)'\(으\)로 맞춤 \(분산과 같은 제약 필요\)$/, "Continuous indicator covariances set to '$1' (must match the variance constraint)"],
+    [/^(Exporting [\s\S]*?) \(사회과학 양식\)\.\.\.$/, "$1 (social-science style)..."],
+    [/^내보내기 실패: ([\s\S]*)$/, "Export failed: $1"],
+    [/^내보내기 오류: ([\s\S]*)$/, "Export error: $1"],
+    [/^저장: ([\s\S]*)$/, "Saved: $1"],
+    [/^모형 예시 목록 불러오기 오류: ([\s\S]*)$/, "Could not load the model templates: $1"],
+    [/^선택한 결과에서 변수 이름을 찾지 못함$/, "No variable names found in the selected results"],
+    [/^먼저 비교할 결과를 선택해야 함$/, "Select the results to compare first"],
+    [/^변수 (\d+)개 추가 — '=' 뒤에 새 이름 입력$/, "Added $1 variables — type the new name after '='"],
+    [/^모든 변수가 이미 목록에 있음$/, "All variables are already in the list"],
+    [/^모형 비교표 오류: ([\s\S]*)$/, "Model comparison table error: $1"],
+    [/^모형 비교표 갱신 \(모형 (\d+)개\)$/, "Model comparison table updated ($1 models)"],
+    [/^모형 비교표 추가 \(모형 (\d+)개\)$/, "Model comparison table added ($1 models)"],
+    [/^모형 비교표 실행 오류: ([\s\S]*)$/, "Model comparison table failed: $1"],
+    [/^세부 항목을 기본값으로 되돌림$/, "Detailed options reset to defaults"],
+    [/^텍스트 문서 (\d+)건 불러옴$/, "Imported $1 text documents"],
+    [/^합성데이터 생성 중\.\.\.$/, "Generating synthetic data..."],
+    [/^합성데이터 생성 완료 \(N=(\d+), (\d+)개 변수\)$/, "Synthetic data generated (N=$1, $2 variables)"],
+    [/^합성데이터 생성 오류: ([\s\S]*)$/, "Synthetic data error: $1"],
+    [/^통신 오류: ([\s\S]*)$/, "Connection error: $1"],
+    [/^실행할 코드 없음$/, "No code to run"],
+    [/^명령 실행 완료$/, "Commands executed"],
+    [/^실행 오류: ([\s\S]*)$/, "Execution error: $1"],
+    [/^명령어 실행 완료: ([\s\S]*)$/, "Command executed: $1"],
+    [/^오류: ([\s\S]*)$/, "Error: $1"],
+    [/^'(.+)' 변수가 이미 캔버스에 있음$/, "'$1' is already on the canvas"],
+    [/^생성된 SEM 모형식 없음$/, "No SEM model generated"],
+    [/^SEM 모형식을 옵션 창에 반영함$/, "SEM model inserted into the options panel"],
+];
+
 function localizeToast(msg) {
-    if ((APP.lang || "ko") === "en" || typeof msg !== "string") return msg;
-    for (const [re, ko] of TOAST_KO) {
-        if (re.test(msg)) return msg.replace(re, ko);
+    if (typeof msg !== "string") return msg;
+    const en = (APP.lang || "ko") === "en";
+    if (en && !UI_HANGUL.test(msg)) return msg;
+    for (const [re, out] of (en ? TOAST_EN : TOAST_KO)) {
+        if (re.test(msg)) return msg.replace(re, out);
     }
-    return msg;
+    return uiText(msg);
 }
 
 function showToast(msg, ms = 2600) {
@@ -7249,7 +7413,7 @@ function openRibbonMenu(ev, menuKey) {
         } else if (it.section) {
             html += `<div class="dd-section">${it.section}</div>`;
         } else if (it.action) {
-            const badgeTxt = it.badge === "@style" ? (reportStyleIsSocial() ? "사회과학" : "APA") : it.badge;
+            const badgeTxt = it.badge === "@style" ? (reportStyleIsSocial() ? (uiKo() ? "사회과학" : "Social") : "APA") : it.badge;
             const badge = badgeTxt ? `<span class="dd-badge">${badgeTxt}</span>` : "";
             html += `<div class="dd-item" onclick="closeDropdown(); ${it.action}"><span>${it.label}</span>${badge}</div>`;
         } else {
@@ -7418,7 +7582,7 @@ async function commitCellEdit(td) {
             res = null;
         }
         if (!res || !res.ok) {
-            let msg = res ? `HTTP ${res.status}` : "서버 연결 실패";
+            let msg = res ? `HTTP ${res.status}` : (uiKo() ? "서버 연결 실패" : "server connection failed");
             try { const d = await res.json(); if (d && d.detail) msg = d.detail; } catch (_) { /* non-JSON body */ }
             showToast(`값 입력 오류 (${c} ${r + 1}행): ${msg}`, 6000);
             td.textContent = prev;
@@ -7480,7 +7644,7 @@ function renderVariablesView() {
             <div style="color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(summaryText)}">${escapeHtml(summaryText)}</div>
             <div style="display:flex;align-items:center;gap:4px;justify-content:center;">
                 <button class="silky-small-btn" onclick="openRecodeModal('${col.name.replace(/'/g, "\\'")}')" title="Recode this variable">Recode</button>
-                <button class="silky-small-btn" onclick="openConvertModal('${col.name.replace(/'/g, "\\'")}')" title="형태 변환 (destring·tostring·encode·decode·값 라벨)">형태</button>
+                <button class="silky-small-btn" onclick="openConvertModal('${col.name.replace(/'/g, "\\'")}')" title="${lang === "en" ? "Convert type (destring · tostring · encode · decode · value labels)" : "형태 변환 (destring·tostring·encode·decode·값 라벨)"}">${lang === "en" ? "Type" : "형태"}</button>
                 <button class="slot-pill-rm" title="Delete Variable" onclick="deleteSpecificCol('${col.name.replace(/'/g, "\\'")}')">×</button>
             </div>
         </div>`;
@@ -7590,7 +7754,7 @@ function autoFillRecodeTarget() {
 function setRecodePreset(kind) {
     const area = document.getElementById("recode-rules");
     if (kind === "3bands") {
-        area.value = "min..39='20-30대'; 40..59='40-50대'; 60..max='60대이상'";
+        area.value = uiKo() ? "min..39='20-30대'; 40..59='40-50대'; 60..max='60대이상'" : "min..39='20-39'; 40..59='40-59'; 60..max='60+'";
     } else if (kind === "passfail") {
         area.value = "<60='Fail'; >=60='Pass'";
     } else if (kind === "controltreat") {
@@ -7838,7 +8002,8 @@ function toggleReshapeFields() {
     const dir = document.getElementById("reshape-direction").value;
     const isLong = dir === "long";
     document.getElementById("reshape-stub-label").textContent = isLong
-        ? "stub (변수명 앞부분, 여러 개 동시 변환)" : "펼칠 변수 (Long 자료의 측정 변수, 여러 개 가능)";
+        ? (uiKo() ? "stub (변수명 앞부분, 여러 개 동시 변환)" : "stub (leading part of the variable names; several at once)")
+        : (uiKo() ? "펼칠 변수 (Long 자료의 측정 변수, 여러 개 가능)" : "Variables to spread (measures in the long data; several allowed)");
     document.getElementById("wrap-value-vars").style.display = isLong ? "" : "none";
     document.getElementById("wrap-value-col").style.display = isLong ? "" : "none";
 }
@@ -8333,14 +8498,16 @@ function renderOptionsPanel() {
     if (!schema) return;
     const container = document.getElementById("opt-panel-body");
     const isKo = (APP.lang || 'ko') !== 'en';
+    // schema text: English source -> OPTION_LABELS_KO / UI_KO in Korean, Korean source -> UI_EN in English
+    const L = (txt) => (typeof txt !== "string") ? txt : (isKo ? (OPTION_LABELS_KO[txt] || uiText(txt, "ko")) : uiText(txt, "en"));
     const optTitle = document.getElementById("opt-panel-title");
     if (optTitle) {
-        optTitle.innerText = (isKo && OPTION_LABELS_KO[schema.title]) ? OPTION_LABELS_KO[schema.title] : schema.title;
+        optTitle.innerText = L(schema.title);
     }
 
     let html = "";
     if (schema.intro) {
-        html += `<div class="opt-intro">${escapeHtml(isKo ? schema.intro : (schema.introEn || schema.intro))}</div>`;
+        html += `<div class="opt-intro">${escapeHtml(isKo ? schema.intro : (schema.introEn || L(schema.intro)))}</div>`;
     }
     if (schema.manualRun) {
         html += renderRunBar();
@@ -8351,11 +8518,11 @@ function renderOptionsPanel() {
 
     if (APP.currentType === "sem") {
         html += `<div style="margin-bottom:12px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:6px;padding:10px;">
-            <div style="font-weight:700;font-size:12.5px;color:#166534;margin-bottom:4px;">🎨 대화형 SEM 모델러 (Stata SEM Builder / Amos 스타일)</div>
-            <div style="font-size:11.5px;color:#374151;margin-bottom:8px;">타원(잠재변수)과 사각형(관측변수)을 마우스로 배치하고 화살표 경로를 손으로 직접 연결합니다.</div>
-            <button class="stata-cmd-btn" style="width:100%;padding:6px;font-size:12px;background:#0D9488;" onclick="openSemBuilderModal()">🎨 대화형 SEM 빌더 캔버스 열기</button>
+            <div style="font-weight:700;font-size:12.5px;color:#166534;margin-bottom:4px;">${isKo ? "🎨 대화형 SEM 모델러 (Stata SEM Builder / Amos 방식)" : "🎨 Interactive SEM modeler (Stata SEM Builder / Amos style)"}</div>
+            <div style="font-size:11.5px;color:#374151;margin-bottom:8px;">${isKo ? "타원(잠재변수)과 사각형(관측변수)을 마우스로 배치하고 화살표 경로를 직접 연결함." : "Place ellipses (latent variables) and rectangles (observed variables) with the mouse and draw the paths."}</div>
+            <button class="stata-cmd-btn" style="width:100%;padding:6px;font-size:12px;background:#0D9488;" onclick="openSemBuilderModal()">${isKo ? "🎨 대화형 SEM 빌더 캔버스 열기" : "🎨 Open the SEM Builder canvas"}</button>
             <button class="stata-cmd-btn" style="width:100%;padding:6px;font-size:12px;background:#1E3A5F;margin-top:6px;"
-                    onclick="openSemTemplateModal()">📐 모형 예시 (교차지연·잠재성장·잠재변화 · 기본 가정 반영)</button>
+                    onclick="openSemTemplateModal()">${isKo ? "📐 모형 예시 (교차지연·잠재성장·잠재변화 · 기본 가정 반영)" : "📐 Model templates (cross-lagged · latent growth · latent change, default assumptions written in)"}</button>
         </div>`;
     }
 
@@ -8364,7 +8531,7 @@ function renderOptionsPanel() {
             <div class="silky-variable-supplier" id="var-supplier-box">`;
         for (const col of APP.columns) {
             const sel = APP.selectedSupplierVar === col.name ? " selected" : "";
-            html += `<div class="supplier-item${sel}" onclick="selectSupplierVar('${col.name.replace(/'/g, "\\'")}')" ondblclick="transferToActiveSlot('${col.name.replace(/'/g, "\\'")}')" title="${escapeHtml(col.name)}${col.avgLen ? ` · 평균 ${col.avgLen}자` : ""}">
+            html += `<div class="supplier-item${sel}" onclick="selectSupplierVar('${col.name.replace(/'/g, "\\'")}')" ondblclick="transferToActiveSlot('${col.name.replace(/'/g, "\\'")}')" title="${escapeHtml(col.name)}${col.avgLen ? (isKo ? ` · 평균 ${col.avgLen}자` : ` · mean ${col.avgLen} characters`) : ""}">
                 <img src="${columnIcon(col)}" alt="">
                 <span>${escapeHtml(col.name)}</span>
             </div>`;
@@ -8388,7 +8555,7 @@ function renderOptionsPanel() {
                     </button>
                 </div>
                 <div class="slot-box-wrap">
-                    <div class="slot-label">${escapeHtml((isKo && OPTION_LABELS_KO[sl.label]) ? OPTION_LABELS_KO[sl.label] : sl.label)}</div>
+                    <div class="slot-label">${escapeHtml(L(sl.label))}</div>
                     <div class="slot-dropzone${multiCls}${isAct}" onclick="setActiveSlot('${sl.key}')">
                         ${items.map(v => {
                             const cMeta = APP.columns.find(c => c.name === v) || { measureType: "Continuous" };
@@ -8398,15 +8565,14 @@ function renderOptionsPanel() {
                             </div>`;
                         }).join("")}
                     </div>
-                    ${sl.hint ? `<div class="slot-hint">${escapeHtml(sl.hint)}</div>` : ""}
+                    ${sl.hint ? `<div class="slot-hint">${escapeHtml(L(sl.hint))}</div>` : ""}
                 </div>
             </div>`;
         }
         html += `</div></div>`;
     }
 
-    const L = (txt) => (isKo && OPTION_LABELS_KO[txt]) ? OPTION_LABELS_KO[txt] : txt;
-    const ph = (txt) => escapeHtml(txt).replace(/\n/g, "&#10;");
+    const ph = (txt) => escapeHtml(L(txt)).replace(/\n/g, "&#10;");
     APP._secKeys = [];
     for (const sec of schema.sections) {
         if (sec.showIf && !optionVisible(sec.showIf)) continue;
@@ -8425,7 +8591,7 @@ function renderOptionsPanel() {
             if (it.showIf && !optionVisible(it.showIf)) continue;
             const cur = APP.currentParams[it.key];
             const span = (it.span2 || it.type === "textarea" || it.type === "info") ? " span-2" : "";
-            const help = it.help ? `<div class="silky-help">${escapeHtml(it.help)}</div>` : "";
+            const help = it.help ? `<div class="silky-help">${escapeHtml(L(it.help))}</div>` : "";
             if (it.type === "check") {
                 const chk = `<label class="silky-chk">
                     <input type="checkbox" ${cur ? "checked" : ""} onchange="updateOptionParam('${it.key}', this.checked)">
@@ -8436,7 +8602,7 @@ function renderOptionsPanel() {
                 html += `<div class="silky-field${span}">
                     <label>${escapeHtml(L(it.label))}</label>
                     <select onchange="updateOptionParam('${it.key}', this.value)">
-                        ${it.options.map(([ov, ol]) => `<option value="${ov}" ${String(cur) === String(ov) ? "selected" : ""}>${escapeHtml(ol)}</option>`).join("")}
+                        ${it.options.map(([ov, ol]) => `<option value="${ov}" ${String(cur) === String(ov) ? "selected" : ""}>${escapeHtml(L(ol))}</option>`).join("")}
                     </select>${help}
                 </div>`;
             } else if (it.type === "number") {
@@ -8449,7 +8615,7 @@ function renderOptionsPanel() {
             } else if (it.type === "text") {
                 html += `<div class="silky-field${span}">
                     <label>${escapeHtml(L(it.label))}</label>
-                    <input type="text" value="${escapeHtml(cur !== undefined ? cur : (it.def || ""))}" oninput="updateOptionParam('${it.key}', this.value, 350)" placeholder="${it.placeholder !== undefined ? ph(it.placeholder) : "Optional figure caption in Analysis Results"}">${help}
+                    <input type="text" value="${escapeHtml(cur !== undefined ? cur : (it.def || ""))}" oninput="updateOptionParam('${it.key}', this.value, 350)" placeholder="${it.placeholder !== undefined ? ph(it.placeholder) : ph("Optional figure caption in Analysis Results")}">${help}
                 </div>`;
             } else if (it.type === "textarea") {
                 const rowsStyle = it.rows ? ` rows="${it.rows}" style="min-height:${it.rows * 18 + 12}px;font-family:inherit;"` : "";
@@ -8458,13 +8624,13 @@ function renderOptionsPanel() {
                     <textarea${rowsStyle} oninput="updateOptionParam('${it.key}', this.value, 550)" placeholder="${it.placeholder !== undefined ? ph(it.placeholder) : "F1 =~ x1 + x2 + x3&#10;y1 ~ F1"}">${escapeHtml(cur || "")}</textarea>${help}
                 </div>`;
             } else if (it.type === "info") {
-                html += `<div class="silky-info span-2">${escapeHtml(it.text || "")}</div>`;
+                html += `<div class="silky-info span-2">${escapeHtml(L(it.text || ""))}</div>`;
             } else if (it.type === "subset") {
                 const pool = Array.isArray(APP.currentParams[it.from]) ? APP.currentParams[it.from] : [];
                 const sel = Array.isArray(cur) ? cur : [];
                 const boxes = pool.length
                     ? pool.map(v => `<label class="silky-chk"><input type="checkbox" ${sel.includes(v) ? "checked" : ""} onchange="toggleSubsetParam('${it.key}', '${String(v).replace(/'/g, "\\'")}', this.checked)"><span>${escapeHtml(v)}</span></label>`).join("")
-                    : `<span class="silky-help">설명변수를 먼저 지정</span>`;
+                    : `<span class="silky-help">${isKo ? "설명변수를 먼저 지정" : "Assign covariates first"}</span>`;
                 html += `<div class="silky-field span-2"><label>${escapeHtml(L(it.label))}</label><div class="subset-box">${boxes}</div>${help}</div>`;
             }
         }
@@ -8536,24 +8702,27 @@ function isManualRunType(type) {
 function renderRunBar() {
     const ready = hasRequiredSlotsFilled();
     const st = APP.runUi || {};
+    const ko = uiKo();
     let cls = "opt-runbar";
     let msg;
     if (APP.running && APP.runningType === APP.currentType) {
         const sec = Math.round((Date.now() - (APP.runStarted || Date.now())) / 1000);
-        msg = `<span class="run-spinner"></span>계산 중 <span id="run-elapsed">${sec}</span>초 경과 (문서 수·방식에 따라 수십 초 이상 소요)`;
+        msg = ko ? `<span class="run-spinner"></span>계산 중 <span id="run-elapsed">${sec}</span>초 경과 (문서 수·방식에 따라 수십 초 이상 소요)`
+                 : `<span class="run-spinner"></span>Computing: <span id="run-elapsed">${sec}</span> s elapsed (may take tens of seconds, depending on the documents and method)`;
     } else if (!ready) {
-        msg = "필수 변수 지정 필요";
+        msg = ko ? "필수 변수 지정 필요" : "Assign the required variables";
     } else if (st.error) {
         cls += " error";
-        msg = "오류: " + escapeHtml(st.error);
+        msg = (ko ? "오류: " : "Error: ") + escapeHtml(st.error);
     } else if (APP.runDirty || !APP.selectedAnalysisId) {
         cls += " dirty";
-        msg = APP.selectedAnalysisId ? "설정 변경됨: [분석 실행]으로 결과 갱신" : "설정 확인 후 [분석 실행]";
+        msg = APP.selectedAnalysisId ? (ko ? "설정 변경됨: [분석 실행]으로 결과 갱신" : "Settings changed: press [Run Analysis] to update the results")
+                                     : (ko ? "설정 확인 후 [분석 실행]" : "Check the settings, then press [Run Analysis]");
     } else {
-        msg = "결과 반영 완료" + (st.seconds !== undefined ? ` (${st.seconds}초)` : "");
+        msg = (ko ? "결과 반영 완료" : "Results updated") + (st.seconds !== undefined ? (ko ? ` (${st.seconds}초)` : ` (${st.seconds} s)`) : "");
     }
     const disabled = (APP.running || !ready) ? " disabled" : "";
-    return `<div class="${cls}" id="opt-runbar"><button class="run-btn" onclick="runCurrentAnalysisNow()"${disabled}>▶ 분석 실행</button><span class="run-msg">${msg}</span></div>`;
+    return `<div class="${cls}" id="opt-runbar"><button class="run-btn" onclick="runCurrentAnalysisNow()"${disabled}>${ko ? "▶ 분석 실행" : "▶ Run Analysis"}</button><span class="run-msg">${msg}</span></div>`;
 }
 
 function updateRunBar() {
@@ -8862,14 +9031,14 @@ function renderAllResults() {
 
         html += `<div class="jmv-results-sheet${isSel}" data-aid="${a.analysisId}" onclick="selectResultCard(event, ${a.analysisId})">
             <div class="sheet-toolbar">
-                <button class="sheet-tool-btn" title="Export PDF Report (.pdf)" onclick="event.stopPropagation(); exportTablesFormat('pdf', ${a.analysisId})">.pdf</button>
-                <button class="sheet-tool-btn" title="Export Hangul + Graphs (.hwpx)" onclick="event.stopPropagation(); exportTablesFormat('hwpx', ${a.analysisId})">.hwpx</button>
-                <button class="sheet-tool-btn" title="Export Word + Graphs (.docx)" onclick="event.stopPropagation(); exportTablesFormat('docx', ${a.analysisId})">.docx</button>
-                <button class="sheet-tool-btn" title="Export Excel + Charts (.xlsx)" onclick="event.stopPropagation(); exportTablesFormat('xlsx', ${a.analysisId})">.xlsx</button>
-                <button class="sheet-tool-btn" title="Export LaTeX + Figures (.tex)" onclick="event.stopPropagation(); exportTablesFormat('tex', ${a.analysisId})">.tex</button>
-                <button class="sheet-tool-btn" onclick="event.stopPropagation(); copyAnalysisMarkdown(${a.analysisId})">Copy MD</button>
-                <button class="sheet-tool-btn" onclick="event.stopPropagation(); copyAnalysisPython(${a.analysisId})">Copy .py</button>
-                <button class="sheet-tool-btn danger" onclick="event.stopPropagation(); deleteResultCard(${a.analysisId})">×</button>
+                <button class="sheet-tool-btn" title="${isKo ? "PDF 보고서로 내보내기 (.pdf)" : "Export PDF report (.pdf)"}" onclick="event.stopPropagation(); exportTablesFormat('pdf', ${a.analysisId})">.pdf</button>
+                <button class="sheet-tool-btn" title="${isKo ? "한글 문서로 내보내기 (표·그림, .hwpx)" : "Export Hangul document with graphs (.hwpx)"}" onclick="event.stopPropagation(); exportTablesFormat('hwpx', ${a.analysisId})">.hwpx</button>
+                <button class="sheet-tool-btn" title="${isKo ? "Word 문서로 내보내기 (표·그림, .docx)" : "Export Word document with graphs (.docx)"}" onclick="event.stopPropagation(); exportTablesFormat('docx', ${a.analysisId})">.docx</button>
+                <button class="sheet-tool-btn" title="${isKo ? "Excel 파일로 내보내기 (표·그림, .xlsx)" : "Export Excel workbook with charts (.xlsx)"}" onclick="event.stopPropagation(); exportTablesFormat('xlsx', ${a.analysisId})">.xlsx</button>
+                <button class="sheet-tool-btn" title="${isKo ? "LaTeX 파일로 내보내기 (표·그림, .tex)" : "Export LaTeX with figures (.tex)"}" onclick="event.stopPropagation(); exportTablesFormat('tex', ${a.analysisId})">.tex</button>
+                <button class="sheet-tool-btn" onclick="event.stopPropagation(); copyAnalysisMarkdown(${a.analysisId})" title="${isKo ? "APA 마크다운 복사" : "Copy APA Markdown"}">${isKo ? "MD 복사" : "Copy MD"}</button>
+                <button class="sheet-tool-btn" onclick="event.stopPropagation(); copyAnalysisPython(${a.analysisId})" title="${isKo ? "이 분석의 파이썬 코드 복사" : "Copy the Python code of this analysis"}">${isKo ? ".py 복사" : "Copy .py"}</button>
+                <button class="sheet-tool-btn danger" onclick="event.stopPropagation(); deleteResultCard(${a.analysisId})" title="${isKo ? "이 결과 삭제" : "Delete this result"}">×</button>
             </div>
             <h2 class="sheet-h1">${escapeHtml(a.title)}</h2>
             <div class="jmv-syntax-box">${escapeHtml(synPy + synR)}</div>`;
@@ -8924,8 +9093,8 @@ function renderAllResults() {
                 <div class="jmv-plot-hdr" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
                     <h4 style="margin:0;">${escapeHtml(p.title)}</h4>
                     <div style="display:flex;gap:4px;flex-wrap:wrap;">
-                        <button class="sheet-tool-btn" title="Send/pin a copy of this graph as a standalone card in Analysis Results" onclick="event.stopPropagation(); pushPlotAsStandaloneResult(${a.analysisId}, ${pIdx})">📌 To Results</button>
-                        <button class="sheet-tool-btn" onclick="event.stopPropagation(); openPlotDesignModal(${a.analysisId})">🎨 Design</button>
+                        <button class="sheet-tool-btn" title="${isKo ? "이 그래프의 사본을 분석 결과에 별도 카드로 추가" : "Pin a copy of this graph as a separate card in Analysis Results"}" onclick="event.stopPropagation(); pushPlotAsStandaloneResult(${a.analysisId}, ${pIdx})">${isKo ? "📌 결과로 보내기" : "📌 To Results"}</button>
+                        <button class="sheet-tool-btn" onclick="event.stopPropagation(); openPlotDesignModal(${a.analysisId})">${isKo ? "🎨 디자인" : "🎨 Design"}</button>
                         <button class="sheet-tool-btn" onclick="event.stopPropagation(); downloadPlotVector(${a.analysisId}, ${pIdx}, 'svg')">⬇ SVG</button>
                         <button class="sheet-tool-btn" onclick="event.stopPropagation(); downloadPlotVector(${a.analysisId}, ${pIdx}, 'pdf')">⬇ PDF</button>
                         <button class="sheet-tool-btn" onclick="event.stopPropagation(); downloadPlotVector(${a.analysisId}, ${pIdx}, 'png')">⬇ PNG</button>
@@ -9154,10 +9323,10 @@ function cmpDescribe(type, p) {
     const list = v => Array.isArray(v) ? v.flat().filter(Boolean).join(", ") : (v ? String(v) : "");
     const parts = [];
     const dep = list(p.dep);
-    if (dep) parts.push(`종속 ${dep}`);
+    if (dep) parts.push(uiKo() ? `종속 ${dep}` : `DV ${dep}`);
     let preds = [list(p.covs), list(p.factors), list(p.pred), list(p.med)].filter(Boolean).join(", ");
     if (!preds && Array.isArray(p.blocks)) preds = list(p.blocks);
-    if (preds) parts.push(`설명 ${preds}`);
+    if (preds) parts.push(uiKo() ? `설명 ${preds}` : `IV ${preds}`);
     if (!parts.length && typeof p.model === "string") parts.push(p.model.replace(/\s+/g, " ").trim());
     return parts.join(" · ") || type;
 }
@@ -9188,7 +9357,7 @@ function cmpExpandedModels() {
         if (!it) continue;
         const head = it.analysisId !== null ? `#${it.analysisId} ${it.title}` : it.title;
         for (let j = 0; j < it.k; j++) {
-            out.push({ nameKey: `${key}:${j}`, source: it.k > 1 ? `${head} · 블록 ${j + 1}` : head });
+            out.push({ nameKey: `${key}:${j}`, source: it.k > 1 ? (uiKo() ? `${head} · 블록 ${j + 1}` : `${head} · block ${j + 1}`) : head });
         }
     }
     return out;
@@ -9240,7 +9409,7 @@ function cmpStateFromCard(card) {
         } else {
             key = "o" + i;
             k = cmpModelCount(type, params);
-            st.orphans.push({ key, analysisId: null, title: `기존 비교표의 모형 지정 ${i + 1} (${type})`,
+            st.orphans.push({ key, analysisId: null, title: uiKo() ? `기존 비교표의 모형 지정 ${i + 1} (${type})` : `Model ${i + 1} of the existing table (${type})`,
                               type, params, k, tables: [], orphan: true });
         }
         st.order.push(key);
@@ -9263,8 +9432,8 @@ function openCompareModal(editCard = null) {
     APP.cmp.running = false;
     const st = APP.cmp;
     document.getElementById("cmp-hdr-title").textContent = st.editId !== null
-        ? `📊 모형 비교표 수정 (결과 #${st.editId})`
-        : "📊 모형 비교표 만들기 (여러 모형 나란히 · esttab 형식)";
+        ? (uiKo() ? `📊 모형 비교표 수정 (결과 #${st.editId})` : `📊 Edit model comparison table (result #${st.editId})`)
+        : (uiKo() ? "📊 모형 비교표 만들기 (여러 모형 나란히 · esttab 형식)" : "📊 Model comparison table (models side by side · esttab layout)");
     document.getElementById("cmp-estimate").value = st.estimate;
     document.querySelectorAll('input[name="cmp-stats"]').forEach(r => { r.checked = r.value === st.statsMode; });
     document.getElementById("cmp-stats-text").value = st.statsText;
@@ -9739,7 +9908,7 @@ async function semTplPreview() {
     } catch (err) {
         if (seq !== SEMTPL.seq) return;
         SEMTPL.last = null;
-        semTplShowError("모형식 생성 오류: " + err.message);
+        semTplShowError((uiKo() ? "모형식 생성 오류: " : "Model generation error: ") + err.message);
         applyBtn.disabled = true;
     }
 }
@@ -9789,9 +9958,9 @@ function cmpSetStatsMode(mode) {
     document.getElementById("cmp-stats-text").disabled = !custom;
     document.getElementById("cmp-stats-custom").style.display = custom ? "" : "none";
     document.getElementById("cmp-stats-help").textContent = {
-        auto: "자동: 모형에 있는 N, R², 수정 R², F, 유사 R², χ², AIC, BIC 등 표시",
-        none: "없음: 계수 행만 표시",
-        custom: "직접 입력: 입력한 순서대로 표시 (모형에 없는 통계량은 빈칸)"
+        auto: uiKo() ? "자동: 모형에 있는 N, R², 수정 R², F, 유사 R², χ², AIC, BIC 등 표시" : "Auto: shows N, R², adjusted R², F, pseudo R², χ², AIC, BIC and others the models have",
+        none: uiKo() ? "없음: 계수 행만 표시" : "None: coefficient rows only",
+        custom: uiKo() ? "직접 입력: 입력한 순서대로 표시 (모형에 없는 통계량은 빈칸)" : "Custom: shown in the order typed (blank where a model lacks the statistic)"
     }[APP.cmp.statsMode];
 }
 
@@ -9807,12 +9976,13 @@ function cmpRender() {
     const items = cmpItems();
     const listEl = document.getElementById("cmp-list");
     if (!items.length) {
-        listEl.innerHTML = `<div class="cmp-empty">계수표가 있는 분석 결과 없음.<br>선형·로지스틱 회귀, 패널, 다층모형, Cox 생존분석, 공간회귀, SEM 등을 먼저 실행해야 함.</div>`;
+        listEl.innerHTML = uiKo() ? `<div class="cmp-empty">계수표가 있는 분석 결과 없음.<br>선형·로지스틱 회귀, 패널, 다층모형, Cox 생존분석, 공간회귀, SEM 등을 먼저 실행해야 함.</div>`
+            : `<div class="cmp-empty">No results with a coefficient table.<br>Run a linear or logistic regression, panel, multilevel, Cox survival, spatial regression or SEM model first.</div>`;
     } else {
         listEl.innerHTML = items.map(it => {
             const pos = st.order.indexOf(it.key);
             const on = pos >= 0;
-            const badge = it.k > 1 ? `<span class="cmp-badge">(블록 ${it.k}개 → 모형 ${it.k}개)</span>` : "";
+            const badge = it.k > 1 ? `<span class="cmp-badge">${uiKo() ? `(블록 ${it.k}개 → 모형 ${it.k}개)` : `(${it.k} blocks → ${it.k} models)`}</span>` : "";
             const head = it.analysisId !== null ? `#${it.analysisId} ${escapeHtml(it.title)}` : escapeHtml(it.title);
             const desc = escapeHtml(cmpDescribe(it.type, it.params));
             return `<label class="cmp-item${on ? " on" : ""}" title="${desc}">
@@ -9828,17 +9998,18 @@ function cmpRender() {
     namesEl.innerHTML = models.length
         ? models.map((m, i) => `<div class="cmp-name-row">
                 <span class="cmp-order num">${i + 1}</span>
-                <input type="text" value="${escapeHtml(st.names[m.nameKey] || "")}" placeholder="모형 ${i + 1}" oninput="cmpSetName('${m.nameKey}', this.value)">
+                <input type="text" value="${escapeHtml(st.names[m.nameKey] || "")}" placeholder="${uiKo() ? "모형" : "Model"} ${i + 1}" oninput="cmpSetName('${m.nameKey}', this.value)">
                 <small title="${escapeHtml(m.source)}">${escapeHtml(m.source)}</small>
             </div>`).join("")
-        : `<div class="cmp-hint">위 목록에서 비교할 결과를 체크하면 모형 이름 칸이 표시됨.</div>`;
+        : `<div class="cmp-hint">${uiKo() ? "위 목록에서 비교할 결과를 체크하면 모형 이름 칸이 표시됨." : "Check the results to compare above; a name box appears for each model."}</div>`;
 
     document.getElementById("cmp-summary").textContent = st.order.length
-        ? `선택 ${st.order.length}건 → 모형 ${models.length}개`
-        : "선택한 결과 없음";
+        ? (uiKo() ? `선택 ${st.order.length}건 → 모형 ${models.length}개` : `${st.order.length} selected → ${models.length} models`)
+        : (uiKo() ? "선택한 결과 없음" : "No results selected");
     const submit = document.getElementById("cmp-submit");
     submit.disabled = !models.length || st.running;
-    submit.textContent = st.running ? "계산 중…" : (st.editId !== null ? "▶ 이 비교표 갱신" : "▶ 비교표 만들기");
+    submit.textContent = uiKo() ? (st.running ? "계산 중…" : (st.editId !== null ? "▶ 이 비교표 갱신" : "▶ 비교표 만들기"))
+        : (st.running ? "Computing…" : (st.editId !== null ? "▶ Update this table" : "▶ Create table"));
     const subNew = document.getElementById("cmp-submit-new");
     subNew.style.display = st.editId !== null ? "" : "none";
     subNew.disabled = !models.length || st.running;
@@ -9891,7 +10062,7 @@ function cmpBuildParams() {
     const st = APP.cmp;
     const byKey = new Map(cmpItems().map(it => [it.key, it]));
     const chosen = st.order.map(k => byKey.get(k)).filter(Boolean);
-    if (!chosen.length) throw new Error("비교할 결과를 1개 이상 선택해야 함");
+    if (!chosen.length) throw new Error(uiKo() ? "비교할 결과를 1개 이상 선택해야 함" : "Select at least one result to compare");
     const params = {
         models: chosen.map(it => Object.assign({}, JSON.parse(JSON.stringify(it.params || {})), { analysis: it.type }))
     };
@@ -9899,9 +10070,9 @@ function cmpBuildParams() {
     // names: only when edited (blank entries keep the default name); count = expanded model count
     const models = cmpExpandedModels();
     if (models.some(m => (st.names[m.nameKey] || "").trim())) {
-        const names = models.map((m, i) => (st.names[m.nameKey] || "").trim() || `모형 ${i + 1}`);
+        const names = models.map((m, i) => (st.names[m.nameKey] || "").trim() || (uiKo() ? `모형 ${i + 1}` : `Model ${i + 1}`));
         const dup = names.find((n, i) => names.indexOf(n) !== i);
-        if (dup) throw new Error(`모형 이름 중복: ${dup}`);
+        if (dup) throw new Error(uiKo() ? `모형 이름 중복: ${dup}` : `Duplicate model name: ${dup}`);
         if (names.length === models.length) params.names = names;
     }
     if (st.estimate && st.estimate !== "b") params.estimate = st.estimate;
@@ -9909,14 +10080,14 @@ function cmpBuildParams() {
         params.stats = "none";
     } else if (st.statsMode === "custom") {
         const keys = String(st.statsText || "").split(/[,\s]+/).map(s => s.trim()).filter(Boolean);
-        if (!keys.length) throw new Error("모형 통계량을 입력하거나 '자동'을 선택해야 함");
+        if (!keys.length) throw new Error(uiKo() ? "모형 통계량을 입력하거나 '자동'을 선택해야 함" : "Type the model statistics or choose 'Auto'");
         const lookup = new Map(CMP_STATS.map(([k]) => [k.toLowerCase(), k]));
         const unknown = keys.filter(k => !lookup.has(k.toLowerCase()));
-        if (unknown.length) throw new Error(`알 수 없는 통계량: ${unknown.join(", ")}`);
+        if (unknown.length) throw new Error(uiKo() ? `알 수 없는 통계량: ${unknown.join(", ")}` : `Unknown statistics: ${unknown.join(", ")}`);
         params.stats = keys.map(k => lookup.get(k.toLowerCase()));
     }
     const { labels, bad } = cmpParseLabels(st.labelsText);
-    if (bad.length) throw new Error(`변수 이름 바꾸기 ${bad.join(", ")}번째 줄: '원래이름=새이름' 형식 필요`);
+    if (bad.length) throw new Error(uiKo() ? `변수 이름 바꾸기 ${bad.join(", ")}번째 줄: '원래이름=새이름' 형식 필요` : `Rename variables, line ${bad.join(", ")}: use 'old=new'`);
     if (Object.keys(labels).length) params.labels = labels;
     if ((st.title || "").trim()) params.title = st.title.trim();
     return params;
@@ -10342,7 +10513,7 @@ function reportStyleIsSocial() {
 function updateReportStyleIndicators() {
     const social = reportStyleIsSocial();
     document.querySelectorAll(".bs-style-tag").forEach(el => {
-        el.textContent = social ? "사회과학 양식 적용" : "기본 APA 양식";
+        el.textContent = uiKo() ? (social ? "사회과학 양식 적용" : "기본 APA 양식") : (social ? "Social-science style" : "Default APA style");
         el.classList.toggle("social", social);
     });
 }
@@ -10357,9 +10528,10 @@ function saveReportStyle() {
 
 function reportStyleSaveText() {
     const p = APP.reportStyle.persisted;
-    if (p === false) return "브라우저 저장소 사용 불가: 이 창을 닫으면 설정이 초기화됨";
-    if (p === true) return "변경 즉시 저장됨 (이 브라우저)";
-    return "변경 즉시 이 브라우저에 저장됨";
+    const ko = uiKo();
+    if (p === false) return ko ? "브라우저 저장소 사용 불가: 이 창을 닫으면 설정이 초기화됨" : "Browser storage unavailable: settings reset when this window closes";
+    if (p === true) return ko ? "변경 즉시 저장됨 (이 브라우저)" : "Saved as you change it (this browser)";
+    return ko ? "변경 즉시 이 브라우저에 저장됨" : "Saved in this browser as you change it";
 }
 
 function setReportStyle(style) {
@@ -10529,7 +10701,7 @@ async function renderBackstageOpen() {
         <p style="font-size:12px;color:#555;margin-bottom:14px;">Click any benchmark dataset (.csv / .omv) or upload your own file:</p>
         <div style="margin-bottom:14px;">
             <button class="silky-small-btn" style="padding:6px 14px;font-weight:600;" onclick="triggerLocalFileUpload()">Browse Local File (.omv, .csv, .xlsx)...</button>
-            <button class="silky-small-btn" style="padding:6px 14px;font-weight:600;margin-left:6px;" onclick="closeBackstage(); openTextImportModal()">텍스트 파일 불러오기 (.txt .md .docx .pdf .hwpx)...</button>
+            <button class="silky-small-btn" style="padding:6px 14px;font-weight:600;margin-left:6px;" onclick="closeBackstage(); openTextImportModal()">${uiKo() ? "텍스트 파일 불러오기" : "Import text files"} (.txt .md .docx .pdf .hwpx)...</button>
         </div>`;
 
     for (const item of (data.items || [])) {
@@ -10644,18 +10816,19 @@ function tiRenderList() {
     document.getElementById("ti-submit").disabled = ok.length === 0;
     if (!files.length) {
         list.style.display = "none";
-        summary.textContent = "선택된 파일 없음";
+        summary.textContent = uiKo() ? "선택된 파일 없음" : "No files selected";
         return;
     }
     const byExt = {};
     ok.forEach(f => { const e = tiExt(f.path); byExt[e] = (byExt[e] || 0) + 1; });
-    summary.innerHTML = `불러올 파일 <b>${ok.length}개</b> (${(bytes / 1048576).toFixed(1)} MB) · ` +
+    const ko = uiKo();
+    summary.innerHTML = (ko ? `불러올 파일 <b>${ok.length}개</b>` : `<b>${ok.length}</b> files to import`) + ` (${(bytes / 1048576).toFixed(1)} MB) · ` +
         Object.entries(byExt).map(([e, n]) => `${e} ${n}`).join(", ") +
-        (files.length > ok.length ? ` · <span style="color:#B91C1C;">제외 ${files.length - ok.length}개 (지원하지 않는 형식${files.some(f => !f.ok && tiExt(f.path) === ".hwp") ? " — 구형 .hwp는 한글에서 '다른 이름으로 저장 → HWPX'로 바꾼 뒤 선택" : ""})</span>` : "") +
-        (ok.length > 1000 ? ` · <span style="color:#B91C1C;">한 번에 최대 1,000개</span>` : "");
+        (files.length > ok.length ? ` · <span style="color:#B91C1C;">${ko ? `제외 ${files.length - ok.length}개 (지원하지 않는 형식` : `${files.length - ok.length} skipped (unsupported format`}${files.some(f => !f.ok && tiExt(f.path) === ".hwp") ? (ko ? " — 구형 .hwp는 한글에서 '다른 이름으로 저장 → HWPX'로 바꾼 뒤 선택" : " — save old .hwp files as HWPX in Hangul first (Save As → HWPX)") : ""})</span>` : "") +
+        (ok.length > 1000 ? ` · <span style="color:#B91C1C;">${ko ? "한 번에 최대 1,000개" : "at most 1,000 files at a time"}</span>` : "");
     list.style.display = "block";
-    list.innerHTML = files.slice(0, 400).map(f => `<div class="${f.ok ? "" : "bad"}"><span>${escapeHtml(f.path)}</span><span>${f.ok ? (f.file.size < 1024 ? f.file.size + " B" : (f.file.size / 1024).toFixed(0) + " KB") : (tiExt(f.path) === ".hwp" ? "제외 (HWPX로 저장 필요)" : "제외")}</span></div>`).join("") +
-        (files.length > 400 ? `<div><span>... 외 ${files.length - 400}개</span><span></span></div>` : "");
+    list.innerHTML = files.slice(0, 400).map(f => `<div class="${f.ok ? "" : "bad"}"><span>${escapeHtml(f.path)}</span><span>${f.ok ? (f.file.size < 1024 ? f.file.size + " B" : (f.file.size / 1024).toFixed(0) + " KB") : (tiExt(f.path) === ".hwp" ? (ko ? "제외 (HWPX로 저장 필요)" : "skipped (save as HWPX)") : (ko ? "제외" : "skipped"))}</span></div>`).join("") +
+        (files.length > 400 ? `<div><span>${ko ? `... 외 ${files.length - 400}개` : `... and ${files.length - 400} more`}</span><span></span></div>` : "");
 }
 
 async function submitTextImport() {
@@ -10664,7 +10837,7 @@ async function submitTextImport() {
     const btn = document.getElementById("ti-submit");
     const out = document.getElementById("ti-result");
     btn.disabled = true;
-    out.innerHTML = `<span class="run-spinner"></span>문서 ${ok.length}개에서 글자 추출 중...`;
+    out.innerHTML = `<span class="run-spinner"></span>${uiKo() ? `문서 ${ok.length}개에서 글자 추출 중...` : `Extracting text from ${ok.length} documents...`}`;
     const fd = new FormData();
     ok.forEach(f => fd.append("files", f.file, f.file.name));
     fd.append("paths", JSON.stringify(ok.map(f => f.path)));
@@ -10673,24 +10846,25 @@ async function submitTextImport() {
         const res = await fetch("/api/dataset/import_texts", { method: "POST", body: fd });
         const data = await res.json();
         if (!res.ok) {
-            out.innerHTML = `<span style="color:#B91C1C;">불러오기 실패: ${escapeHtml(typeof data.detail === "string" ? data.detail : res.statusText)}</span>`;
+            out.innerHTML = `<span style="color:#B91C1C;">${uiKo() ? "불러오기 실패" : "Import failed"}: ${escapeHtml(typeof data.detail === "string" ? data.detail : res.statusText)}</span>`;
             return;
         }
         applyDatasetPayload(data);
         const im = data.import || {};
         const skipped = im.skipped || [];
-        out.innerHTML = `<div style="color:#065F46;font-weight:600;">✔ 문서 ${im.documents}건 · ${Number(im.characters || 0).toLocaleString()}자 불러오기 완료 (데이터: ${escapeHtml(im.file || data.name)})</div>` +
-            (skipped.length ? `<div style="color:#B45309;margin-top:4px;">제외 ${skipped.length}건: ${skipped.slice(0, 5).map(s => escapeHtml(s.path + " (" + s.reason + ")")).join("; ")}${skipped.length > 5 ? " ..." : ""}</div>` : "") +
+        const ko = uiKo();
+        out.innerHTML = `<div style="color:#065F46;font-weight:600;">${ko ? `✔ 문서 ${im.documents}건 · ${Number(im.characters || 0).toLocaleString()}자 불러오기 완료 (데이터: ${escapeHtml(im.file || data.name)})` : `✔ Imported ${im.documents} documents · ${Number(im.characters || 0).toLocaleString()} characters (data: ${escapeHtml(im.file || data.name)})`}</div>` +
+            (skipped.length ? `<div style="color:#B45309;margin-top:4px;">${ko ? `제외 ${skipped.length}건` : `${skipped.length} skipped`}: ${skipped.slice(0, 5).map(s => escapeHtml(s.path + " (" + s.reason + ")")).join("; ")}${skipped.length > 5 ? " ..." : ""}</div>` : "") +
             `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
-                <button class="silky-small-btn" onclick="closeTextImportModal(); openAnalysis('textKeywords')">키워드 분석 시작</button>
-                <button class="silky-small-btn" onclick="closeTextImportModal(); openAnalysis('textNetwork')">동시출현 관계망</button>
-                <button class="silky-small-btn" onclick="closeTextImportModal(); openAnalysis('textCluster')">문서 군집 분석</button>
+                <button class="silky-small-btn" onclick="closeTextImportModal(); openAnalysis('textKeywords')">${ko ? "키워드 분석 시작" : "Keyword analysis"}</button>
+                <button class="silky-small-btn" onclick="closeTextImportModal(); openAnalysis('textNetwork')">${ko ? "동시출현 관계망" : "Co-occurrence network"}</button>
+                <button class="silky-small-btn" onclick="closeTextImportModal(); openAnalysis('textCluster')">${ko ? "문서 군집 분석" : "Document clustering"}</button>
             </div>`;
         APP.tiFiles = [];
         tiRenderList();
         showToast(`텍스트 문서 ${im.documents}건 불러옴`);
     } catch (err) {
-        out.innerHTML = `<span style="color:#B91C1C;">불러오기 실패: ${escapeHtml(err.message)}</span>`;
+        out.innerHTML = `<span style="color:#B91C1C;">${uiKo() ? "불러오기 실패" : "Import failed"}: ${escapeHtml(err.message)}</span>`;
     } finally {
         btn.disabled = !(APP.tiFiles || []).some(f => f.ok);
     }
@@ -10760,7 +10934,7 @@ function renderLeftVarExplorer() {
     const countBadge = document.getElementById("left-var-count-badge");
     if (countBadge) countBadge.textContent = isKo ? `${cols.length}개 변수` : `${cols.length} variables`;
     if (!cols.length) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#94A3B8;padding:12px;">${isKo ? '데이터가 없습니다' : 'No variables'}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#94A3B8;padding:12px;">${isKo ? '변수 없음' : 'No variables'}</td></tr>`;
         return;
     }
     const query = (APP.leftVarFilter || "").toLowerCase();
@@ -11040,7 +11214,7 @@ function updateSyntaxStatusBadge() {
 function downloadCommandLog(fmt) {
     const base = (APP.datasetName || "analysis").replace(/\.[^/.]+$/, "");
     const ext = fmt === "r" ? "R" : fmt;
-    return downloadFromServer(`/api/command_log/export?fmt=${encodeURIComponent(fmt)}`, `${base}_명령기록.${ext}`);
+    return downloadFromServer(`/api/command_log/export?fmt=${encodeURIComponent(fmt)}`, `${base}_${uiKo() ? "명령기록" : "command_log"}.${ext}`);
 }
 
 /* 🧹: start a new record (the previous one stays in workspace/command_log_YYYYmmdd_HHMMSS.py). */
@@ -11137,14 +11311,14 @@ async function executeIntegratedSyntax(selectionOnly = false) {
     }
 
     if (!codeToRun || !codeToRun.trim()) {
-        showToast("실행할 스크립트 코드가 없습니다.");
+        showToast("실행할 코드 없음");
         return;
     }
 
     const badge = document.getElementById("syntax-status-badge");
     if (badge) {
         badge.className = "badge-pill blue";
-        badge.textContent = "실행 중...";
+        badge.textContent = uiKo() ? "실행 중..." : "Running...";
     }
 
     try {
@@ -11162,14 +11336,14 @@ async function executeIntegratedSyntax(selectionOnly = false) {
             showToast("명령 실행 완료");
             if (badge) {
                 badge.className = "badge-pill green";
-                badge.textContent = "실행 성공";
+                badge.textContent = uiKo() ? "실행 성공" : "Done";
                 setTimeout(updateSyntaxStatusBadge, 1800);
             }
         } else {
             showToast("실행 오류: " + (data.detail || "Script syntax error"));
             if (badge) {
                 badge.className = "badge-pill red";
-                badge.textContent = "오류 발생";
+                badge.textContent = uiKo() ? "오류 발생" : "Error";
                 setTimeout(updateSyntaxStatusBadge, 2500);
             }
         }
@@ -11177,7 +11351,7 @@ async function executeIntegratedSyntax(selectionOnly = false) {
         showToast("통신 오류: " + err.message);
         if (badge) {
             badge.className = "badge-pill red";
-            badge.textContent = "통신 실패";
+            badge.textContent = uiKo() ? "통신 실패" : "Connection failed";
             setTimeout(updateSyntaxStatusBadge, 2500);
         }
     }
@@ -11252,7 +11426,8 @@ function insertSyntaxSnippet(type) {
     const sEvent = pick(/status|event|dead|death|사망|사건/i, names);
     const uniq3 = [n1, n2, n3].filter((v, i, a) => a.indexOf(v) === i);
     // Templates that need variables the dataset does not have are inserted as a comment to fill in.
-    const asTodo = (code, what) => `# ${what}을(를) 자료에 맞게 지정한 뒤 주석(#)을 지우고 실행\n# ${code}`;
+    const ko = uiKo();
+    const asTodo = (code, what) => ko ? `# ${what}을(를) 자료에 맞게 지정한 뒤 주석(#)을 지우고 실행\n# ${code}` : `# Set the ${what} for your data, then remove the leading # and run\n# ${code}`;
 
     let snippet = "";
     if (type === "desc") snippet = `sess.descriptives(vars=['${n1}', '${n2}'])`;
@@ -11260,15 +11435,15 @@ function insertSyntaxSnippet(type) {
     else if (type === "anova") snippet = `sess.anova(dep='${n1}', group='${g}')`;
     else if (type === "reg") snippet = `sess.regression(dep='${n1}', covs=['${n2}'${n3 !== n2 ? `, '${n3}'` : ""}])`;
     else if (type === "corr") snippet = `sess.correlation(vars=[${[n1, n2, n3].filter((v, i, a) => a.indexOf(v) === i).map(v => `'${v}'`).join(", ")}])`;
-    else if (type === "spatial") snippet = `sess.spatial_regression(dep='${n1}', covs=['${n2}'], model='sar')  # 경계: sess.attach_boundary('경계.shp', key='SIG_CD', data_key='지역코드')`;
+    else if (type === "spatial") snippet = `sess.spatial_regression(dep='${n1}', covs=['${n2}'], model='sar')  # ${ko ? "경계" : "boundary"}: sess.attach_boundary('${ko ? "경계" : "boundary"}.shp', key='SIG_CD', data_key='${ko ? "지역코드" : "region_code"}')`;
     else if (type === "sem") snippet = uniq3.length >= 3 ? `sess.sem(model="F1 =~ ${uniq3.join(" + ")}")` : `sess.sem(model="${n1} ~ ${n2}")`;
     else if (type === "panel") {
-        const code = `sess.panel(dep='${n1}', entity='${entity || "개체변수"}', time='${time || "시점변수"}', covs=['${others.find(n => n !== time && n !== entity) || n2}'])`;
-        snippet = entity && time ? code : asTodo(code, "개체·시점 변수");
+        const code = `sess.panel(dep='${n1}', entity='${entity || (ko ? "개체변수" : "entity_var")}', time='${time || (ko ? "시점변수" : "time_var")}', covs=['${others.find(n => n !== time && n !== entity) || n2}'])`;
+        snippet = entity && time ? code : asTodo(code, ko ? "개체·시점 변수" : "entity and time variables");
     }
     else if (type === "survival") {
-        const code = `sess.survival(time='${sTime || "기간변수"}', event='${sEvent || "사건변수"}', covs=['${nums.find(n => n !== sTime && n !== sEvent) || n2}'])`;
-        snippet = sTime && sEvent ? code : asTodo(code, "기간·사건 변수");
+        const code = `sess.survival(time='${sTime || (ko ? "기간변수" : "duration_var")}', event='${sEvent || (ko ? "사건변수" : "event_var")}', covs=['${nums.find(n => n !== sTime && n !== sEvent) || n2}'])`;
+        snippet = sTime && sEvent ? code : asTodo(code, ko ? "기간·사건 변수" : "duration and event variables");
     }
     else if (type === "network") snippet = `sess.network(vars=[${[n1, n2, n3].filter((v, i, a) => a.indexOf(v) === i).map(v => `'${v}'`).join(", ")}])`;
     else if (type === "summary_ttest") snippet = `sess.summary_ttest(m1=25.4, s1=4.2, n1=50, m2=21.1, s2=3.9, n2=50)`;
@@ -11324,7 +11499,7 @@ function setSemTool(tool) {
 
 function addNewLatentPrompt() {
     const defaultName = `F${SEM_BUILDER.nodes.filter(n => n.type === 'latent').length + 1}`;
-    const name = prompt("생성할 잠재변수(타원) 이름을 입력하세요:", defaultName);
+    const name = prompt(uiKo() ? "새 잠재변수(타원) 이름:" : "Name of the new latent variable (ellipse):", defaultName);
     if (!name || !name.trim()) return;
     const cleanName = name.trim().replace(/\s+/g, "_");
     SEM_BUILDER.nodes.push({
@@ -11340,7 +11515,7 @@ function addNewLatentPrompt() {
 
 function addObservedNode(varName) {
     if (SEM_BUILDER.nodes.some(n => n.id === varName)) {
-        showToast(`'${varName}' 변수가 이미 캔버스에 존재합니다.`);
+        showToast(`'${varName}' 변수가 이미 캔버스에 있음`);
         return;
     }
     SEM_BUILDER.nodes.push({
@@ -11579,7 +11754,7 @@ function updateSemSyntaxPreview() {
 function applySemBuilderToModel(runNow = false) {
     const syntaxText = updateSemSyntaxPreview();
     if (!syntaxText.trim()) {
-        showToast("생성된 SEM 모델 문법이 없습니다.");
+        showToast("생성된 SEM 모형식 없음");
         return;
     }
 
@@ -11596,7 +11771,7 @@ function applySemBuilderToModel(runNow = false) {
     if (runNow) {
         executeCurrentAnalysis();
     } else {
-        showToast("SEM 모델 문법이 옵션 패널에 적용되었습니다.");
+        showToast("SEM 모형식을 옵션 창에 반영함");
     }
 }
 

@@ -10,7 +10,7 @@ setup(
     packages=find_packages(where="reconstructed"),
     include_package_data=True,
     package_data={
-        "pyjamovi": ["web/*.html", "web/assets/*.svg"],
+        "pyjamovi": ["web/*.html", "web/assets/*.svg", "web/assets/*.js"],
     },
     install_requires=[
         "numpy>=2.0.0",

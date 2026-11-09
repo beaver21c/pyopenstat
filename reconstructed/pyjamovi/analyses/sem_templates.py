@@ -117,7 +117,7 @@ TEMPLATE_CATALOG: List[Dict[str, Any]] = [
     },
     {
         "id": "riclpm", "group": "crosslag", "group_title": GROUPS["crosslag"],
-        "title": "무선절편 교차지연 패널모형", "name_en": "Random-Intercept Cross-Lagged Panel Model (RI-CLPM)",
+        "title": "무선절편 교차지연 패널모형", "name_en": "Random Intercept Cross-Lagged Panel Model (RI-CLPM)",
         "short": "RI-CLPM",
         "description": "관측값을 개인 간 안정적 성분(무선절편)과 시점별 개인 내 성분으로 분해하고, 개인 내 성분 사이의 "
                        "자기회귀·교차지연 경로를 추정 (Hamaker, Kuiper & Grasman, 2015). 3시점 이상 필요.",
@@ -141,7 +141,7 @@ TEMPLATE_CATALOG: List[Dict[str, Any]] = [
     },
     {
         "id": "latent_clpm", "group": "crosslag", "group_title": GROUPS["crosslag"],
-        "title": "다중지표 잠재 교차지연모형", "name_en": "Multiple-Indicator (Latent) Cross-Lagged Panel Model",
+        "title": "다중지표 잠재 교차지연모형", "name_en": "Multiple Indicator Latent Cross-Lagged Panel Model",
         "short": "잠재 CLPM",
         "description": "구성개념마다 시점별로 같은 문항들로 잠재요인을 정의하고(종단 측정동일성), 같은 문항 잔차의 "
                        "시점 간 공분산을 허용한 뒤 잠재요인 사이의 자기회귀·교차지연 경로를 추정.",
@@ -188,7 +188,7 @@ TEMPLATE_CATALOG: List[Dict[str, Any]] = [
     },
     {
         "id": "lgm_basis", "group": "growth", "group_title": GROUPS["growth"],
-        "title": "잠재기저 성장모형", "name_en": "Latent Basis Growth Model (freely estimated time scores)",
+        "title": "잠재기저 성장모형", "name_en": "Latent Basis Growth Model (estimated time scores)",
         "short": "잠재기저 LGM",
         "description": "첫 시점 0, 기준 시점 1로 고정하고 나머지 시간점수를 자유 추정하여 변화의 형태를 자료에서 추정. "
                        "3시점이면 포화(자유도 0), 4시점 이상 권장.",
@@ -205,7 +205,7 @@ TEMPLATE_CATALOG: List[Dict[str, Any]] = [
     },
     {
         "id": "lgm_conditional", "group": "growth", "group_title": GROUPS["growth"],
-        "title": "조건부 잠재성장모형", "name_en": "Conditional Latent Growth Model (time-invariant / time-varying covariates)",
+        "title": "조건부 잠재성장모형", "name_en": "Conditional Latent Growth Model (time-invariant and time-varying covariates)",
         "short": "조건부 LGM",
         "description": "시간불변 공변량이 절편·기울기를 예측하고, 선택적으로 시간가변 공변량이 같은 시점의 관측변수를 "
                        "예측하는 성장모형 (공변량은 조건부 처리, Mplus 기본).",
@@ -226,7 +226,7 @@ TEMPLATE_CATALOG: List[Dict[str, Any]] = [
     },
     {
         "id": "lgm_parallel", "group": "growth", "group_title": GROUPS["growth"],
-        "title": "병행과정 잠재성장모형", "name_en": "Parallel-Process Latent Growth Model", "short": "병행과정 LGM",
+        "title": "병행과정 잠재성장모형", "name_en": "Parallel Process Latent Growth Model", "short": "병행과정 LGM",
         "description": "두 변수의 선형 성장을 동시에 추정하고 성장요인 사이의 공분산 또는 절편 → 기울기 경로를 추정.",
         "min_waves": 3,
         "roles": [
@@ -246,7 +246,7 @@ TEMPLATE_CATALOG: List[Dict[str, Any]] = [
     },
     {
         "id": "lgm_second_order", "group": "growth", "group_title": GROUPS["growth"],
-        "title": "2차 요인 잠재성장모형 (다중지표)", "name_en": "Second-Order (Curve-of-Factors) Latent Growth Model",
+        "title": "2차 요인 잠재성장모형 (다중지표)", "name_en": "Second-Order Latent Growth Model (multiple indicators)",
         "short": "2차 요인 LGM",
         "description": "시점마다 같은 문항들로 1차 잠재요인을 정의하고(종단 측정동일성), 1차 요인들 위에 절편·기울기 "
                        "2차 성장요인을 둔 다중지표 성장모형. 측정오차를 분리한 잠재변수 수준의 변화 추정.",
@@ -305,14 +305,14 @@ _EN = {
     "변수 X — 시점별 관측변수 (1시점부터 순서대로)": "Variable X — one observed variable per wave (wave 1 first)",
     "변수 Y — 시점별 관측변수 (X와 같은 시점 수)": "Variable Y — one observed variable per wave (same waves as X)",
     "변수 Z — 시점별 관측변수 (선택, 3변수 모형)": "Variable Z — one observed variable per wave (optional, 3 variables)",
-    "구성개념 이름 (선택, 쉼표 구분: 예 우울, 외로움)": "Construct names (optional, comma separated)",
-    "구성개념 이름 (선택, 쉼표 구분)": "Construct names (optional, comma separated)",
+    "구성개념 이름 (선택, 쉼표 구분: 예 우울, 외로움)": "Construct names (optional, comma-separated)",
+    "구성개념 이름 (선택, 쉼표 구분)": "Construct names (optional, comma-separated)",
     "구성개념 이름 (선택)": "Construct name (optional)",
     "변수 이름 (선택)": "Variable name (optional)",
-    "과정 이름 (선택, 쉼표 구분)": "Process names (optional, comma separated)",
+    "과정 이름 (선택, 쉼표 구분)": "Process names (optional, comma-separated)",
     "시간불변 공변량 → 무선절편 (선택)": "Time-invariant covariates → random intercepts (optional)",
     "구성개념 X — 문항 × 시점 (문항별 한 줄, 시점 순서대로; 첫 문항이 기준지표)":
-        "Construct X — items × waves (one row per item, waves in order, first item = marker)",
+        "Construct X — items × waves (one row per item, waves in order, first item = marker indicator)",
     "구성개념 Y — 문항 × 시점": "Construct Y — items × waves",
     "구성개념 Z — 문항 × 시점 (선택)": "Construct Z — items × waves (optional)",
     "반복측정 변수 — 시점별 관측변수 (1시점부터 순서대로)": "Repeated measure — one observed variable per wave (wave 1 first)",
@@ -322,74 +322,85 @@ _EN = {
     "과정 1 — 시점별 관측변수": "Process 1 — one observed variable per wave",
     "과정 2 — 시점별 관측변수 (과정 1과 같은 시점 수)": "Process 2 — one observed variable per wave (same waves)",
     "문항 × 시점 (문항별 한 줄, 시점 순서대로; 첫 문항이 기준지표)":
-        "Items × waves (one row per item, waves in order, first item = marker)",
-    "자기회귀·교차지연 경로 시점 간 동일 제약 (정상성)": "Equal autoregressive and cross-lagged paths over time (stationarity)",
-    "2시점 이후 잔차 공분산 시점 간 동일 제약": "Equal residual covariances from wave 2 on",
-    "2시점 이후 잔차분산 시점 간 동일 제약": "Equal residual variances from wave 2 on",
-    "개인 내 자기회귀·교차지연 경로 시점 간 동일 제약": "Equal within-person lagged paths over time",
-    "2시점 이후 개인 내 잔차(혁신) 공분산 동일 제약": "Equal within-person residual (innovation) covariances",
-    "2시점 이후 개인 내 잔차(혁신) 분산 동일 제약": "Equal within-person residual (innovation) variances",
-    "시점별 평균(관측변수 절편) 시점 간 동일 제약": "Equal means (observed intercepts) over time",
+        "Items × waves (one row per item, waves in order, first item = marker indicator)",
+    "자기회귀·교차지연 경로 시점 간 동일 제약 (정상성)": "Autoregressive and cross-lagged paths constrained over time (stationarity)",
+    "2시점 이후 잔차 공분산 시점 간 동일 제약": "Residual covariances constrained over time from wave 2 on",
+    "2시점 이후 잔차분산 시점 간 동일 제약": "Residual variances constrained over time from wave 2 on",
+    "개인 내 자기회귀·교차지연 경로 시점 간 동일 제약": "Within-person autoregressive and cross-lagged paths constrained over time",
+    "2시점 이후 개인 내 잔차(혁신) 공분산 동일 제약": "Covariances between within-person residuals (innovations) constrained over time from wave 2 on",
+    "2시점 이후 개인 내 잔차(혁신) 분산 동일 제약": "Variances of within-person residuals (innovations) constrained over time from wave 2 on",
+    "시점별 평균(관측변수 절편) 시점 간 동일 제약": "Means at each wave (observed intercepts) constrained over time",
     "공변량 분포를 모형에 포함 (공변량 결측 사례도 FIML로 사용)":
         "Model the covariate distribution (cases with missing covariates kept by FIML)",
     "모형식에 설명 주석(# …) 포함": "Explanatory comments (# …) in the model",
-    "종단 측정동일성 수준": "Longitudinal measurement invariance",
-    "같은 문항 잔차의 시점 간 공분산": "Residual covariances of the same item over time",
-    "자기회귀·교차지연 경로 시점 간 동일 제약": "Equal autoregressive and cross-lagged paths over time",
-    "2시점 이후 요인 잔차 공분산 동일 제약": "Equal factor residual covariances from wave 2 on",
-    "2시점 이후 요인 잔차분산 동일 제약": "Equal factor residual variances from wave 2 on",
-    "시간점수 (쉼표 구분, 비우면 0, 1, …, T−1)": "Time scores (comma separated, empty = 0, 1, …, T−1)",
-    "관측변수 잔차분산 시점 간 동일 제약": "Equal residual variances of the observed variables",
-    "시간점수 1 고정 시점": "Wave with time score fixed at 1",
+    "종단 측정동일성 수준": "Level of longitudinal measurement invariance",
+    "같은 문항 잔차의 시점 간 공분산": "Residual covariances of the same item across waves",
+    "자기회귀·교차지연 경로 시점 간 동일 제약": "Autoregressive and cross-lagged paths constrained over time",
+    "2시점 이후 요인 잔차 공분산 동일 제약": "Factor residual covariances constrained over time from wave 2 on",
+    "2시점 이후 요인 잔차분산 동일 제약": "Factor residual variances constrained over time from wave 2 on",
+    "시간점수 (쉼표 구분, 비우면 0, 1, …, T−1)": "Time scores (comma-separated, empty = 0, 1, …, T−1)",
+    "관측변수 잔차분산 시점 간 동일 제약": "Residual variances of the observed variables held equal across time",
+    "시간점수 1 고정 시점": "Wave with the time score fixed at 1",
     "성장 형태": "Growth shape",
-    "시간가변 공변량 효과 시점 간 동일 제약": "Equal time-varying covariate effect over time",
-    "성장요인 관계": "Relations among growth factors",
+    "시간가변 공변량 효과 시점 간 동일 제약": "Effect of the time-varying covariate held equal across time",
+    "성장요인 관계": "Relations among the growth factors",
     "같은 시점 두 변수 잔차 공분산 허용": "Residual covariance of the two variables at the same wave",
-    "성장요인 평균 식별 방식": "Identification of growth factor means",
-    "1차 요인 잔차분산 시점 간 동일 제약": "Equal first-order factor residual variances",
-    "일정 변화 요인 (상수 변화, 모든 변화점수에 적재량 1)": "Constant change factor (loading 1 on every change score)",
-    "비례 변화 효과 (직전 진점수 → 변화점수, 시점 간 동일)": "Proportional change (previous true score → change, equal)",
+    "성장요인 평균 식별 방식": "Identification of the growth factor means",
+    "1차 요인 잔차분산 시점 간 동일 제약": "First-order factor residual variances held equal across time",
+    "일정 변화 요인 (상수 변화, 모든 변화점수에 적재량 1)": "Constant change factor (loading 1 on every latent change score)",
+    "비례 변화 효과 (직전 진점수 → 변화점수, 시점 간 동일)": "Proportional change (previous true score → latent change score, equal over time)",
     # select option labels
-    "모든 시점 쌍 (Little, 2013 권고)": "All pairs of waves (Little, 2013)", "인접 시점만": "Adjacent waves only",
+    "모든 시점 쌍 (Little, 2013 권고)": "All pairs of waves (recommended by Little, 2013)", "인접 시점만": "Adjacent waves only",
     "없음": "None", "형태 동일성 (제약 없음)": "Configural (no constraints)",
     "측정단위 동일성 (요인적재량 동일)": "Metric (equal loadings)",
     "절편 동일성 (요인적재량·절편 동일)": "Scalar (equal loadings and intercepts)",
     "엄격 동일성 (적재량·절편·잔차분산 동일)": "Strict (equal loadings, intercepts and residual variances)",
     "마지막 시점 (기울기 평균 = 전체 변화량)": "Last wave (slope mean = total change)",
-    "2시점 (기울기 평균 = 첫 구간 변화량, Mplus 예제 방식)": "Wave 2 (slope mean = change in the first interval)",
+    "2시점 (기울기 평균 = 첫 구간 변화량, Mplus 예제 방식)": "Wave 2 (slope mean = change over the first interval, as in Mplus Example 6.8)",
     "선형": "Linear", "2차 (4시점 이상)": "Quadratic (4+ waves)",
     "성장요인 4개 모두 공분산 (기본)": "Covariances among all four growth factors (default)",
-    "기울기 ← 두 과정 절편 회귀 (과정 간 절편 → 기울기 효과)": "Slopes regressed on both intercepts",
-    "기준지표 절편 0 고정, 절편·기울기 평균 추정": "Marker intercepts 0, intercept and slope means estimated",
+    "기울기 ← 두 과정 절편 회귀 (과정 간 절편 → 기울기 효과)": "Slopes regressed on the intercepts of both processes (intercept → slope effects across processes)",
+    "기준지표 절편 0 고정, 절편·기울기 평균 추정": "Marker indicator intercepts fixed at 0, intercept and slope growth factor means estimated",
     "모든 절편 동일(추정), 절편요인 평균 0 고정 (Mplus 예제 6.14 방식)":
-        "All intercepts equal (estimated), intercept factor mean 0 (Mplus ex. 6.14)",
-    "예: 0, 1, 2, 4": "e.g. 0, 1, 2, 4",
-    "측정 간격이 다르면 실제 간격에 비례하는 값 입력": "Unequal spacing: enter values proportional to the actual intervals",
+        "All intercepts equal (estimated), intercept growth factor mean fixed at 0 (as in Mplus Example 6.14)",
+    "예: 0, 1, 2, 4": "e.g., 0, 1, 2, 4",
+    "측정 간격이 다르면 실제 간격에 비례하는 값 입력": "With unequal spacing, enter values proportional to the actual intervals",
     "기본은 Mplus처럼 공변량에 조건부 처리(공변량 결측 사례 제외)":
-        "Default (as in Mplus): analysis conditional on covariates, cases missing a covariate are excluded",
+        "Default (as in Mplus): model conditional on the covariates; cases with a missing covariate are excluded",
 }
 _DESC_EN = {
-    "clpm": "Autoregressive (stability) and cross-lagged paths among two or more variables measured at each wave. "
-            "Stable between-person differences are not separated.",
-    "riclpm": "Observed scores split into stable between-person parts (random intercepts) and within-person "
-              "deviations; lagged paths among the within-person parts (Hamaker et al., 2015). Needs 3+ waves.",
-    "latent_clpm": "A factor per construct and wave from the same items (longitudinal invariance), correlated "
-                   "same-item residuals and cross-lagged paths among the factors.",
-    "lgm_linear": "Intercept and slope growth factors from repeated observed measures (time scores 0, 1, …).",
-    "lgm_quadratic": "Intercept, linear and quadratic growth factors (quadratic loadings = squared time scores).",
-    "lgm_basis": "First time score 0, reference wave 1, remaining time scores estimated (shape of change).",
-    "lgm_conditional": "Growth factors regressed on time-invariant covariates, optional time-varying covariates "
-                       "predicting the outcome at the same wave.",
-    "lgm_parallel": "Linear growth of two variables with covariances (or intercept → slope paths) among the growth "
-                    "factors.",
-    "lgm_second_order": "First-order factors per wave (longitudinal invariance) and second-order intercept / slope "
-                        "growth factors (curve of factors).",
-    "lcs_univariate": "True scores and latent change scores between adjacent waves; change = constant change factor "
-                      "+ proportional effect of the previous level (McArdle, 2009).",
+    "clpm": "Basic panel model with autoregressive (stability) and cross-lagged paths among the observed scores of two "
+            "or more variables at each wave. Stable between-person differences are not separated from the "
+            "within-person process, so consider the RI-CLPM when within-person effects are to be interpreted.",
+    "riclpm": "Separates the observed scores into stable between-person differences (random intercepts) and "
+              "within-person centered components at each wave, and estimates autoregressive and cross-lagged paths "
+              "among the within-person components (Hamaker, Kuiper & Grasman, 2015). Requires 3 or more waves.",
+    "latent_clpm": "A latent factor for each construct at each wave from the same items (longitudinal measurement "
+                   "invariance), residual covariances of the same item across waves, and autoregressive and "
+                   "cross-lagged paths among the latent factors.",
+    "lgm_linear": "Intercept and slope growth factors defined by the repeated observed measures (time scores 0, 1, …). "
+                  "Requires 3 or more waves.",
+    "lgm_quadratic": "Curvilinear change with intercept, linear slope and quadratic slope growth factors (the quadratic "
+                     "time scores are the squared linear time scores). Requires 4 or more waves.",
+    "lgm_basis": "Time score of the first wave fixed at 0 and of the reference wave at 1; the remaining time scores are "
+                 "estimated, so the shape of change is estimated from the data. Saturated (0 df) with 3 waves; "
+                 "4 or more waves are recommended.",
+    "lgm_conditional": "Growth model in which time-invariant covariates predict the intercept and slope and, optionally, "
+                       "time-varying covariates predict the outcome at the same wave (model conditional on the "
+                       "covariates, Mplus default).",
+    "lgm_parallel": "Linear growth of two parallel processes estimated together, with covariances among the growth "
+                    "factors or regressions of the slopes on the intercepts.",
+    "lgm_second_order": "Multiple indicator growth model: first-order latent factors defined by the same items at each "
+                        "wave (longitudinal measurement invariance) and second-order intercept and slope growth factors "
+                        "on these factors (curve of factors), so change is estimated for latent variables separated "
+                        "from measurement error.",
+    "lcs_univariate": "A true score at each wave and latent change scores between adjacent waves; change is decomposed "
+                      "into constant change (constant change factor) and proportional change (effect of the previous "
+                      "true score) (McArdle, 2009).",
 }
 _SHORT_EN = {"clpm": "CLPM", "riclpm": "RI-CLPM", "latent_clpm": "latent CLPM", "lgm_linear": "linear LGM",
              "lgm_quadratic": "quadratic LGM", "lgm_basis": "latent basis LGM", "lgm_conditional": "conditional LGM",
-             "lgm_parallel": "parallel-process LGM", "lgm_second_order": "second-order LGM", "lcs_univariate": "LCS"}
+             "lgm_parallel": "parallel process LGM", "lgm_second_order": "second-order LGM", "lcs_univariate": "LCS"}
 _GROUPS_EN = {"crosslag": "Cross-lagged panel models", "growth": "Latent growth models",
               "change": "Latent change score models"}
 

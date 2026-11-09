@@ -149,7 +149,10 @@ class SpatialWeights:
             inv = np.divide(1.0, rs, out=np.zeros_like(rs), where=rs > 0)
             return sp.diags(inv) @ raw
         if norm == "minmax":
-            m = max(float(np.asarray(raw.sum(axis=1)).max()), float(np.asarray(raw.sum(axis=0)).max()))
+            # Kelejian & Prucha (2010); Stata spmatrix normalize(minmax): divide by the smaller of the
+            # largest row sum and the largest column sum of absolute values
+            a = abs(raw)
+            m = min(float(np.asarray(a.sum(axis=1)).max()), float(np.asarray(a.sum(axis=0)).max()))
             return raw / (m if m > 0 else 1.0)
         if norm == "spectral":
             n = raw.shape[0]
