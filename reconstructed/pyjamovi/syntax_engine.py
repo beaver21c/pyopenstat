@@ -239,6 +239,10 @@ def generate_python_script(
                 lines.append("# sess.add_figure(fig, title=" + repr(p.get("title", title)) + ")")
                 lines.append("")
                 continue
+            if a_type == "aiNote":
+                lines.append("# AI 분석 지원 응답 카드 (자연어 요청: " + " ".join(str(p.get("question", "")).split())[:120] + ")")
+                lines.append("")
+                continue
             lines.append(f"res_{idx} = sess.run(")
             lines.append(f"    {a_type!r},")
             for pk, pv in p.items():

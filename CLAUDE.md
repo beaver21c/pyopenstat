@@ -35,6 +35,13 @@ This repository contains **OpenStat Studio v3.0** (`openstat` / `pyjamovi`, MIT 
 - 결과는 브라우저 화면에 2~3초 안에 나타나고, 모든 명령은 `workspace/command_log.py`에 누적 기록된다.
 - 결과 수치 확인: `curl -s http://127.0.0.1:8500/api/session/state` 의 `analyses[].tables` 를 읽어 보고한다 (요약은 표 이름·핵심 수치·해석 순서).
 
+**④-1 화면의 「AI 분석 지원」 입력줄 (Gemini API)**
+- 결과 창 위 입력줄에 이용자가 말로 요청하면 Gemini가 `sess.run('<분석 id>', …)` 명령을 작성 → 실행 전 점검(분석 id·옵션 이름·선택지·변수) → 실행 → 해석 카드 추가. 진행 단계와 실패 원인이 입력줄 아래에 표시됨
+- 키: 화면의 「API 키 · 모형」 또는 환경 변수 `GEMINI_API_KEY`(모형은 `GEMINI_MODEL`). 서버 메모리에만 보관
+- API: `POST /api/assistant/run` 본문 `{"question": "...", "lang": "ko"}` / 상태 `GET /api/assistant/info`, 진행 `GET /api/assistant/progress`
+- 구현: `reconstructed/pyjamovi/ai/` (`knowledge.py` 분석 목록·옵션 카드, `guard.py` 점검, `assistant.py` 처리 순서, `system_prompt.md` 지침). 화면의 분석 양식(`ANALYSIS_SCHEMAS`)을 바꾸면 `node scripts/build_ai_knowledge.js`로 `ai/analysis_schemas.json` 갱신(`tests/test_ai_assistant.py`가 불일치를 잡음)
+- 실측 점검: `GEMINI_API_KEY=... .venv/bin/python tests/ai_eval/run_ai_eval.py --name <이름> --model <모형>` (결과 `tests/ai_eval/results/`)
+
 **⑤ 기록·내보내기**
 - 명령 기록(파일 불러오기부터 전부): `workspace/command_log.py` (그대로 다시 실행 가능)
 - Stata·R 코드가 필요하면 변환본 요청: `curl -s "http://127.0.0.1:8500/api/command_log/export?fmt=do"` (`fmt=r`은 R)
