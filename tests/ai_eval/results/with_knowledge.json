@@ -1,0 +1,499 @@
+{
+ "meta": {
+  "name": "with_knowledge",
+  "model": "gemini-3.1-flash-lite",
+  "knowledge": true,
+  "n": 28,
+  "pass": 28,
+  "pass_first_try": 27,
+  "usage": {
+   "calls": 83,
+   "prompt_tokens": 577099,
+   "completion_tokens": 14914
+  },
+  "elapsed_sec": 172.0
+ },
+ "rows": [
+  {
+   "id": "T01",
+   "data": "ToothGrowth.csv",
+   "q": "용량에 따라 치아 길이에 차이가 있는지 분석하고 Games-Howell 사후검정과 등분산 검정도 해줘",
+   "verdict": "pass",
+   "detail": "",
+   "code": "sess.run('anovaOneW', deps=['len'], group='dose', eqv=True, phMethod='gamesHowell')",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "anovaOneW"
+   ],
+   "model": "gemini-3.1-flash-lite",
+   "sec": 4.0,
+   "footer": [],
+   "final": "「결과」\n- 용량(dose)에 따른 치아 길이(len)의 차이를 분석한 결과, 통계적으로 유의미한 차이가 확인됨(Welch's F(2, 37.74) = 68.40, p < .001).\n- 사후검정 결과, 모든 용량 집단 간(500, 1000, 2000) 치아 길이의 차이는 통계적으로 유의미함(p < .001).\n- 집단별 평균 치아 길이는 2000(26.100)이 가장 길고, 1000(19.735), 500(10.605) 순으로 나타남.\n\n「유의 사항」\n- 등분산 검정(Levene's) 결과(F(2, 57) = 0.646, p = 0.528) 등분산 가정이 충족되는 것으로 나타났으나, 요청에 따라 Games-Howell 사후검정을 적용함.\n- 본 분석은 집단 간 평균 차이를 확인하는 것이며, 변수 간의 인과관계를 직접적으로 증명하는 것은 아님."
+  },
+  {
+   "id": "T02",
+   "data": "ToothGrowth.csv",
+   "q": "보충제 종류에 따라 치아 길이 평균이 다른지 Welch 검정으로 확인",
+   "verdict": "pass",
+   "detail": "",
+   "code": "sess.run('ttestIS', vars=['len'], group='supp', students=False, welchs=True)",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "ttestIS"
+   ],
+   "model": "gemini-3.1-flash-lite",
+   "sec": 3.3,
+   "footer": [],
+   "final": "「결과」\n- 보충제 종류(OJ, VC)에 따른 치아 길이(len)의 평균 차이를 Welch T-검정으로 분석한 결과, 통계량은 1.915(df = 55.309)이며 유의확률(p)은 0.061임.\n- 유의수준 .05를 기준으로 할 때, 보충제 종류에 따른 치아 길이의 평균 차이는 통계적으로 유의하지 않음.\n- 집단별 평균은 OJ 집단이 20.663, VC 집단이 16.963으로 나타났으며, 평균 차이는 3.700임.\n\n「유의 사항」\n- 본 분석은 Welch T-검정을 사용하여 두 집단의 분산이 동일하지 않을 가능성을 고려함.\n- 결과표에 제시된 효과크기(Cohen's d)는 0.495임.\n- 표본 크기가 각 집단별 30개로 제한적이므로 해석에 유의가 필요함."
+  },
+  {
+   "id": "T03",
+   "data": "ToothGrowth.csv",
+   "q": "len의 기술통계를 dose별로 나눠서, 왜도 첨도랑 정규성 검정 포함",
+   "verdict": "pass",
+   "detail": "",
+   "code": "sess.run('descriptives', vars=['len'], splitBy='dose', skew=True, kurt=True, sw=True)",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "descriptives"
+   ],
+   "model": "gemini-3.1-flash-lite",
+   "sec": 5.4,
+   "footer": [],
+   "final": "「결과」\n- len 변수의 기술통계량을 dose 집단(500, 1000, 2000)별로 분석한 결과는 다음과 같음.\n- 평균(Mean)은 dose 500에서 10.605, 1000에서 19.735, 2000에서 26.100으로 나타남.\n- 왜도(Skewness)는 500 집단 0.829, 1000 집단 0.311, 2000 집단 0.287임.\n- 첨도(Kurtosis)는 500 집단 0.351, 1000 집단 -1.279, 2000 집단 0.142임.\n- Shapiro-Wilk 정규성 검정 결과, 모든 집단에서 p값이 .05보다 크게 나타나(500: p=.247, 1000: p=.164, 2000: p=.902) 정규성 가정을 위배하지 않는 것으로 판단됨.\n\n「유의 사항」\n- 본 분석은 dose 집단별 len 변수의 분포 특성을 확인하기 위해 수행함.\n- Shapiro-Wilk 검정 결과 모든 집단에서 p > .05를 보여 정규성 가정을 충족함.\n- 각 집단별 표본 크기는 20으로 동일하며, 결측치는 없음."
+  },
+  {
+   "id": "T04",
+   "data": "ToothGrowth.csv",
+   "q": "치아 길이를 로그 변환한 변수를 만들고 그 변수를 용량에 회귀시켜줘",
+   "verdict": "pass",
+   "detail": "",
+   "code": "sess.compute('log_len', 'log(len)')\nsess.run('linReg', dep='log_len', factors=['dose'], r2Adj=True, aicBic=False, fTest=True, stdEst=True, ci=False, collin=True, dw=False, norm=False, cooks=False, plotsDiag=True)",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "linReg"
+   ],
+   "model": "gemini-3.1-flash-lite",
+   "sec": 6.6,
+   "footer": [],
+   "final": "「결과」\n- 치아 길이의 로그 변환값(log_len)을 종속변수로, 용량(dose)을 독립변수로 한 회귀분석 결과, 모형은 통계적으로 유의함(F(2, 57) = 59.474, p < .001).\n- 모형의 설명력(Adjusted R²)은 0.665로 나타남.\n- 용량 1,000을 기준(Intercept)으로 할 때, 용량 2,000은 치아 길이의 로그 변환값을 유의하게 증가시키며(Estimate = 0.293, p = 0.002), 용량 500은 유의하게 감소시킴(Estimate = -0.682, p < .001).\n\n「유의 사항」\n- 분석을 위해 `sess.compute` 메서드를 사용하여 `len` 변수에 자연로그를 취한 `log_len` 변수를 생성하였으며, 이 변수는 현재 자료에 포함되어 있음.\n- `dose` 변수는 범주형 요인(Factors)으로 처리하여 분석함.\n- 다중공선성 지표인 VIF는 1.333으로 나타나 변수 간의 심각한 다중공선성 문제는 없는 것으로 판단됨.\n- 본 분석은 선형회귀 모형의 가정을 따르며, 결과 해석 시 인과관계보다는 변수 간의 통계적 관련성에 주목해야 함."
+  },
+  {
+   "id": "T05",
+   "data": "ToothGrowth.csv",
+   "q": "용량별 치아 길이 분포를 레인클라우드 그림으로 그려줘. 보충제별로 색 구분",
+   "verdict": "pass",
+   "detail": "",
+   "code": "sess.run('graph', chartType='raincloud', x='dose', y='len', group='supp')",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "graph"
+   ],
+   "model": "gemini-3.1-flash-lite",
+   "sec": 3.8,
+   "footer": [],
+   "final": "「결과」\n- 용량(dose)이 증가함에 따라 치아 길이(len)의 평균값은 500(10.605), 1000(19.735), 2000(26.100)으로 점진적으로 증가하는 경향을 보임.\n- 각 용량별 중앙값 또한 9.850, 19.250, 25.950으로 용량 증가에 따라 상승함.\n- 레인클라우드 그림을 통해 각 용량 집단 내 치아 길이의 분포와 사분위수 범위를 시각적으로 확인하였음.\n\n「유의 사항」\n- 본 결과는 기술통계량과 시각화 자료를 바탕으로 작성되었으며, 용량 간 차이에 대한 통계적 유의성 검정은 포함되지 않음.\n- 각 용량 집단은 20개의 표본으로 구성되어 있음.\n- 보충제(supp)별 색상 구분을 적용하여 그림을 생성하였으나, 결과표에는 용량별 요약 통계량만 제시됨."
+  },
+  {
+   "id": "T06",
+   "data": "ToothGrowth.csv",
+   "q": "용량이 1000 이상인 자료만 남기고 보충제별 t검정",
+   "verdict": "pass",
+   "detail": "",
+   "code": "sess.filter_rows(\"dose >= 1000\")\nsess.run('ttestIS', vars=['len'], group='supp', students=True, welchs=False, mann=False, meanDiff=True, ci=False, effectSize=True, desc=True, norm=False, eqv=False, plots=True, raincloud=False, qq=False, hypothesis='different')",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "ttestIS"
+   ],
+   "model": "gemini-3.1-flash-lite",
+   "sec": 6.1,
+   "footer": [],
+   "final": "「결과」\n- 보충제 종류(OJ, VC)에 따른 치아 길이(len)의 차이를 독립표본 T-검정으로 분석한 결과, t(38) = 1.84, p = 0.074로 나타남.\n- 유의수준 .05를 기준으로 할 때, 보충제 종류에 따른 치아 길이의 차이는 통계적으로 유의하지 않음.\n- 효과크기(Cohen's d)는 0.58로 나타남.\n- 기술통계 결과, OJ 집단의 평균은 24.38(SD = 3.68), VC 집단의 평균은 21.45(SD = 6.08)임.\n\n「유의 사항」\n- 분석을 위해 `sess.filter_rows(\"dose >= 1000\")` 명령을 사용하여 용량(dose)이 1000 이상인 자료만 추출하였으며, 이 자료 처리 결과는 이후 분석에도 적용됨.\n- 독립표본 T-검정의 가정 중 등분산성을 가정하는 Student's t-test를 적용함.\n- 본 분석은 표본 크기가 제한적이며, 통계적 유의성 여부와 별개로 효과크기 등을 종합적으로 고려하여 해석할 필요가 있음."
+  },
+  {
+   "id": "T07",
+   "data": "ToothGrowth.csv",
+   "q": "치아 길이 분포가 용량 집단 간에 다른지 비모수 검정으로",
+   "verdict": "pass",
+   "detail": "",
+   "code": "sess.run('kruskal', deps=['len'], group='dose', dscf=True)",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "kruskal"
+   ],
+   "model": "gemini-3.1-flash-lite",
+   "sec": 5.6,
+   "footer": [],
+   "final": "「결과」\n- 치아 길이(len)에 대한 용량(dose) 집단 간 차이를 Kruskal-Wallis 검정으로 분석한 결과, 통계적으로 유의한 차이가 확인됨(χ²(2) = 40.669, p < .001).\n- 사후검정(DSCF) 결과, 모든 용량 집단 간(500-1000, 500-2000, 1000-2000) 치아 길이의 차이가 통계적으로 유의함(모두 p < .001).\n\n「유의 사항」\n- 용량 집단 간 치아 길이 분포의 차이를 확인하기 위해 비모수 검정인 Kruskal-Wallis 검정을 적용함.\n- 사후검정은 Holm 방법으로 보정된 p-값을 사용함.\n- 본 분석은 집단 간 차이의 유의성을 검정한 것이며, 인과관계에 대한 해석은 자료의 성격상 제한됨."
+  },
+  {
+   "id": "M01",
+   "data": "MedMod_WorkStress.csv",
+   "q": "직무 스트레스가 이직의도에 미치는 영향을 소진이 매개하는지 부트스트랩 1000회로 검정",
+   "verdict": "pass",
+   "detail": "",
+   "code": "sess.run('mediation', dep='Turnover_Intent', med='Burnout', pred='Stress', bootstrap=1000, ci=True, pm=True, paths=True, diagram=True)",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "mediation"
+   ],
+   "model": "gemini-3.6-flash",
+   "sec": 31.2,
+   "footer": [],
+   "final": "결과\n\n- 간접효과: 직무 스트레스(Stress)가 소진(Burnout)을 거쳐 이직의도(Turnover_Intent)에 미치는 간접효과는 Estimate = 0.417, SE = 0.051, 95% CI [0.337, 0.510], Z = 8.260, p < .001 로 유의수준 .05에서 통계적으로 유의함.\n- 직접효과: 직무 스트레스가 이직의도에 미치는 직접효과는 Estimate = 0.083, SE = 0.061, 95% CI [-0.036, 0.201], Z = 1.360, p = 0.175 로 통계적으로 유의하지 않음.\n- 총효과: 직무 스트레스가 이직의도에 미치는 총효과는 Estimate = 0.500, SE = 0.055, 95% CI [0.392, 0.608], Z = 9.060, p < .001 로 통계적으로 유의함.\n- 세부 경로 계수: \n  - 경로 a (Stress → Burnout): Estimate = 0.639, SE = 0.047, Z = 13.456, p < .001 (유의함)\n  - 경로 b (Burnout → Turnover_Intent): Estimate = 0.653, SE = 0.062, Z = 10.463, p < .001 (유의함)\n  - 경로 c' (Stress → Turnover_Intent): Estimate = 0.083, SE = 0.061, Z = 1.360, p = 0.175 "
+  },
+  {
+   "id": "M02",
+   "data": "MedMod_WorkStress.csv",
+   "q": "스트레스와 이직의도의 관계를 사회적 지지가 조절하는지 보고 단순기울기 그림도",
+   "verdict": "pass",
+   "detail": "",
+   "code": "sess.run('moderation', dep='Turnover_Intent', pred='Stress', mod='Social_Support', simpleSlopes=True, slopePlot=True)",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "moderation"
+   ],
+   "model": "gemini-flash-lite-latest",
+   "sec": 4.7,
+   "footer": [],
+   "final": "결과\n\n- 조절효과 모형: 스트레스와 사회적 지지의 상호작용이 이직의도에 미치는 영향에 대한 모형 설명력은 R² = 0.438임.\n- 상호작용 효과: 스트레스와 사회적 지지의 상호작용 항(Stress × Social_Support)의 비표준화 계수는 -0.00933, 표준오차는 0.0049, t = -1.903, p = 0.058로 통계적 유의수준 .05 기준에서 유의하지 않음.\n- 주효과: 스트레스(b = 0.521, SE = 0.048, t = 10.783, p < .001)와 사회적 지지(b = -0.421, SE = 0.050, t = -8.459, p < .001)는 이직의도에 각각 통계적으로 유의한 주효과를 나타냄.\n- 단순기울기: 사회적 지지 수준별 스트레스가 이직의도에 미치는 단순기울기는 평균 수준에서 b = 0.521 (t = 10.783, p < .001), 낮은 수준(-1SD)에서 b = 0.612 (t = 8.710, p < .001), 높은 수준(+1SD)에서 b = 0.429 (t = 6.510, p < .001)로 모두 유의함.\n\n유의 사항\n\n- 방법 선택: 스트레스와 이직의도의 관계에서 사회적 지지의 조절효과를 검정하기 위해 조절효과 분석(moderation)을 적용함.\n- 자료 처리: 상호작용항을 계산하기에 앞서 예측변인과 조절변인은 평균중심화(mean-centered) 과정을 거침.\n- 해석상 한계: "
+  },
+  {
+   "id": "M03",
+   "data": "MedMod_WorkStress.csv",
+   "q": "이직 여부(Quit_Binary)를 스트레스, 소진, 사회적 지지로 예측하는 로지스틱 회귀. 승산비랑 ROC 곡선도",
+   "verdict": "pass",
+   "detail": "",
+   "code": "sess.run('logRegBin', dep='Quit_Binary', covs=['Stress', 'Burnout', 'Social_Support'], oddsRatio=True, rocPlot=True)",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "logRegBin"
+   ],
+   "model": "gemini-flash-lite-latest",
+   "sec": 3.9,
+   "footer": [],
+   "final": "결과\n\n- 모형 적합도: 이직 여부(Quit_Binary)를 예측하는 이항 로지스틱 회귀모형은 통계적으로 유의함 (χ²(3) = 37.811, p < .001). 맥패든 결정계수(McFadden's R²)는 0.114, 내글케르케 결정계수(Nagelkerke's R²)는 0.194이며, ROC 곡선 아래 면적(AUC)은 0.719임.\n- 예측 변인별 효과:\n  - 스트레스(Stress): 회귀계수(Estimate)는 0.068, 표준오차(SE)는 0.021, Z 검정통계량은 3.181, p값은 0.001로 통계적으로 유의함. 승산비(Odds ratio)는 1.070 (95% CI [1.026, 1.115])임.\n  - 소진(Burnout): 회귀계수(Estimate)는 0.015, 표준오차(SE)는 0.022, Z 검정통계량은 0.672, p값은 0.501로 통계적으로 유의하지 않음. 승산비(Odds ratio)는 1.015 (95% CI [0.972, 1.060])임.\n  - 사회적 지지(Social_Support): 회귀계수(Estimate)는 -0.043, 표준오차(SE)는 0.017, Z 검정통계량은 -2.481, p값은 0.013으로 통계적으로 유의함. 승산비(Odds ratio)는 0.958 (95% CI [0.926, 0.991])임.\n- 분류 성능(Cut-off = 0.50): 전체 정확도(Accuracy)는 0.646"
+  },
+  {
+   "id": "M04",
+   "data": "MedMod_WorkStress.csv",
+   "q": "모형1은 스트레스만, 모형2는 소진과 사회적 지지를 추가해서 이직의도 회귀를 하고 두 모형을 나란히 비교표로",
+   "verdict": "pass",
+   "detail": "",
+   "code": "m1 = sess.run('linReg', dep='Turnover_Intent', covs=['Stress'])\nm2 = sess.run('linReg', dep='Turnover_Intent', covs=['Stress', 'Burnout', 'Social_Support'])\nsess.compare_models(m1, m2, names=['모형 1', '모형 2'])",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "linReg",
+    "compareModels"
+   ],
+   "model": "gemini-flash-lite-latest",
+   "sec": 4.0,
+   "footer": [],
+   "final": "결과\n\n- 모형 1 (스트레스만 포함): 이직의도를 예측하기 위한 회귀모형은 통계적으로 유의함 (F(1, 238) = 82.081, p < .001). 설명력은 R² = 0.256 (수정 R² = 0.253)임. 스트레스의 비표준화 계수는 B = 0.500 (SE = 0.055, 표준화 계수 = 0.506, t = 9.060, p < .001)으로, 이직의도에 유의한 정적 영향을 미치는 것으로 나타남.\n- 모형 2 (스트레스, 소진, 사회적 지지 포함): 이직의도를 예측하기 위한 회귀모형은 통계적으로 유의함 (F(3, 236) = 88.731, p < .001). 설명력은 R² = 0.530 (수정 R² = 0.524)으로 모형 1에 비해 설명력이 크게 증가함.\n- 모형 2의 개별 예측변수 효과:\n  - 스트레스(Stress): B = 0.191 (SE = 0.063, 표준화 계수 = 0.194, t = 3.012, p = 0.003)로 유의한 정적 영향 유지.\n  - 소진(Burnout): B = 0.496 (SE = 0.070, 표준화 계수 = 0.489, t = 7.102, p < .001)으로 유의한 정적 영향 확인.\n  - 사회적 지지(Social_Support): B = -0.233 (SE = 0.053, 표준화 계수 = -0.229, t = -4.407, p < .001)으로 유의한 부적 영향 확인.\n- 모형 비교: 소진"
+  },
+  {
+   "id": "M05",
+   "data": "MedMod_WorkStress.csv",
+   "q": "부서별 이직 여부 교차표와 카이제곱 검정, 기대빈도 포함",
+   "verdict": "pass",
+   "detail": "",
+   "code": "sess.run('contTables', rows='Department', cols='Quit_Binary', chiSq=True, exp=True)",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "contTables"
+   ],
+   "model": "gemini-3.1-flash-lite",
+   "sec": 18.3,
+   "footer": [],
+   "final": "「결과」\n- 부서(Department)와 이직 여부(Quit_Binary) 간의 독립성 검정을 위해 카이제곱 검정을 실시함.\n- 분석 결과, 부서와 이직 여부 사이에는 통계적으로 유의미한 관련성이 나타나지 않음, χ²(2, N = 240) = 2.785, p = 0.248.\n\n「유의 사항」\n- 본 분석은 교차분할표를 통해 관측빈도와 기대빈도를 비교하여 두 범주형 변수 간의 독립성을 검정함.\n- 유의수준 .05를 기준으로 할 때, p값이 .248로 나타나 귀무가설을 기각할 수 없음.\n- Cramér's V 값은 0.108로, 두 변수 간의 연관성 크기는 작음."
+  },
+  {
+   "id": "M06",
+   "data": "MedMod_WorkStress.csv",
+   "q": "Stress, Burnout, Social_Support, Turnover_Intent 상관행렬을 스피어만으로, 유의성 별표 표시",
+   "verdict": "pass",
+   "detail": "",
+   "code": "sess.run('corrMatrix', vars=['Stress', 'Burnout', 'Social_Support', 'Turnover_Intent'], pearson=False, spearman=True, sig=True, flag=True)",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "corrMatrix"
+   ],
+   "model": "gemini-flash-lite-latest",
+   "sec": 7.4,
+   "footer": [],
+   "final": "「결과」\n- Stress, Burnout, Social_Support, Turnover_Intent 간의 스피어만 상관분석 결과는 다음과 같음.\n- Stress와 Burnout의 상관계수는 r = 0.629, p < .001로 유의한 정적 상관을 보임.\n- Stress와 Social_Support의 상관계수는 r = 0.074, p = .252로 통계적으로 유의하지 않음.\n- Stress와 Turnover_Intent의 상관계수는 r = 0.476, p < .001로 유의한 정적 상관을 보임.\n- Burnout과 Social_Support의 상관계수는 r = -0.336, p < .001로 유의한 부적 상관을 보임.\n- Burnout과 Turnover_Intent의 상관계수는 r = 0.691, p < .001로 유의한 정적 상관을 보임.\n- Social_Support와 Turnover_Intent의 상관계수는 r = -0.393, p < .001로 유의한 부적 상관을 보임.\n- 유의수준 .05를 기준으로 Social_Support와 Stress 사이의 관계를 제외한 모든 변수 간 쌍에서 통계적으로 유의한 상관이 확인됨.\n\n「유의 사항」\n- 분석에는 Stress, Burnout, Social_Support, Turnover_Intent 변수가 사용되었으며, 스피어만 순위상관계수가 적용됨.\n- 상관분석은 변수 간의 선형 또는 단조 관계"
+  },
+  {
+   "id": "P01",
+   "data": "Grunfeld_Panel.csv",
+   "q": "xtreg invest value capital, fe vce(robust) 해주고 하우스만 검정도",
+   "verdict": "pass",
+   "detail": "",
+   "code": "sess.run('panel', entity='firm', time='year', dep='invest', covs=['value', 'capital'], modelType='fixed', covType='robust', hausman=True)",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "panel"
+   ],
+   "model": "gemini-3.1-flash-lite",
+   "sec": 6.3,
+   "footer": [],
+   "final": "### 결과\n\n- 고정효과 패널 회귀분석 결과, 기업의 가치(`value`)와 자본(`capital`)은 투자(`invest`)에 통계적으로 유의미한 정(+)의 영향을 미치는 것으로 나타남.\n- `value`의 계수는 0.110(p < .001), `capital`의 계수는 0.310(p < .001)으로, 두 변수 모두 투자를 증가시키는 요인임.\n- 모형의 집단 내 결정계수(within R²)는 0.767로, 기업 내 시간 변화에 따른 투자 변동의 약 76.7%를 설명함.\n- Hausman 검정 결과, χ²(2) = 3.968, p = 0.138로 나타나 유의수준 .05에서 귀무가설을 기각하지 못함. 이는 고정효과 모형과 확률효과 모형 간의 계수 차이가 통계적으로 유의하지 않음을 의미함.\n\n### 유의 사항\n\n- 본 분석은 개체효과를 고려한 고정효과(Fixed Effects) 모형을 적용하였으며, 표준오차는 패널 변수(`firm`)를 기준으로 군집-강건(cluster-robust) 표준오차를 산출함.\n- Hausman 검정은 Stata의 기본 방식에 따라 일반 분산(동분산 가정)을 기준으로 수행되었으며, 강건 표준오차를 고려한 모형 비교는 포함되지 않음.\n- 개체효과 F 검정 결과(p < .001)를 통해 통합 OLS보다 고정효과 모형이 적합함을 확인하였으나, Hausman 검정에서는 확률효과 모형의 일관성이 기각되지 않았음.\n- "
+  },
+  {
+   "id": "P02",
+   "data": "Grunfeld_Panel.csv",
+   "q": "기업과 연도 이원 고정효과로 투자를 기업가치와 자본에 회귀",
+   "verdict": "pass",
+   "detail": "",
+   "code": "sess.run('panel', entity='firm', time='year', dep='invest', covs=['value', 'capital'], modelType='twoway')",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "panel"
+   ],
+   "model": "gemini-3.1-flash-lite",
+   "sec": 5.4,
+   "footer": [],
+   "final": "결과\n\n- 기업과 연도를 이원 고정효과로 설정하여 투자를 기업가치와 자본에 대해 회귀 분석한 결과, 모형의 설명력(집단 내 R²)은 0.795로 나타남.\n- 기업가치(value)의 계수는 0.117(p < .001), 자본(capital)의 계수는 0.351(p < .001)로, 두 변수 모두 투자를 유의미하게 정(+)의 방향으로 예측함.\n- 시점 효과 결합검정 결과(F(19, 188) = 1.385, p = 0.138)에 따르면, 연도별 효과가 통계적으로 유의하지 않아 시점 간 차이가 크지 않음을 시사함.\n- 개체효과 F 검정 결과(F(10, 188) = 51.938, p < .001)는 통합 OLS보다 고정효과 모형이 적합함을 보여줌.\n- Hausman 검정 결과(χ²(21) = 10.836, p = 0.966)는 확률효과 모형의 일관성을 기각하지 않음.\n\n유의 사항\n\n- 본 분석은 개체(기업)와 시점(연도)의 고정효과를 모두 고려한 이원 고정효과 모형을 적용함.\n- Hausman 검정 시 V_b − V_B 행렬이 양정치(positive definite)가 아니라는 경고가 발생하여 검정 결과 해석에 주의가 필요함.\n- 시점 효과 결합검정에서 p값이 .05보다 크게 나타나, 본 자료에서 연도별 더미 변수들의 영향은 통계적으로 유의하지 않은 것으로 판단됨.\n- 표준오차는 일반(unadjusted) 방식을 사용하였으며, 결과는 표본 내"
+  },
+  {
+   "id": "P03",
+   "data": "Dynamic_Panel_Welfare.csv",
+   "q": "복지지출의 동적 패널모형을 시스템 GMM으로 추정. 설명변수는 고령인구비율과 재정자립도, 종속변수 시차 1개",
+   "verdict": "pass",
+   "detail": "",
+   "code": "sess.run('dynPanel', entity='지역코드', time='연도', dep='복지지출', exog=['고령인구비율', '재정자립도'], method='system', lags=1)",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "dynPanel"
+   ],
+   "model": "gemini-3.1-flash-lite",
+   "sec": 5.6,
+   "footer": [],
+   "final": "「결과」\n- 복지지출의 동적 패널모형을 시스템 GMM으로 추정한 결과, 복지지출의 1기 시차(L1.복지지출) 계수는 0.866으로 통계적으로 유의미하게 나타남(z = 44.054, p < .001).\n- 고령인구비율은 복지지출에 정(+)의 영향을 미치며(계수 = 0.037, z = 7.098, p < .001), 재정자립도는 복지지출에 부(-)의 영향을 미치는 것으로 나타남(계수 = -0.019, z = -9.747, p < .001).\n- 모형 전체의 적합도를 나타내는 Wald χ²(3) 값은 12583.188로 통계적으로 유의함(p < .001).\n\n「유의 사항」\n- 본 분석은 Blundell-Bond 시스템 GMM 1단계 추정 방식을 적용함.\n- 결과표에 제시된 표준오차는 GMM 1단계 추정치에 기반함.\n- Arellano-Bond 자기상관 검정 및 Hansen 검정 결과는 1단계 추정 및 설정상의 이유로 결과표에 산출되지 않아 모형의 타당성을 추가로 검증하기에는 한계가 있음.\n- 상수항은 수준식 오차를 통해 식별되었으며, 모든 계수는 수준식 모형을 기준으로 해석함."
+  },
+  {
+   "id": "S01",
+   "data": "SEM_Latent3Factor.csv",
+   "q": "x1~x3은 시각, x4~x6은 언어, x7~x9는 속도 요인으로 하는 3요인 확인적 요인분석을 하고 표준화 계수와 적합도 지수 보여줘",
+   "verdict": "pass",
+   "detail": "",
+   "code": "model = \"\"\"\nVisual =~ x1_vis + x2_vis + x3_vis\nText =~ x4_txt + x5_txt + x6_txt\nSpeed =~ x7_spd + x8_spd + x9_spd\n\"\"\"\nsess.run('sem', model=model, stdEst=True, standardized='stdyx', fitMeasures=True)",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "sem"
+   ],
+   "model": "gemini-3.1-flash-lite",
+   "sec": 5.7,
+   "footer": [],
+   "final": "「결과」\n- 3요인 확인적 요인분석 결과, 모든 관측변수는 각 잠재요인(Visual, Text, Speed)에 통계적으로 유의하게 적재됨(p < .001).\n- 표준화 요인적재량(STDYX)은 Visual 요인의 경우 0.766~0.852, Text 요인은 0.803~0.911, Speed 요인은 0.736~0.846 범위로 나타남.\n- 모형 적합도 지수는 χ²(24) = 23.09(p = 0.515), CFI = 1.000, TLI = 1.000, RMSEA = 0.000(90% CI [0.000, 0.045]), SRMR = 0.022로, 전반적으로 모형이 자료에 매우 잘 부합함.\n- 잠재요인 간 공분산은 모두 통계적으로 유의하며(p < .001), Visual과 Text(0.475), Visual과 Speed(0.427), Text와 Speed(0.328) 간의 정적 상관을 확인함.\n\n「유의 사항」\n- 본 분석은 최대우도(ML) 추정법과 완전정보최대우도(FIML) 결측 처리 방식을 사용하여 300명의 자료를 분석함.\n- 각 요인의 첫 번째 관측변수를 척도 설정(적재량 1로 고정)을 위해 사용함.\n- 모형 적합도 지수(CFI, TLI, RMSEA, SRMR)가 권장 기준을 충족하여 제안된 3요인 구조가 타당함을 시사함.\n- 본 결과는 횡단면 자료에 기초하므로 변수 간의 인과관계를 직접적으로 해석할 수 없음."
+  },
+  {
+   "id": "S02",
+   "data": "SEM_Latent3Factor.csv",
+   "q": "x1_vis부터 x9_spd까지 9개 문항으로 탐색적 요인분석, 요인 3개, 사각 회전",
+   "verdict": "pass",
+   "detail": "",
+   "code": "sess.run('efa', vars=['x1_vis', 'x2_vis', 'x3_vis', 'x4_txt', 'x5_txt', 'x6_txt', 'x7_spd', 'x8_spd', 'x9_spd'], extraction='minres', rotation='oblimin')",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "efa"
+   ],
+   "model": "gemini-3.1-flash-lite",
+   "sec": 3.1,
+   "footer": [],
+   "final": "결과\n\n- 탐색적 요인분석 결과, 9개 문항은 3개의 요인으로 분류되었으며 전체 분산의 68.2%를 설명함.\n- 요인 1은 x4_txt, x5_txt, x6_txt 문항으로 구성됨.\n- 요인 2는 x1_vis, x2_vis, x3_vis 문항으로 구성됨.\n- 요인 3은 x7_spd, x8_spd, x9_spd 문항으로 구성됨.\n- KMO 표본 적합도 지수는 0.814로 분석에 적합한 수준이며, Bartlett의 구형성 검정 결과(χ² = 1459.078, p < .001) 요인분석을 수행하기에 통계적으로 유의미함.\n\n유의 사항\n\n- 요인 추출은 최소잔차법(minres)을, 요인 회전은 사각 회전(oblimin)을 적용함.\n- 결과표에서 0.3 미만의 요인 적재값은 생략되었음.\n- 본 분석은 탐색적 요인분석으로, 변수 간의 잠재적 구조를 확인하는 데 목적이 있으며 인과관계를 설명하지 않음."
+  },
+  {
+   "id": "S03",
+   "data": "SEM_Latent3Factor.csv",
+   "q": "x1_vis x2_vis x3_vis 세 문항의 크론바흐 알파와 오메가",
+   "verdict": "pass",
+   "detail": "",
+   "code": "sess.run('reliability', vars=['x1_vis', 'x2_vis', 'x3_vis'], alphaScale=True, omegaScale=True)",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "reliability"
+   ],
+   "model": "gemini-3.1-flash-lite",
+   "sec": 3.4,
+   "footer": [],
+   "final": "결과\n- x1_vis, x2_vis, x3_vis 세 문항으로 구성된 척도의 신뢰도 분석 결과, Cronbach's α는 0.872(95% CI [0.844, 0.895]), McDonald's ω는 0.873으로 나타남.\n- 각 문항의 Item-rest correlation은 0.730에서 0.774 사이의 값을 보임.\n- 모든 문항을 포함했을 때의 신뢰도 계수가 높게 나타났으며, 문항 제거 시의 신뢰도 계수(Cronbach's α 0.802~0.843)와 비교했을 때 현재의 문항 구성이 척도의 내적 일관성을 적절히 유지하고 있음.\n\n유의 사항\n- 본 분석은 300명의 표본을 대상으로 수행되었으며, 산출된 계수들은 해당 척도가 높은 수준의 내적 일관성을 가지고 있음을 시사함.\n- 신뢰도 계수는 표본의 특성에 따라 달라질 수 있으므로, 다른 집단이나 환경에 적용할 때는 주의가 필요함."
+  },
+  {
+   "id": "C01",
+   "data": "Count_HealthVisits.csv",
+   "q": "외래방문 횟수를 연령, 여성, 만성질환수로 설명하는 음이항 회귀. 발생률비로 보고",
+   "verdict": "pass",
+   "detail": "",
+   "code": "sess.run('countReg', dep='외래방문', covs=['연령', '만성질환수'], factors=['여성'], family='nb2', irr=True, margins=True, predProbs=True, predPlot=True)",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "countReg"
+   ],
+   "model": "gemini-3.1-flash-lite",
+   "sec": 8.1,
+   "footer": [
+    "결과표에서 확인되지 않는 수치: 42.9, 26.8 (결과표의 값을 우선함)"
+   ],
+   "final": "결과\n\n- 외래방문 횟수에 대한 음이항 회귀분석 결과, 연령, 만성질환수, 여성 여부는 모두 통계적으로 유의한 영향을 미치는 것으로 나타남(p < .05).\n- 연령이 1세 증가할 때 외래방문 횟수는 1.9% 증가함(IRR = 1.019, 95% CI [1.015, 1.024]).\n- 만성질환수가 1개 증가할 때 외래방문 횟수는 42.9% 증가함(IRR = 1.429, 95% CI [1.344, 1.519]).\n- 여성인 경우 남성(여성=0)에 비해 외래방문 횟수가 26.8% 더 많음(IRR = 1.268, 95% CI [1.091, 1.474]).\n- 모형 전체의 적합도는 유의하며(LR χ²(3) = 305.787, p < .001), 산포 모수 α(1.200)에 대한 LR 검정 결과 포아송 분포보다 음이항 분포가 적합함이 확인됨(p < .001).\n\n유의 사항\n\n- 본 분석은 음이항 회귀(NB2) 모형을 사용하였으며, 결측치가 포함된 12개의 관측치는 목록별 삭제(listwise deletion) 처리되어 총 1,488개의 사례가 분석에 사용됨.\n- 발생률비(IRR)는 계수의 지수 변환값으로, 독립변수가 한 단위 증가할 때 종속변수의 기대 횟수가 몇 배가 되는지를 나타냄.\n- 산포 모수 α가 0보다 크고 통계적으로 유의하므로, 종속변수의 분산이 평균보다 큰 과산포(overdispersion) 현상이 존재하며 이를 음이항 모형이 적"
+  },
+  {
+   "id": "C02",
+   "data": "Count_HealthVisits.csv",
+   "q": "응급실방문은 0이 너무 많아서 영과잉 포아송으로. 영과잉 부분은 만성질환수로",
+   "verdict": "pass",
+   "detail": "",
+   "code": "sess.run('countReg', dep='응급실방문', inflate=['만성질환수'], family='zip', inflateLink='logit', margins=True, predProbs=True, predPlot=True, vuong=True)",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "countReg"
+   ],
+   "model": "gemini-3.1-flash-lite",
+   "sec": 3.8,
+   "footer": [],
+   "final": "결과\n\n- 영과잉 포아송 회귀 분석 결과, 만성질환수는 응급실 방문의 영과잉(구조적 0) 발생 확률에 통계적으로 유의한 영향을 미치는 것으로 나타남(계수 = -0.702, p < .001).\n- 팽창 방정식의 계수가 음(-)의 값을 보이므로, 만성질환수가 많을수록 응급실 방문이 항상 0인 집단(구조적 0)에 속할 확률은 낮아짐.\n- 평균 한계효과(AME) 분석 결과, 만성질환수가 1단위 증가할 때 기대 응급실 방문 횟수는 평균 0.057회 증가함(p < .001).\n- Vuong 검정 결과(보정 없음 z = 3.097, p < .001 등)는 일반 포아송 모형보다 영과잉 포아송 모형이 자료를 더 잘 설명함을 시사함.\n- 모형 전체의 LR χ² 검정은 자유도가 0으로 나타나 모형의 적합도 통계량 해석에 제한이 있음.\n\n유의 사항\n\n- 본 분석은 응급실 방문 횟수의 영과잉 현상을 설명하기 위해 영과잉 포아송(ZIP) 모형을 사용하였으며, 만성질환수를 팽창 방정식의 독립변수로 투입함.\n- 결측치가 포함된 12개의 관측치는 분석에서 제외됨.\n- Vuong 검정은 영과잉 모형의 적합성을 판단하는 지표로 활용되었으나, 해당 검정의 해석에 대한 통계적 논란이 존재함을 유의해야 함.\n- 관측·예측 빈도 비교표에서 5회 방문에 대한 Pearson 기여분이 높게 나타나, 극단적인 방문 횟수에 대한 모형의 예측력이 다소 낮을 가능성이 있음.\n- 본 결과"
+  },
+  {
+   "id": "L01",
+   "data": "LimDep_Employment_Wage.csv",
+   "q": "시간당임금 방정식을 헤크만 표본선택 모형으로. 임금식은 교육연수와 경력, 선택식에는 미취학자녀수와 배우자소득 추가",
+   "verdict": "pass",
+   "detail": "",
+   "code": "sess.run('heckman', dep='시간당임금', covs=['교육연수', '경력'], selectDep='취업여부', selectCovs=['미취학자녀수', '배우자소득'], method='ml')",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "heckman"
+   ],
+   "model": "gemini-3.1-flash-lite",
+   "sec": 3.2,
+   "footer": [],
+   "final": "「결과」\n\n- 시간당임금 방정식에서 교육연수(B = 0.053, p < .001)와 경력(B = 0.015, p < .001)은 모두 시간당임금에 통계적으로 유의미한 정(+)의 영향을 미치는 것으로 나타남.\n- 취업여부를 결정하는 선택 방정식에서 미취학자녀수(B = -0.414, p < .001)와 배우자소득(B = -0.077, p < .001)은 취업 확률을 유의미하게 낮추는 요인으로 확인됨.\n- 두 방정식의 오차항 간 상관계수(ρ)는 0.495로 나타났으며, 독립성 검정 결과(LR χ²(1) = 7.008, p = 0.008)가 유의수준 .05에서 통계적으로 유의함. 이는 표본 선택 편향이 존재하며 헤크만 모형을 통한 보정이 적절했음을 시사함.\n\n「유의 사항」\n\n- 본 분석은 최대우도법(ml)을 사용하여 추정되었으며, 전체 1,600명의 표본 중 1,180명이 선택 방정식에 의해 분석에 포함됨.\n- 선택 방정식의 유의미한 결과와 ρ에 대한 독립성 검정 결과는 표본 선택 편향이 존재함을 뒷받침함.\n- 결과식의 계수는 선택된 표본(취업자)에 한정된 추정치이며, 전체 모집단으로의 일반화에는 주의가 필요함.\n- 표준오차는 관측 정보행렬(OIM)을 기준으로 산출되었음."
+  },
+  {
+   "id": "L02",
+   "data": "LimDep_Employment_Wage.csv",
+   "q": "취업여부를 프로빗으로 추정하고 평균 한계효과",
+   "verdict": "pass",
+   "detail": "",
+   "code": "sess.run('binaryReg', dep='취업여부', covs=['연령', '교육연수', '경력', '미취학자녀수', '배우자소득'], factors=['지역유형'], link='probit', ame=True)",
+   "rewrites": 1,
+   "first_errors": [
+    "ValueError: 이항 프로빗 (probit) 회귀: 필수 변수 지정 필요 — covs/factors"
+   ],
+   "routed": [
+    "binaryReg"
+   ],
+   "model": "gemini-3.1-flash-lite",
+   "sec": 4.1,
+   "footer": [
+    "코드 수정 1회 후 실행됨"
+   ],
+   "final": "「결과」\n\n- 취업여부에 대한 프로빗 회귀분석 결과, 모형의 적합도는 통계적으로 유의함(LR χ²(7) = 266.816, p < .001).\n- 교육연수(dy/dx = 0.038, p < .001)는 취업 확률을 유의하게 높이는 것으로 나타났으며, 미취학자녀수(dy/dx = -0.122, p < .001)와 배우자소득(dy/dx = -0.023, p < .001)은 취업 확률을 유의하게 낮추는 요인임.\n- 지역유형의 경우, 농어촌 지역에 비해 대도시(dy/dx = -0.107, p < .001)와 중소도시(dy/dx = -0.087, p = .001) 거주자의 취업 확률이 유의하게 낮음.\n- 반면, 연령(p = 0.887)과 경력(p = 0.311)은 취업 여부에 통계적으로 유의한 영향을 미치지 않음.\n\n「유의 사항」\n\n- 본 분석은 프로빗 모형을 사용하였으며, 결과표의 평균 한계효과(AME)는 각 변수가 취업 확률에 미치는 평균적인 변화량을 나타냄.\n- 지역유형은 '농어촌'을 기준 범주로 설정하여 분석함.\n- 표준오차는 관측 정보행렬(OIM)을 기준으로 산출되었음.\n- 본 결과는 관측된 변수들 간의 통계적 관련성을 보여줄 뿐이며, 변수 간의 인과관계를 직접적으로 증명하는 것은 아님."
+  },
+  {
+   "id": "H01",
+   "data": "Multilevel_School3L.csv",
+   "q": "수학성취도를 가정SES와 학습시간으로 설명하는 3수준 다층모형(학생-학급-학교), ICC도",
+   "verdict": "pass",
+   "detail": "",
+   "code": "sess.run('mixedModel', dep='수학성취도', cluster='학급ID', cluster3='학교ID', covs=['가정SES', '학습시간'])",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "mixedModel"
+   ],
+   "model": "gemini-flash-lite-latest",
+   "sec": 4.1,
+   "footer": [],
+   "final": "결과\n\n- 고정효과: 가정SES(계수 = 3.264, 표준오차 = 0.156, z = 20.928, p < .001)와 학습시간(계수 = 0.598, 표준오차 = 0.030, z = 19.640, p < .001) 모두 수학성취도에 통계적으로 유의한 정적(+) 영향을 미침. 절편은 52.907(표준오차 = 0.770, z = 68.693, p < .001)임.\n- 모형 적합도 및 유의성: Wald χ²(2) = 1170.20, p < .0001이며, 단순 선형회귀 대비 LR 검정 결과 유의함(χ² = 1373.175, df = 2, p < .001).\n- 급내상관(ICC): 학교ID 수준의 ICC는 0.231(95% 신뢰구간 [0.162, 0.319]), 학교ID 내 학급ID 수준의 ICC는 0.307(95% 신뢰구간 [0.240, 0.383])임.\n- 분산 성분: 학교ID 분산은 22.508(표준오차 = 5.039), 학급ID 분산은 7.418(표준오차 = 1.141), 잔차 분산은 67.547(표준오차 = 1.411)임.\n\n유의 사항\n\n- 분석 방법: 학생(1수준), 학급(2수준), 학교(3수준)의 3수준 위계 구조를 고려한 선형 혼합모형(REML 추정)을 적용하였으며, 결측치 119개를 제외한 4,811개의 관측치가 분석에 사용됨.\n- 집단 구조: 학급ID 값이 상위 수준인 학교ID 안에서만 고유하므로, 학교ID와 결합한 조합("
+  },
+  {
+   "id": "I01",
+   "data": "IV_Schooling.csv",
+   "q": "교육의 임금 수익률을 nearc4를 도구변수로 2SLS 추정. 외생변수는 exper, expersq, black, south",
+   "verdict": "pass",
+   "detail": "",
+   "code": "m1 = sess.run('ivReg', dep='lwage', endog=['educ'], instruments=['nearc4'], exog=['exper', 'expersq', 'black', 'south'], estimator='2sls', constant=True, covType='robust', firstStage=True, endogTest=True, overidTest=True)",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "ivReg"
+   ],
+   "model": "gemini-flash-lite-latest",
+   "sec": 3.4,
+   "footer": [],
+   "final": "결과\n\n- 교육(educ)의 임금(lwage) 수익률을 nearc4를 도구변수로 2SLS 추정한 결과, 교육 계수는 0.074, 표준오차는 0.029, z 통계량은 2.523, p값은 0.012로 나타남\n- 유의수준 .05 기준에서 교육의 임금 수익률은 통계적으로 유의함\n- 통제변수인 경험(exper) 계수는 0.037 (p < .001), 경험의 제곱(expersq) 계수는 -0.057 (p < .001), 흑인 여부(black) 계수는 -0.184 (p < .001), 남부 거주 여부(south) 계수는 -0.072 (p < .001), 상수항은 5.026 (p < .001)으로 모두 통계적으로 유의함\n- 1단계 회귀 모형의 F 통계량은 36.662 (자유도 1, 1494, p < .001)이며, 부분 R제곱은 0.024로 나타남\n- 내생성 검정 결과(강건 점수 χ² = 0.791, df = 1, p = 0.374; 강건 회귀 F = 0.789, df = 1, 1493, p = 0.375)는 통계적으로 유의하지 않음\n- 모형 전체의 Wald χ²는 219.783 (자유도 5, p < .001), R제곱은 0.305임\n\n유의 사항\n\n- 추정 방법으로 2단계 최소제곱(2SLS)을 사용하였으며, 표준오차는 이분산 강건(robust) 방식을 적용함\n- 관측치 수는 1,500개임\n- 제외 도구변수(nearc4)의 수가 내생변수(educ)의"
+  },
+  {
+   "id": "A01",
+   "data": "TS_Monthly_Welfare.csv",
+   "q": "lvisits에 대해 ADF 단위근 검정",
+   "verdict": "pass",
+   "detail": "",
+   "code": "sess.run('unitRoot', dep='lvisits', time='t', test='adf', trend='constant', lagSelect='aic')",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "unitRoot"
+   ],
+   "model": "gemini-flash-lite-latest",
+   "sec": 3.2,
+   "footer": [],
+   "final": "결과\n\n- 검정 결과: lvisits 변수에 대한 Augmented Dickey-Faller(ADF) 단위근 검정 결과, ADF 통계량 Z(t)는 -0.373, 시차는 13, 표본 크기는 178임\n- 통계적 유의성: 유의확률 p = 0.912로 유의수준 .05 기준에서 귀무가설(단위근 존재)을 기각하지 못함. 즉, lvisits 시계열은 비정상성(non-stationary)을 띰\n\n유의 사항\n\n- 방법 선택: 상수항이 포함된 모형(`trend='constant'`)과 AIC 최소 기준을 적용한 시차 자동 선택(`lagSelect='aic'`) 방식을 사용함\n- 해석상 한계: 단위근이 존재한다는 결과에 따라 lvisits 계열은 비정상 시계열로 판단되며, 회귀분석 등 후속 분석 시 가성회귀(spurious regression)를 피하기 위해 차분 등의 처리가 필요할 수 있음"
+  },
+  {
+   "id": "X01",
+   "data": "ToothGrowth.csv",
+   "q": "성별에 따라 치아 길이가 다른지 알려줘",
+   "verdict": "pass",
+   "detail": "",
+   "code": "",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [
+    "ttestIS"
+   ],
+   "model": "gemini-flash-lite-latest",
+   "sec": 1.6,
+   "footer": [],
+   "final": "확인 필요\n\n- 자료에 「성별」을 나타내는 변수가 없음. 자료에는 치아 길이(len), 투여 방법(supp), 용량(dose) 변수만 있음\n- 성별 변수로 분석하려면 어떤 변수를 성별로 봐야 하는지 알려주거나, 대신 「투여 방법에 따라 치아 길이가 다른지」 분석하려면 해당 요청을 주면 실행 가능함"
+  },
+  {
+   "id": "X02",
+   "data": "MedMod_WorkStress.csv",
+   "q": "매개효과와 조절효과의 차이가 뭐야?",
+   "verdict": "pass",
+   "detail": "",
+   "code": "",
+   "rewrites": 0,
+   "first_errors": [],
+   "routed": [],
+   "model": "gemini-flash-lite-latest",
+   "sec": 6.0,
+   "footer": [],
+   "final": "안내\n\n매개효과와 조절효과는 독립변수가 종속변수에 미치는 영향을 설명하는 서로 다른 인과적 경로와 메커니즘을 다룸.\n\n- 매개효과 (Mediation): 독립변수가 종속변수에 영향을 미칠 때, 그 과정에서 어떤 '제3의 변수(매개변수)'를 거쳐서 영향을 미치는지 경로를 설명함. 즉, 독립변수가 매개변수에 영향을 주고, 다시 매개변수가 종속변수에 영향을 주는 '왜, 어떤 과정을 통해'의 관계임. (예: 직무 스트레스가 이직 의도에 미치는 영향에서 '소진'이 매개하는지 분석)\n- 조절효과 (Moderation): 독립변수가 종속변수에 미치는 영향의 크기나 방향이 '제3의 변수(조절변수)'의 수준에 따라 달라지는지를 설명함. 즉, '언제, 어떤 조건에서' 두 변수의 관계가 강해지거나 약해지는지의 상호작용 관계임. (예: 스트레스가 이직 의도에 미치는 영향이 '사회적 지지' 수준에 따라 달라지는지 분석)"
+  }
+ ]
+}

@@ -1647,6 +1647,20 @@ openstat run --data sample_data/MedMod_WorkStress.csv --analysis linReg \
                     &gt; "Compute a new BMI variable from weight and height and save the data as an Excel file"
                 </div>
             </div>
+                    <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">Gemini API</span>
+                    <span class="step-title">Analyzing in words inside the program: the AI assistant line</span>
+                </div>
+                <div class="step-body">
+                    1. Click <b>API key · model</b> under the <b>AI assistant</b> line above the results pane and register a Gemini API key (get one at aistudio.google.com/app/apikey). The key is kept only in the memory of the running program and is gone when the program closes<br>
+                    2. Type the request in words and click <b>Run</b> (for example: “Test whether tooth length differs by dose, with Games-Howell post-hoc comparisons”)<br>
+                    3. While it runs, the line shows the current step (choosing the analyses → writing the commands → checking the commands → running the analysis → writing the interpretation) and the elapsed time<br>
+                    4. When it finishes, the table and figure cards and an answer card with the interpretation are added to the results sheet, and the commands that ran are written to the command record with the request above them<br>
+                    5. If it fails, the reason is shown under the line: key problem, quota exceeded, connection failure, the option or variable name the check stopped on, or the run error. A failed request changes neither the results sheet nor the data<br><br>
+                    With every request Gemini receives the list of the 66 analyses and the option card of each analysis it needs (the same variable roles, option names and choices as the forms on screen), and the commands it writes are checked for analysis names, options and variable names before they run. Sent to Google: the request, variable descriptions (names, types, summary statistics, category names) and the result tables; rows of the dataset are not sent. Check the numbers of the interpretation against the tables. Free-tier keys have a per-model daily request limit (one request takes about 3 model calls).
+                </div>
+            </div>
         </section>
 
         <!-- Chapter 9: Colab & Python -->

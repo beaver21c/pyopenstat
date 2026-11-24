@@ -221,7 +221,7 @@ class GlobalState:
         df = self.session.df
         for idx, card in enumerate(list(self.analyses_store)):
             a_type = card.get("analysis_type") or card.get("name")
-            if not a_type or a_type == "customFigure":
+            if not a_type or a_type in ("customFigure", "aiNote"):
                 continue
             aid = card.get("analysisId")
             params = card.get("params") or {}
@@ -1258,6 +1258,67 @@ def get_current_syntax():
     }
 
 
+def _execute_syntax(code_to_run: str):
+    """Runs transpiled code on a copy of the session data; the session itself is left as it is."""
+    default_path = os.path.join(SAMPLE_DIR, STATE.dataset_name)
+    return execute_python_syntax(
+        code_to_run,
+        default_df=STATE.session.df,
+        default_dataset_path=default_path if os.path.isfile(default_path) else None,
+        sync_workspace=False,
+        return_meta=True,
+        session_attrs={"boundary": {k: v for k, v in (getattr(STATE, "boundary", None) or {}).items()
+                                    if k in ("boundary", "boundaryKey", "idVar", "labelVar") and v} or None},
+    )
+
+
+def _commit_syntax(source: str, code_to_run: str, replace_existing: bool, prev_script: str, result) -> List[int]:
+    """Adds the outcome of _execute_syntax to the session: data steps, result cards, workspace files, command record."""
+    analyses, stdout_log, final_df, final_ds_name, meta = result
+    new_ops = list((meta or {}).get("data_ops") or [])
+    same_ds = (not final_ds_name) or final_ds_name == STATE.dataset_name
+    if final_df is not None:
+        if not replace_existing and same_ds and new_ops:
+            # added to the current session: replay the new data steps on it so earlier steps and undo are kept
+            for op in new_ops:
+                STATE.session.apply_data_op(op)
+        elif not replace_existing and same_ds and final_df.equals(STATE.session.df):
+            pass                                   # analyses only: the data and its history are unchanged
+        else:
+            STATE.session = JamoviSession(final_df, auto_sync_workspace=False)
+            if final_ds_name:
+                STATE.dataset_name = final_ds_name
+
+    if replace_existing:
+        STATE.analyses_store = []
+        STATE.analysis_objects = {}
+        STATE.next_id = 1
+
+    added = []
+    for a in analyses:
+        aid = STATE.next_id
+        STATE.next_id += 1
+        payload = a.to_payload(analysis_id=aid)
+        payload["analysis_type"] = a.name
+        payload["params"] = a.options
+        STATE.analyses_store.append(payload)
+        STATE.analysis_objects[aid] = a
+        added.append(aid)
+
+    STATE.session.history = list(STATE.analysis_objects.values())
+    # Keep the workspace .py valid Python (Stata lines in their transpiled form) and cumulative:
+    # a run that adds to the current results (selection, one-line command) appends to the script.
+    if replace_existing:
+        new_script = code_to_run
+    else:
+        new_script = (prev_script.rstrip() + "\n\n" + code_to_run.strip() + "\n") if prev_script.strip() else code_to_run
+    STATE.sync_to_workspace(py_code=new_script)
+    STATE.revision += 1
+    STATE.cmdlog.code_run(code_to_run, whole=bool(replace_existing), source=source)
+    STATE.log_mark()
+    return added
+
+
 @app.post("/api/syntax/execute")
 def execute_syntax_endpoint(req: ExecuteSyntaxRequest):
     """Executes user- or Claude-edited Python (`.py`) or Stata (`.do`) code directly and updates the Results Sheet & workspace."""
@@ -1267,58 +1328,10 @@ def execute_syntax_endpoint(req: ExecuteSyntaxRequest):
         prev_script = STATE.current_python_script()
         if not req.replace_existing:
             STATE.log_sync()          # the record must hold the data this code runs on
-        default_path = os.path.join(SAMPLE_DIR, STATE.dataset_name)
-        analyses, stdout_log, final_df, final_ds_name, meta = execute_python_syntax(
-            code_to_run,
-            default_df=STATE.session.df,
-            default_dataset_path=default_path if os.path.isfile(default_path) else None,
-            sync_workspace=False,
-            return_meta=True,
-            session_attrs={"boundary": {k: v for k, v in (getattr(STATE, "boundary", None) or {}).items()
-                                        if k in ("boundary", "boundaryKey", "idVar", "labelVar") and v} or None},
-        )
-        new_ops = list((meta or {}).get("data_ops") or [])
-        same_ds = (not final_ds_name) or final_ds_name == STATE.dataset_name
-        if final_df is not None:
-            if not req.replace_existing and same_ds and new_ops:
-                # added to the current session: replay the new data steps on it so earlier steps and undo are kept
-                for op in new_ops:
-                    STATE.session.apply_data_op(op)
-            elif not req.replace_existing and same_ds and final_df.equals(STATE.session.df):
-                pass                                   # analyses only: the data and its history are unchanged
-            else:
-                STATE.session = JamoviSession(final_df, auto_sync_workspace=False)
-                if final_ds_name:
-                    STATE.dataset_name = final_ds_name
-
-        if req.replace_existing:
-            STATE.analyses_store = []
-            STATE.analysis_objects = {}
-            STATE.next_id = 1
-
-        for a in analyses:
-            aid = STATE.next_id
-            STATE.next_id += 1
-            payload = a.to_payload(analysis_id=aid)
-            payload["analysis_type"] = a.name
-            payload["params"] = a.options
-            STATE.analyses_store.append(payload)
-            STATE.analysis_objects[aid] = a
-
-        STATE.session.history = list(STATE.analysis_objects.values())
-        # Keep the workspace .py valid Python (Stata lines in their transpiled form) and cumulative:
-        # a run that adds to the current results (selection, one-line command) appends to the script.
-        if req.replace_existing:
-            new_script = code_to_run
-        else:
-            new_script = (prev_script.rstrip() + "\n\n" + code_to_run.strip() + "\n") if prev_script.strip() else code_to_run
-        STATE.sync_to_workspace(py_code=new_script)
-        STATE.revision += 1
-        STATE.cmdlog.code_run(code_to_run, whole=bool(req.replace_existing), source=req.code)
-        STATE.log_mark()
-
+        result = _execute_syntax(code_to_run)
+        _commit_syntax(req.code, code_to_run, req.replace_existing, prev_script, result)
         resp = STATE.dataset_payload()
-        resp["stdout"] = stdout_log
+        resp["stdout"] = result[1]
         return resp
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Python syntax execution error: {e}")
@@ -1387,7 +1400,7 @@ def restyle_plots_endpoint(req: PlotRestyleRequest):
         if req.analysis_id is not None and aid != req.analysis_id:
             continue
         a_type = card.get("analysis_type") or card.get("name")
-        if a_type == "customFigure":
+        if a_type in ("customFigure", "aiNote"):
             continue
         params = dict(card.get("params") or card.get("options") or {})
         merged_style = dict(params.get("plotStyle") or {})
@@ -1575,6 +1588,11 @@ def ai_push_analysis(req: AIPushRequest):
             STATE.load_file(req.dataset)
     run_req = RunAnalysisRequest(analysis_type=req.analysis_type, params=req.params)
     return run_analysis(run_req)
+
+
+from .ai import routes as _ai_routes  # noqa: E402
+
+_ai_routes.register(app, STATE, _execute_syntax, _commit_syntax)
 
 
 @app.get("/api/dataset/export_omv")

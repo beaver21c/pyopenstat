@@ -1646,6 +1646,20 @@ openstat run --data sample_data/MedMod_WorkStress.csv --analysis linReg \
                     &gt; "체중과 신장으로 BMI 변수 새로 계산(compute)하고 엑셀 파일로 저장해줘"
                 </div>
             </div>
+                    <div class="step-box">
+                <div class="step-hdr">
+                    <span class="step-pill">Gemini API</span>
+                    <span class="step-title">프로그램 화면에서 말로 분석하기: AI 분석 지원 입력줄</span>
+                </div>
+                <div class="step-body">
+                    1. 결과 창 위 <b>AI 분석 지원</b> 입력줄 아래의 <b>API 키 · 모형</b>을 눌러 Gemini API 키 등록 (발급: aistudio.google.com/app/apikey). 키는 실행 중인 프로그램의 메모리에만 보관되고 프로그램을 끄면 사라짐<br>
+                    2. 요청을 말로 입력하고 <b>실행</b> (예: 「용량에 따라 치아 길이에 차이가 있는지 분석하고 Games-Howell 사후검정도 해줘」)<br>
+                    3. 처리 중에는 현재 단계(분석 선택 → 명령 작성 → 명령 점검 → 분석 실행 → 결과 해석)와 경과 시간이 표시됨<br>
+                    4. 끝나면 결과표·그림 카드와 해석을 적은 응답 카드가 결과 시트에 추가되고, 실행된 명령은 요청 문장과 함께 명령 기록에 남음<br>
+                    5. 실패하면 입력줄 아래에 원인이 표시됨: API 키 문제, 사용 한도 초과, 연결 실패, 점검에서 걸린 옵션·변수 이름, 실행 오류 문구. 실패한 요청은 결과 시트와 자료를 바꾸지 않음<br><br>
+                    Gemini에는 요청마다 분석 66종의 목록과 필요한 분석의 옵션 카드(화면 양식과 같은 변수 역할·옵션 이름·선택지)가 함께 전달되고, 작성된 명령은 실행 전에 분석 이름·옵션·변수 이름을 점검받음. Google로 전송되는 것은 요청 문장, 변수 설명(이름·유형·요약 통계·범주 이름), 분석 결과표이며 자료의 개별 행은 전송되지 않음. 해석 문장의 수치는 결과표를 기준으로 확인해야 하며, 무료 등급 키는 모형별 하루 요청 수 제한이 있음(요청 1건에 모형 호출 3회 안팎).
+                </div>
+            </div>
         </section>
 
         <!-- Chapter 9: Colab & Python -->

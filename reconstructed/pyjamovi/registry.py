@@ -216,6 +216,10 @@ def dispatch_analysis(analysis_type: str, df: pd.DataFrame, params: Dict[str, An
 def _dispatch_inner(analysis_type: str, df: pd.DataFrame, p: Dict[str, Any]) -> BaseAnalysis:
     t = analysis_type.strip()
 
+    if t == "aiNote":                 # answer card of the AI assistant: rebuilt from its stored text, no computation
+        from .ai.note import build_note
+        return build_note(p)
+
     # Aliases for CLI / MCP ergonomics
     alias_map = {
         "ttest": "ttestIS",
